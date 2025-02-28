@@ -1,0 +1,95 @@
+{% load static %}  <!-- Load Django static files -->
+
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Register</title>
+
+    <!-- Linking CSS -->
+    <link rel="stylesheet" href="{% static 'users/css/nav.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/signup.css' %}">
+    
+    <!-- Boxicons (For Icons) -->
+    <link href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Linking JavaScript -->
+    <script src="{% static 'users/js/nav.js' %}" defer></script>
+</head>
+
+<body>
+    <nav class="nav">
+        <i class="uil uil-bars navOpenBtn"></i>
+        <a href="#" class="logo">Venue Booking System</a>
+        <ul class="nav-links">
+            <i class="uil uil-times navCloseBtn"></i>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">Products</a></li>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Contact Us</a></li>
+        </ul>
+        <i class="uil uil-search search-icon" id="searchIcon"></i>
+        <div class="search-box">
+            <i class="uil uil-search search-icon"></i>
+            <input type="text" placeholder="Search here..." />
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <h2>Registration</h2>
+
+        <form action="{% url 'register' %}" method="post">
+            {% csrf_token %}
+            
+            <div class="input-box">
+                <input name="name" type="text" placeholder="Enter your name" required>
+            </div>
+            
+            <div class="input-box">
+                <input name="email" type="email" placeholder="Enter your email" required>
+            </div>
+            
+            <div class="input-box">
+                <input name="organisation_name" type="text" placeholder="Enter organisation name" required>
+            </div>
+            
+            <div class="input-box">
+                <input name="organisation_type" type="text" placeholder="Enter organisation type" required>
+            </div>
+            
+            <div class="input-box">
+                <select name="role" required>
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="club">Club</option>
+                    <option value="fests">Fests</option>
+                    <option value="student_chapter">Student Chapter</option>
+                    <option value="faculty">Faculty</option>
+                    <option value="HOD">HOD</option>
+                    <option value="Dean">Dean</option>
+                    <option value="VC">VC</option>
+                    <option value="Registrar">Registrar</option>
+                    <option value="outsider">Outsider</option>
+                </select>
+            </div>
+            
+            <div class="input-box">
+                <input name="password" type="password" placeholder="Create password" required>
+            </div>
+            
+            <div class="input-box">
+                <input name="confirm_password" type="password" placeholder="Confirm password" required>
+            </div>
+
+            <div class="input-box button">
+                <input type="submit" value="Register Now">
+            </div>
+
+            <div class="text">
+                <h3>Already have an account? <a href="{% url 'login' %}">Login now</a></h3>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

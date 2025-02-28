@@ -1,0 +1,73 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Booking Calendar</title>
+
+   
+
+
+    <link rel="stylesheet" href="{% static 'users/css/calendar.css' %}">
+    <script src="{% static 'users/js/calendar.js' %}" defer></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Venue Booking Calendar</h1>
+            <p class="subtitle">Select a date to book your event</p>
+        </header>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button id="prevMonth">&lt;</button>
+                </div>
+                <h2 class="calendar-title" id="currentMonth">February 2025</h2>
+                <div class="calendar-nav">
+                    <button id="nextMonth">&gt;</button>
+                </div>
+            </div>
+
+            <div class="calendar-weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+            <div class="calendar-days" id="calendarDays">
+                <!-- Calendar days will be generated dynamically -->
+            </div>
+
+            <div class="calendar-actions">
+                <button class="secondary" id="resetSelection">Reset Selection</button>
+                <button id="confirmDate">Confirm Selection</button>
+            </div>
+        </div>
+
+        <div class="selected-date-display" id="selectedDateDisplay">
+            <h3>Selected Date</h3>
+            <p id="selectedDateText">None selected</p>
+        </div>
+
+        <div class="booking-info" id="bookingInfo" style="display: none;">
+            <h2>Available Time Slots</h2>
+            <p>Select a time slot for your booking on <span id="bookingDate"></span></p>
+
+            <div class="time-slots" id="startTime"></div>
+
+            <div class="confirmation-buttons">
+                <button class="secondary" id="backToCalendar">Back to Calendar</button>
+                <button id="confirmBooking">Confirm Booking</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+</body>
+</html>

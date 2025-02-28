@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Bookings</title>
+
+    <!-- Linking CSS -->
+    <link rel="stylesheet" href="{% static 'gymkhana/css/view_request.css' %}">
+
+    <!-- Linking JavaScript -->
+    <script src="{% static 'gymkhana/js/view_request.js' %}" defer></script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Venue Booking</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'home' %}">Dashboard</a></li>
+            <li><a href="{% url 'home' %}">Bookings</a></li>
+            <li><a href="{% url 'home' %}">Reports</a></li>
+            <li><a href="{% url 'login' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <div class="sidebar">
+        <h2>👋 Welcome, {{ person_name }}</h2>
+    </div>
+
+    <div class="container">
+        <h1>Booking Requests for {{ person_name }}</h1>
+        <script id="requestsData" type="application/json">
+            {{ requests|safe }}
+        </script>
+        <table id="bookingsTable">
+            
+            <thead>
+                <tr>
+                   
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Event Description</th>
+                    <th>Cancel</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in requests %}
+                <tr>
+                    
+                    <td>{{ request.venue.venue_name }}</td>
+                    <td>{{ request.date }}</td>
+                    <td>{{ request.duration }}</td>
+                    <td>{{ request.need }}</td>
+                    <td>
+                        {% if request.status == 'pending' %}
+                            <form method="POST" action="{% url 'cancel_request' request.request_id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn cancel-btn">Cancel</button>
+                            </form>
+                        {% else %}
+                            {{ request.status }}
+                        {% endif %}
+                    </td>
+                    <td class="status-{{ request.status }}">{{ request.status|upper }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">No booking requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            
+            
+        </table>
+    </div>
+
+    <!-- Modal for declining reason -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal" id="reasonModal">
+        <h3>State Reason for Decline</h3>
+        <textarea id="reasonText"></textarea>
+        <div class="modal-buttons">
+            <button class="btn submit-btn" onclick="submitDecline()">Submit</button>
+            <button class="btn cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="{% static 'admin_script.js' %}"></script>
+</body>
+</html>

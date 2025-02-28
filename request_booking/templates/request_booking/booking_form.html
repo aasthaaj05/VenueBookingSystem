@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Venue Booking</title>
+    <style>
+        :root {
+            --primary-color: black;
+            --secondary-color: black;
+            --accent-color: #4fc3dc;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--secondary-color);
+            font-weight: normal;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(79, 195, 220, 0.2);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .error {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: var(--success-color);
+            color: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>College Venue Booking Request</h1>
+            <p class="subtitle">Complete the form below to request a booking for your college event</p>
+        </header>
+        
+        {% if success %}
+            <div class="success-message">Thank you for your booking request! We will contact you shortly to confirm availability and details.</div>
+        {% endif %}
+
+        <form id="bookingForm" method="POST" action="{% url 'process_booking' %}">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="venue">Venue Name <span class="required">*</span></label>
+                <input type="text" id="venue" name="venue" value="{{ venue }}" readonly class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="eventType">Event Type <span class="required">*</span></label>
+                <select id="eventType" name="eventType" required>
+                    <option value="" disabled selected>Select event type</option>
+                    <option value="seminar">Seminar</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="guest_lecture">Guest Lecture</option>
+                    <option value="cultural_event">Cultural Event</option>
+                    <option value="sports_event">Sports Event</option>
+                    <option value="other">Other</option>
+                </select>
+                <div class="error" id="eventTypeError">Please select an event type</div>
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">First Name <span class="required">*</span></label>
+                <input type="text" id="firstName" name="firstName" value = "{{ user_data.name }}" required>
+                <div class="error" id="firstNameError">Please enter your first name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Email <span class="required">*</span></label>
+                <input type="text" id="email" name="email" value = "{{ user_data.email }}" required>
+                <div class="error" id="lastNameError">Please enter your last name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="organization_name">Organization Name <span class="required">*</span></label>
+                <input type="text" id="organization_name" name="organization_name" value = "{{ user_data.organization_name }}" required>
+                <div class="error" id="firstNameError">Please enter a valid Organization Name</div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" required>
+                <div class="error" id="phoneError">Please enter a valid phone number</div>
+            </div>
+
+            <div class="form-group">
+                <label for="guestCount">Estimated Number of Attendees <span class="required">*</span></label>
+                <input type="number" id="guestCount" name="guestCount" min="1" required>
+                <div class="error" id="guestCountError">Please enter the estimated number of attendees</div>
+            </div>
+
+            <div class="form-group">
+                <label for="additionalRequests">Explain the purpose of the booking</label>
+                <textarea id="additionalRequests" name="additionalRequests" class="additional-requests"></textarea>
+            </div>
+
+            <div class="form-footer">
+                <p class="required-note"><span class="required">*</span> Required fields</p>
+                <button type="submit">Submit Booking Request</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

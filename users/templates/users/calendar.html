@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Booking Calendar</title>
+    <style>
+        :root {
+            --primary-color: black;
+            --secondary-color: black;
+            --accent-color: #4fc3dc;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --highlight-color: #ff7e5f;
+            --disabled-color: #e9ecef;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: var(--dark-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--secondary-color);
+            font-weight: normal;
+        }
+
+        .calendar-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 15px;
+        }
+
+        .calendar-nav button {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+
+        .calendar-nav button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            padding: 10px 0;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            padding: 10px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover:not(.disabled) {
+            background-color: #f0f7ff;
+        }
+
+        .calendar-day.today {
+            border: 2px solid var(--accent-color);
+            font-weight: bold;
+        }
+
+        .calendar-day.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            color: var(--disabled-color);
+            cursor: not-allowed;
+        }
+
+        .calendar-day .event-dot {
+            position: absolute;
+            bottom: 8px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: var(--highlight-color);
+        }
+
+        .calendar-actions {
+            padding: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            border: 1px solid var(--border-color);
+        }
+
+        button.secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .selected-date-display {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .selected-date-display h3 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .booking-info {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .booking-info h2 {
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .time-slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 1rem;
+        }
+
+        .time-slots-section {
+            margin-top: 15px;
+        }
+
+        .time-slots-section h3 {
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .time-slot {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .time-slot:hover {
+            background-color: #f0f7ff;
+        }
+
+        .time-slot.selected {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .time-slot.unavailable {
+            color: var(--disabled-color);
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .confirmation-buttons {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .booking-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--light-color);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .booking-summary h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .booking-summary p {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-day {
+                font-size: 0.9rem;
+            }
+
+            .time-slots {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Venue Booking Calendar</h1>
+            <p class="subtitle">Select a date to book your event</p>
+        </header>
+
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-nav">
+                    <button id="prevMonth">&lt;</button>
+                </div>
+                <h2 class="calendar-title" id="currentMonth">February 2025</h2>
+                <div class="calendar-nav">
+                    <button id="nextMonth">&gt;</button>
+                </div>
+            </div>
+
+            <div class="calendar-weekdays">
+                <div>Sun</div>
+                <div>Mon</div>
+                <div>Tue</div>
+                <div>Wed</div>
+                <div>Thu</div>
+                <div>Fri</div>
+                <div>Sat</div>
+            </div>
+
+            <div class="calendar-days" id="calendarDays">
+                <!-- Calendar days will be generated by JavaScript -->
+            </div>
+
+            <div class="calendar-actions">
+                <button class="secondary" id="resetSelection">Reset Selection</button>
+                <button id="confirmDate">Confirm Selection</button>
+            </div>
+        </div>
+
+        <div class="selected-date-display" id="selectedDateDisplay">
+            <h3>Selected Date</h3>
+            <p id="selectedDateText">None selected</p>
+        </div>
+
+        <div class="booking-info" id="bookingInfo" style="display: none;">
+            <h2>Booking Details</h2>
+            <p>Select time slots for your booking on <span id="bookingDate"></span></p>
+
+            <div class="time-slots-container">
+                <div class="time-slots-section">
+                    <h3>Start Time</h3>
+                    <div class="time-slots" id="startTime">
+                        <!-- Start time slots will be generated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="time-slots-section">
+                    <h3>End Time</h3>
+                    <div class="time-slots" id="endTime">
+                        <!-- End time slots will be generated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="bookingSummary" class="booking-summary" style="display: none;">
+                <h3>Booking Summary</h3>
+                <p><strong>Date:</strong> <span id="summaryDate"></span></p>
+                <p><strong>Start Time:</strong> <span id="summaryStartTime"></span></p>
+                <p><strong>End Time:</strong> <span id="summaryEndTime"></span></p>
+            </div>
+
+            <div class="confirmation-buttons">
+                <button class="secondary" id="backToCalendar">Back to Calendar</button>
+                <button id="confirmBooking">Confirm Booking</button>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Calendar elements
+            const calendarDays = document.getElementById('calendarDays');
+            const currentMonthElement = document.getElementById('currentMonth');
+            const prevMonthButton = document.getElementById('prevMonth');
+            const nextMonthButton = document.getElementById('nextMonth');
+            const resetSelectionButton = document.getElementById('resetSelection');
+            const confirmDateButton = document.getElementById('confirmDate');
+            const selectedDateDisplay = document.getElementById('selectedDateDisplay');
+            const selectedDateText = document.getElementById('selectedDateText');
+            const bookingInfo = document.getElementById('bookingInfo');
+            const bookingDateElement = document.getElementById('bookingDate');
+            const startTimeContainer = document.getElementById('startTime');
+            const endTimeContainer = document.getElementById('endTime');
+            const backToCalendarButton = document.getElementById('backToCalendar');
+            const confirmBookingButton = document.getElementById('confirmBooking');
+            const notification = document.getElementById('notification');
+            const bookingSummary = document.getElementById('bookingSummary');
+            const summaryDate = document.getElementById('summaryDate');
+            const summaryStartTime = document.getElementById('summaryStartTime');
+            const summaryEndTime = document.getElementById('summaryEndTime');
+
+            // Current date and selected date
+            const today = new Date();
+            let currentMonth = today.getMonth();
+            let currentYear = today.getFullYear();
+            let selectedDate = null;
+            let selectedStartTime = null;
+            let selectedEndTime = null;
+
+            // Example of unavailable dates (in a real app, these would come from your backend)
+            const unavailableDates = [
+                new Date(2025, 1, 10).toDateString(),
+                new Date(2025, 1, 15).toDateString(),
+                new Date(2025, 1, 20).toDateString()
+            ];
+
+            // Example of dates with events (in a real app, these would come from your backend)
+            const eventsOnDates = [
+                new Date(2025, 1, 5).toDateString(),
+                new Date(2025, 1, 12).toDateString(),
+                new Date(2025, 1, 25).toDateString()
+            ];
+
+            // Generate month name
+            function getMonthName(month) {
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+                return months[month];
+            }
+
+            // Generate the calendar
+            function generateCalendar(month, year) {
+                calendarDays.innerHTML = '';
+
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startDayOfWeek = firstDay.getDay();
+
+                // Update the month and year display
+                currentMonthElement.textContent = `${getMonthName(month)} ${year}`;
+
+                // Add empty cells for days before the first day of the month
+                for (let i = 0; i < startDayOfWeek; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.classList.add('calendar-day', 'disabled');
+                    calendarDays.appendChild(emptyDay);
+                }
+
+                // Add days of the current month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.classList.add('calendar-day');
+                    dayElement.textContent = day;
+
+                    const currentDate = new Date(year, month, day);
+
+                    // Check if this day is today
+                    if (currentDate.toDateString() === today.toDateString()) {
+                        dayElement.classList.add('today');
+                    }
+
+                    // Check if this day is the selected date
+                    if (selectedDate && currentDate.toDateString() === selectedDate.toDateString()) {
+                        dayElement.classList.add('selected');
+                    }
+
+                    // Check if this day is unavailable
+                    if (unavailableDates.includes(currentDate.toDateString()) || currentDate < today) {
+                        dayElement.classList.add('disabled');
+                    } else {
+                        // Add click event only for available dates
+                        dayElement.addEventListener('click', () => selectDate(currentDate));
+                    }
+
+                    // Add event indicator if there's an event on this date
+                    if (eventsOnDates.includes(currentDate.toDateString())) {
+                        const eventDot = document.createElement('div');
+                        eventDot.classList.add('event-dot');
+                        dayElement.appendChild(eventDot);
+                    }
+
+                    calendarDays.appendChild(dayElement);
+                }
+            }
+
+            // Select a date
+            function selectDate(date) {
+                // Remove selected class from previously selected date
+                const previouslySelected = document.querySelector('.calendar-day.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+
+                // Find the day element for the new selected date and add selected class
+                const dayElements = document.querySelectorAll('.calendar-day:not(.disabled)');
+                for (const element of dayElements) {
+                    const day = parseInt(element.textContent);
+                    if (day === date.getDate()) {
+                        element.classList.add('selected');
+                        break;
+                    }
+                }
+
+                selectedDate = date;
+
+                // Update selected date display
+                selectedDateDisplay.style.display = 'block';
+                selectedDateText.textContent = selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+
+            // Reset selection
+            function resetSelection() {
+                const selectedElement = document.querySelector('.calendar-day.selected');
+                if (selectedElement) {
+                    selectedElement.classList.remove('selected');
+                }
+
+                selectedDate = null;
+                selectedDateDisplay.style.display = 'none';
+                selectedDateText.textContent = 'None selected';
+            }
+
+            // Show booking time slots
+            function showBookingTimeSlots() {
+                if (!selectedDate) {
+                    showNotification('Please select a date first', 'error');
+                    return;
+                }
+
+                bookingDateElement.textContent = selectedDate.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Reset selections
+                selectedStartTime = null;
+                selectedEndTime = null;
+                bookingSummary.style.display = 'none';
+
+                // Generate time slots (in a real app, available slots would come from your backend)
+                startTimeContainer.innerHTML = '';
+                endTimeContainer.innerHTML = '';
+                
+                const startHour = 9; // 9 AM
+                const endHour = 21; // 9 PM
+                const interval = 1; // 1 hour intervals
+
+                // Example of unavailable time slots (in a real app, these would come from your backend)
+                const unavailableTimeSlots = ['12:00', '13:00', '17:00'];
+
+                // Generate start time slots
+                for (let hour = startHour; hour < endHour; hour += interval) {
+                    const timeSlotElement = document.createElement('div');
+                    timeSlotElement.classList.add('time-slot');
+
+                    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                    const amPm = hour < 12 ? 'AM' : 'PM';
+                    const timeString = `${formattedHour}:00 ${amPm}`;
+
+                    timeSlotElement.textContent = timeString;
+                    timeSlotElement.dataset.hour = hour;
+
+                    // Check if this time slot is unavailable
+                    const militaryFormat = `${hour}:00`;
+                    if (unavailableTimeSlots.includes(militaryFormat)) {
+                        timeSlotElement.classList.add('unavailable');
+                    } else {
+                        // Add click event for available time slots
+                        timeSlotElement.addEventListener('click', () => selectStartTime(timeSlotElement, timeString, hour));
+                    }
+
+                    startTimeContainer.appendChild(timeSlotElement);
+                }
+
+                // Show booking info section
+                bookingInfo.style.display = 'block';
+
+                // Scroll to booking info section
+                bookingInfo.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Select a start time
+            function selectStartTime(element, timeString, hour) {
+                // Remove selected class from previously selected time slot
+                const previouslySelected = startTimeContainer.querySelector('.time-slot.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+
+                // Add selected class to the new selected time slot
+                element.classList.add('selected');
+                selectedStartTime = timeString;
+
+                // Update end time slots based on selected start time
+                updateEndTimeSlots(hour);
+                
+                // Update booking summary
+                updateBookingSummary();
+            }
+
+            // Update end time slots based on selected start time
+            function updateEndTimeSlots(startHour) {
+                endTimeContainer.innerHTML = '';
+                selectedEndTime = null;
+
+                const endHour = 21; // 9 PM
+                const interval = 1; // 1 hour intervals
+
+                // Example of unavailable time slots (in a real app, these would come from your backend)
+                const unavailableTimeSlots = ['12:00', '13:00', '17:00'];
+
+                // Generate end time slots (must be after start time)
+                for (let hour = startHour + 1; hour <= endHour; hour += interval) {
+                    const timeSlotElement = document.createElement('div');
+                    timeSlotElement.classList.add('time-slot');
+
+                    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                    const amPm = hour < 12 ? 'AM' : 'PM';
+                    const timeString = `${formattedHour}:00 ${amPm}`;
+
+                    timeSlotElement.textContent = timeString;
+
+                    // Check if this time slot is unavailable
+                    const militaryFormat = `${hour}:00`;
+                    if (unavailableTimeSlots.includes(militaryFormat)) {
+                        timeSlotElement.classList.add('unavailable');
+                    } else {
+                        // Add click event for available time slots
+                        timeSlotElement.addEventListener('click', () => selectEndTime(timeSlotElement, timeString));
+                    }
+
+                    endTimeContainer.appendChild(timeSlotElement);
+                }
+            }
+
+            // Select an end time
+            function selectEndTime(element, timeString) {
+                // Remove selected class from previously selected time slot
+                const previouslySelected = endTimeContainer.querySelector('.time-slot.selected');
+                if (previouslySelected) {
+                    previouslySelected.classList.remove('selected');
+                }
+
+                // Add selected class to the new selected time slot
+                element.classList.add('selected');
+                selectedEndTime = timeString;
+                
+                // Update booking summary
+                updateBookingSummary();
+            }
+
+            // Update booking summary
+            function updateBookingSummary() {
+                if (selectedDate && selectedStartTime && selectedEndTime) {
+                    summaryDate.textContent = selectedDate.toLocaleDateString('en-US', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    summaryStartTime.textContent = selectedStartTime;
+                    summaryEndTime.textContent = selectedEndTime;
+                    bookingSummary.style.display = 'block';
+                } else {
+                    bookingSummary.style.display = 'none';
+                }
+            }
+
+            // Confirm booking
+            function confirmBooking() {
+                if (!selectedDate) {
+                    showNotification('Please select a date', 'error');
+                    return;
+                }
+
+                if (!selectedStartTime) {
+                    showNotification('Please select a start time', 'error');
+                    return;
+                }
+
+                if (!selectedEndTime) {
+                    showNotification('Please select an end time', 'error');
+                    return;
+                }
+
+                // Format the date for sending to backend
+                const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
+
+                // In a real application, you would send this data to your Django backend
+                const bookingData = {
+                    date: formattedDate,
+                    start_time: selectedStartTime,
+                    end_time: selectedEndTime
+                };
+
+                // Send data to backend
+                sendBookingToBackend(bookingData);
+            }
+
+            // Send booking data to the Django backend
+            // function sendBookingToBackend(data) {
+            //     console.log('1111111111111111111111')
+            //     console.log('Sending booking data to backend:', data);
+
+            //     fetch('/submit_booking', {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json'
+            //         },
+            //         body: JSON.stringify(data)
+            //     })
+            //         .then(response => {
+            //             if (response.redirected) {
+            //                 window.location.href = response.url;
+            //             } else {
+            //                 return response.json();
+            //             }
+            //         })
+            //         .then(result => {
+            //             if (result) {  // Only process if we got JSON
+            //                 showNotification(result.message, 'success');
+            //                 console.log("Booking response:", result);
+            //                 resetForm();
+            //             }
+            //         })
+            //         .catch(error => {
+            //             console.error("Error submitting booking:", error);
+            //             showNotification('Error processing booking', 'error');
+            //         });
+            //         console.log('4444444444444444')
+            // }
+            // function sendBookingToBackend(data) {
+            //     console.log('Sending booking data to backend:', data);
+                
+            //     // Get CSRF token for Django
+            //     const csrftoken = getCookie('csrftoken');
+                
+            //     fetch('/request_booking/calendar/', {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //             'X-CSRFToken': csrftoken
+            //         },
+            //         body: JSON.stringify(data)
+            //     })
+            //     .then(response => {
+            //         console.log('response' , response);
+            //         console.log("Booking SENT successfully");
+            //         showNotification('Booking SUBMITTED successfully', 'success');
+            //         // resetForm();
+            //     })
+            //     .catch(error => {
+            //         console.log('error : ' , error)
+            //         console.error("Error submitting booking:", error);
+            //         showNotification('Error processing booking', 'error');
+            //     });
+            // }
+            function sendBookingToBackend(data) {
+                console.log('Sending booking data to backend:', data);
+
+                const csrftoken = getCookie('csrftoken');
+
+                fetch('/request_booking/calendar/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())  // Convert response to JSON
+                .then(responseData => {
+                    console.log("Response from backend:", responseData);
+
+                    if (responseData.redirect_url) {
+                        console.log("Redirecting to:", responseData.redirect_url);
+                        window.location.href = responseData.redirect_url;  // Redirect the user
+                    } else {
+                        showNotification('Booking submitted successfully', 'success');
+                    }
+                })
+                .catch(error => {
+                    console.error("Error submitting booking:", error);
+                    showNotification('Error processing booking', 'error');
+                });
+            }
+
+
+            // Function to get CSRF token from cookies (required for Django)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            // Reset the entire form
+            function resetForm() {
+                resetSelection();
+                selectedStartTime = null;
+                selectedEndTime = null;
+                bookingInfo.style.display = 'none';
+                bookingSummary.style.display = 'none';
+
+                // Remove selected class from time slots
+                const selectedStartTimeElement = startTimeContainer.querySelector('.time-slot.selected');
+                if (selectedStartTimeElement) {
+                    selectedStartTimeElement.classList.remove('selected');
+                }
+
+                const selectedEndTimeElement = endTimeContainer.querySelector('.time-slot.selected');
+                if (selectedEndTimeElement) {
+                    selectedEndTimeElement.classList.remove('selected');
+                }
+            }
+
+            // Show notification
+            function showNotification(message, type) {
+                notification.textContent = message;
+                notification.className = 'notification';
+
+                if (type === 'error') {
+                    notification.style.backgroundColor = '#dc3545';
+                } else if (type === 'success') {
+                    notification.style.backgroundColor = '#28a745';
+                } else {
+                    notification.style.backgroundColor = '#4a6fa5';
+                }
+
+                notification.classList.add('show');
+
+                // Hide notification after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+
+            // Event listeners
+            prevMonthButton.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                generateCalendar(currentMonth, currentYear);
+            });
+
+            nextMonthButton.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                generateCalendar(currentMonth, currentYear);
+            });
+
+            resetSelectionButton.addEventListener('click', resetSelection);
+            confirmDateButton.addEventListener('click', showBookingTimeSlots);
+            backToCalendarButton.addEventListener('click', () => {
+                bookingInfo.style.display = 'none';
+            });
+            confirmBookingButton.addEventListener('click', confirmBooking);
+
+            // Initialize the calendar
+            generateCalendar(currentMonth, currentYear);
+        });
+    </script>
+</body>
+
+</html>
