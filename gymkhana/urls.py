@@ -6,13 +6,13 @@ urlpatterns = [
     # path('requests/faculty/', view_faculty_requests, name='view_faculty_requests'),
     # path('venues/<uuid:venue_id>/', venue_details, name='venue_details'),
     path('create/', create_venue, name='create_venue'),
-    path('request/<uuid:request_id>/approve/', approve_request, name='approve_request'),
-    path('request/<uuid:request_id>/reject/', reject_request, name='reject_request'),
-    path('request/<uuid:request_id>/cancel/', cancel_request, name='cancel_request'),
+    path('request/<str:request_id>/approve/', approve_request, name='approve_request'),
+    path('request/<str:request_id>/reject/', reject_request, name='reject_request'),
+    path('request/<str:request_id>/cancel/', cancel_request, name='cancel_request'),
     path('requests/pending/', pending_requests_by_date, name='pending_requests_by_date'),
     # path('requests/gymkhana/', requests_for_gymkhana, name='requests_for_gymkhana'),
     path('requests/', requests_for_gymkhana, name='requests_for_gymkhana'),
     path('request_booking/', request_booking, name='request_booking'),
-    path('approve/<uuid:request_id>/', approve_request, name='approve_request'),
+    path('approve/<str:request_id>/', approve_request, name='approve_request'),
 ]
 

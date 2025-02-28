@@ -319,21 +319,40 @@ def getBookedSlotsFromDB(venue_id, start_date, end_date):
     return list(Booking.objects.filter(
         venue_id=venue_id, 
         date__range=[start_date, end_date]
-    ).values('date', 'time', 'duration'))
+    ).exclude(status="cancelled")  # Exclude cancelled bookings
+    .values('date', 'time', 'duration'))
+
 
 def cancelRequestFromDB(req_id):
-    deleted, _ = Request.objects.filter(id=req_id).delete()
-    return deleted > 0  # Returns True if at least one row was deleted
+    try:
+        request = Request.objects.get(request_id=req_id)
 
+        if request.status != "approved":
+            # If the request is not approved, simply mark it as "cancelled"
+            request.status = "cancelled"
+            request.save()
+            return True
 
+        # If the request is approved, cancel the booking as well
+        booking = Booking.objects.filter(request=request).first()
+        if booking:
+            booking.status = "cancelled"
+            booking.save()
+
+        # Now cancel the request
+        request.status = "cancelled"
+        request.save()
+
+        return True  # Successfully cancelled
+
+    except Request.DoesNotExist:
+        return False  # Request ID not found
+
+""" 
 # ✅ Cancel request (No changes needed)
 def cancelRequestFromDB(req_id):
-    query = """
-            DELETE
-            FROM request_booking_request
-            WHERE request_booking_request.request_id=%s
-            """
     with connection.cursor() as cursor:
         cursor.execute(query, (req_id,))
         connection.commit()
     return True
+ """

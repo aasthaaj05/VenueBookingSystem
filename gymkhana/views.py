@@ -65,6 +65,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Venue
+from .serializers import VenueSerializer
 
 @api_view(['POST'])
 def create_venue(request):
@@ -95,9 +96,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import Request, Booking, Rejection
 from .serializers import RequestSerializer, BookingSerializer, RejectionSerializer
+from django.views.decorators.csrf import csrf_exempt
+
 
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
+@csrf_exempt
 def approve_request(request, request_id):
     """Approve a request and create a booking."""
     req = get_object_or_404(Request, request_id=request_id)
