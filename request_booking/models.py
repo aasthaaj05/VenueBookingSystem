@@ -5,6 +5,7 @@ import uuid
 
 class Request(models.Model):
     STATUS_CHOICES = [
+        ('waiting_for_approval', 'Waiting for Approval'),  # Added new state
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
@@ -21,10 +22,10 @@ class Request(models.Model):
     alternate_venue_1 = models.ForeignKey(Venue, on_delete=models.SET_NULL, null=True, related_name="alt_venue_1")  # First alternate venue
     alternate_venue_2 = models.ForeignKey(Venue, on_delete=models.SET_NULL, null=True, related_name="alt_venue_2")  # Second alternate venue
     event_details = models.TextField()  # Description of the event
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')  # Request status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting_for_approval')  # Default is waiting for approval
     reasons = models.CharField(max_length=255, blank=True, null=True)  # Reason for approval/rejection
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Request {self.request_id} by {self.user} for {self.venue}"
+        return f"Request {self.request_id} by {self.user} for {self.venue} ({self.status})"

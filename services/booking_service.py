@@ -295,3 +295,33 @@ def getUserRequests(user_id):
             }
         )
     return json_array
+
+def forwardRequestToGymkhana(req_id, user_id):
+    try:
+        res = db.forwardRequestToGymkhanaFromDB(req_id, user_id)
+    except Exception as e:
+        raise e
+    
+    return True
+
+def getForwardRequests(user_id):
+    try:
+        json_array=[]
+        res = db.getForwardRequestsFromDB(user_id)
+        for row in res:
+            json_array.append(
+                {
+                    'RequestID': row['request_id'],
+                    'user_name': row['user__name'],
+                    'venue_name': row['venue__venue_name'],
+                    'date': row['date'],
+                    'time': row['time'],
+                    'duration': row['duration'],
+                    'event_details': row['event_details']
+                }
+            )
+
+    except Exception as e:
+        raise e
+    
+    return json_array

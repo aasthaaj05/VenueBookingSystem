@@ -246,24 +246,31 @@ def requestSlotFromDB(venue_id, user_id, date, time, duration, alternate_venues,
     try:
         # Get main venue
         venue = Venue.objects.get(id=venue_id)
-        print('venue: ', venue)  # Print the main venue
+        print('venue: ', venue)  # Debugging log
 
+        # Get user details
         user = CustomUser.objects.get(id=user_id)
 
-        # Get alternate venues
-        alternate_venue_1 = Venue.objects.get(id=alternate_venues[0]) if alternate_venues[0] else None
-        alternate_venue_2 = Venue.objects.get(id=alternate_venues[1]) if alternate_venues[1] else None
-        print('alternate_venue_1 : ', alternate_venue_1)
-        print('alternate_venue_2 : ', alternate_venue_2)
+        # Determine request status based on role
+        if user.role == 'student':  
+            initial_status = 'waiting_for_approval'  # Students require faculty approval
+        else:
+            initial_status = 'pending'  # Faculty and others get direct approval
 
-        # Print all the parameters before creating the request
-        print('user_id: ', user_id)
-        print('date: ', date)
-        print('time: ', time)
-        print('time: ', type(time))
-        print('duration: ', duration)
-        print('event_details: ', event_details)
-        print('need: ', need)
+        # Get alternate venues (handle cases where alternate_venues may be empty)
+        alternate_venue_1 = Venue.objects.get(id=alternate_venues[0]) if alternate_venues and alternate_venues[0] else None
+        alternate_venue_2 = Venue.objects.get(id=alternate_venues[1]) if alternate_venues and len(alternate_venues) > 1 else None
+
+        # Debugging logs
+        print('alternate_venue_1:', alternate_venue_1)
+        print('alternate_venue_2:', alternate_venue_2)
+        print('user_id:', user_id)
+        print('date:', date)
+        print('time:', time, '| Type:', type(time))
+        print('duration:', duration)
+        print('event_details:', event_details)
+        print('need:', need)
+        print('Initial Status:', initial_status)  # Debugging log
 
         # Creating the request object
         request = Request.objects.create(
@@ -275,15 +282,51 @@ def requestSlotFromDB(venue_id, user_id, date, time, duration, alternate_venues,
             alternate_venue_1=alternate_venue_1,
             alternate_venue_2=alternate_venue_2,
             event_details=event_details,
-            need=need
+            need=need,
+            status=initial_status  # Set the initial status based on role
         )
-        # print('Request ID: ', request.id)  # Print the created request ID
-        print('user_id: ', user_id)
+
+        print('Request ID:', request.request_id)  # Debugging log
         return request.request_id  # Returning request ID for reference
 
     except Venue.DoesNotExist:
         raise ValueError("Venue doesn't exist")
+    except CustomUser.DoesNotExist:
+        raise ValueError("User doesn't exist")
+
+
+def forwardRequestToGymkhanaFromDB(request_id, user_id):
+    user = CustomUser.objects.get(id=user_id)
+    req = Request.objects.get(request_id=request_id)
+    # add a check for user role
+    if (req.status != 'waiting_for_approval'):
+        raise ValueError('Cannot Forward a Request that is already Forwarded')
     
+    user_req=req.user
+
+    if (user.organization_name != user_req.organization_name):
+        raise ValueError("Cannot Approve Requests other than your Organization")
+    
+    req.status='pending'
+    req.save()
+
+    return True
+
+def getForwardRequestsFromDB(user_id):
+    try:
+        # Fetch the user making the query
+        user = CustomUser.objects.get(id=user_id)
+
+        # Fetch all requests that are waiting for approval
+        requests = Request.objects.filter(status="waiting_for_approval").values(
+            "request_id", "user__name", "venue__venue_name", "date", "time", "duration", "event_details"
+        )
+
+        return list(requests)  # Convert queryset to list of dictionaries
+
+    except CustomUser.DoesNotExist:
+        raise ValueError("User not found")
+
 
 '''
 class Request(models.Model):
