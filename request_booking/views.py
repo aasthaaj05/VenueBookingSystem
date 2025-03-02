@@ -65,7 +65,38 @@ def get_available_slots(request):
             start_date = data.get("date")
             end_date = data.get("end_date", start_date)  # Default end_date to start_date if missing
 
+            print('in get_available_slots function')
+            print('start_date : ' , start_date)
+
             print(f"Start Date: {start_date}, End Date: {end_date}")
+
+
+
+            # start_time_str = request.POST.get("start_time")  # e.g., "6:00 PM"
+            # end_time_str = request.POST.get("end_time")      # e.g., "7:00 PM"
+
+            start_time_str = data.get("start_time")  # e.g., "6:00 PM"
+            end_time_str = data.get("end_time")      # e.g., "7:00 PM"
+
+            print('start time : ' , start_time_str)
+            print('end time : ' , end_time_str)
+
+            # Convert string times to datetime objects
+            time_format = "%I:%M %p"  # Format for "6:00 PM"
+            start_time = datetime.strptime(start_time_str, time_format)
+            end_time = datetime.strptime(end_time_str, time_format)
+
+            # Calculate duration in hours
+            duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
+
+            # Store duration in session
+            request.session["booking_duration"] = duration
+
+            print('-----')
+            print('duration : ' , duration)
+
+            print()
+            print()
 
             if not start_date:
                 return JsonResponse({'error': 'Missing start_date'}, status=400)
@@ -102,22 +133,15 @@ def get_available_slots(request):
 
             print('1111111111111111')
 
-                # return JsonResponse({
-                #     "message": "Booking successful", 
-                #     "redirect_url": "/request_booking/user_dashboard"
-                # })
-            # return redirect('/users/login')  # Redirect to new page
+          
+      
 
             return JsonResponse({
                 "message": "Booking successful",
                 "redirect_url": "/request_booking/user_dashboard"
             })
             
-            # return redirect('/users/home')
-                # return render()
-                # return render(request, 'venues.html', {'venues': venues})
-                # return render(request, 'request_booking/user_dashboard.html', {'all_slots': all_slots})
-                # return render(request, 'request_booking/user_dashboard.html')
+           
 
 
         except json.JSONDecodeError:
@@ -167,12 +191,7 @@ from django.shortcuts import render
 from django.shortcuts import render
 from django.http import HttpResponseNotAllowed
 
-# def user_dashboard(request):
-#     if request.method == "GET":  # Ensuring only GET requests are processed
-#         print('444444444444')  # Debugging
-#         return render(request, 'request_booking/user_dashboard.html')
-#     else:
-#         return HttpResponseNotAllowed(['GET'])  # Return 405 Method Not Allowed for other methods
+
 
 import sys
 from django.http import HttpResponse
@@ -181,32 +200,7 @@ import traceback
 
 from django.http import HttpResponse
 
-# def user_dashboard(request):
-#     if request.method == "GET":
-#         print("Inside user_dashboard view", flush=True)
-#         return HttpResponse("<h1>User Dashboard Loaded</h1>")  # Simple response
-#     else:
-#         return HttpResponseNotAllowed(['GET'])
 
-
-def f(a,b):
-    return a+b
-
-# def user_dashboard(request):
-#     if request.method == "GET": 
-#         print("Inside user_dashboard view")
-#         print("Request path:", request.path)
-#         print("Request headers:", request.headers)  # Check if a redirect caused this
-#         print('ooooooooooooooooooooo')
-#         print(f(1,2))
-
-
-
-#         # return HttpResponse("<h1>User Dashboarlkjsaldjadaod Loaded</h1>")
-#         return render(request, 'request_booking/user_dashboard.html')
-        
-#     else:
-#         return HttpResponseNotAllowed(['GET'])
 
 
 
@@ -247,62 +241,11 @@ def user_dashboard(request):
 
 
 
-# def user_dashboard(request):
-#     if request.method == "GET":
-#         print("Inside user_dashboard view")
-#         print("Request path:", request.path)
-#         print("Request headers:", request.headers)
-#         print('ooooooooooooooooooooo')
-
-#         # Store in session to access in the next view
-#         all_slots = request.session['all_slots'] 
-
-#         print(all_slots)
-        
-        
-
-#         return render(request, 'request_booking/user_dashboard.html', {"venues": venues})
-
-#     return HttpResponseNotAllowed(['GET'])
 
 from django.shortcuts import render
 from django.http import HttpResponseNotAllowed
 from gymkhana.models import Venue  # Replace 'your_app' with your actual app name
 
-# def user_dashboard(request):
-#     if request.method == "GET":
-#         print("Inside user_dashboard view")
-#         print("Request path:", request.path)
-#         print("Request headers:", request.headers)
-#         print('ooooooooooooooooooooo')
-
-#         # Retrieve stored venue slot availability from the session
-#         all_slots = request.session.get('all_slots', {})
-
-#         print(all_slots)
-
-#         # Extract venue names from all_slots
-#         venue_names = all_slots.keys()
-
-#         # Fetch venues from the database
-#         venues = Venue.objects.filter(venue_name__in=venue_names).values('venue_name', 'capacity', 'facilities')
-
-#         # Map the venue data with availability
-#         mapped_venues = {}
-
-#         for venue in venues:
-#             print('venue : ' , venue)
-#             venue_name = venue['venue_name']
-#             mapped_venues[venue_name] = {
-#                 'capacity': venue['capacity'],
-#                 'facilities': venue['facilities'],
-#                 'availability': all_slots.get(venue_name, [])  # Get availability data from all_slots
-#             }
-
-#         # Pass mapped venue data to the template
-#         return render(request, 'request_booking/user_dashboard.html', {"venues": mapped_venues})
-
-#     return HttpResponseNotAllowed(['GET'])
 
 def user_dashboard(request):
     if request.method == "GET":
@@ -506,116 +449,7 @@ from django.http import JsonResponse
 from .models import Venue, Request
 import json
 
-# @csrf_exempt  # Disable CSRF for testing purposes (not recommended in production)
-# def book_venue(request):
-#     if request.method == "POST":
-#         venue_name = request.POST.get("venue_name")
-#         print(f"Venue selected: {venue_name}")
-#         return render(request, "request_booking/booking_form.html", {"venue": venue_name})
 
-# @csrf_exempt
-# def process_booking(request):
-#     if request.method == "POST":
-#         data = {
-#             "event_type": request.POST.get("eventType"),
-#             "other_event_type": request.POST.get("otherEventType"),
-#             "first_name": request.POST.get("firstName"),
-#             "last_name": request.POST.get("lastName"),
-#             "email": request.POST.get("email"),
-#             "phone": request.POST.get("phone"),
-#             "venue": request.POST.get("venue"),
-#             "guest_count": request.POST.get("guestCount"),
-#             "purpose": request.POST.get("purpose"),
-#         }
-#         print(data)
-
-#         # Save to database
-#         venue_obj = Venue.objects.get(name=data["venue"]) if data["venue"] else None
-#         Request.objects.create(
-#             user=request.user,
-#             date="2024-01-01",  # Default value (Replace with actual date input)
-#             time=12,  # Default value (Replace with actual time input)
-#             duration=2,  # Default duration (Replace with actual input)
-#             venue=venue_obj,
-#             need=data["purpose"],
-#             event_details=data["event_type"],
-#             status="pending",
-#         )
-
-#         return render(request, "request_booking/user_dashboard.html", {"success": True, "venue": data["venue"]})
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
-
-
-
-# from django.shortcuts import render, redirect
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# from .models import Venue, Request
-
-# @csrf_exempt  # Not recommended in production; use Django’s CSRF protection
-# def book_venue(request):
-#     """Handles venue selection and preloads user session details."""
-#     if request.method == "POST":
-#         venue_name = request.POST.get("venue_name")
-#         print(f"Venue selected: {venue_name}")
-
-#         # Fetch user details from session
-#         user_data = {
-#             "first_name": request.session.get("first_name", ""),
-#             "email": request.session.get("email", ""),
-#             "organization_name": request.session.get("organization_name", ""),
-#         }
-
-#         return render(request, "request_booking/booking_form.html", {
-#             "venue": venue_name,
-#             "user_data": user_data  # Passing session data to prefill the form
-#         })
-
-# @csrf_exempt
-# def process_booking(request):
-#     """Processes the booking request and saves details in the database."""
-#     if request.method == "POST":
-#         data = {
-#             "event_type": request.POST.get("eventType"),
-#             "other_event_type": request.POST.get("otherEventType"),
-#             "first_name": request.session.get("first_name"),  # From session
-#             "email": request.session.get("email"),  # From session
-#             "organization_name": request.session.get("organization_name"),  # From session
-#             "phone": request.POST.get("phone"),
-#             "venue": request.POST.get("venue"),
-#             "guest_count": request.POST.get("guestCount"),
-#             "purpose": request.POST.get("purpose"),
-#         }
-#         print(data)
-
-#         # Save to database
-#         venue_obj = Venue.objects.get(name=data["venue"]) if data["venue"] else None
-#         Request.objects.create(
-#             user=request.user,
-#             date="2024-01-01",  # Default value (Replace with actual date input)
-#             time=12,  # Default value (Replace with actual time input)
-#             duration=2,  # Default duration (Replace with actual input)
-#             venue=venue_obj,
-#             need=data["purpose"],
-#             event_details=data["event_type"],
-#             status="pending",
-#         )
-
-#         return render(request, "request_booking/user_dashboard.html", {"success": True, "venue": data["venue"]})
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
-
-# def set_user_session(request):
-#     """Sets user details in session before booking."""
-#     if request.method == "POST":
-#         request.session["first_name"] = request.POST.get("first_name")
-#         request.session["email"] = request.POST.get("email")
-#         request.session["organization_name"] = request.POST.get("organization_name")
-
-#         return JsonResponse({"message": "User details saved in session"}, status=200)
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 from django.shortcuts import render, redirect
@@ -623,30 +457,14 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Venue, Request
 
-# @csrf_exempt  # Not recommended in production; use Django’s CSRF protection
-# def book_venue(request):
-#     """Handles venue selection and preloads user session details."""
-#     if request.method == "POST":
-#         venue_name = request.POST.get("venue_name")
-#         print(f"Venue selected: {venue_name}")
 
-#         # Fetch user details from session
-#         user_data = {
-#             "name": request.session.get("name", ""),  # Full name from session
-#             "email": request.session.get("email", ""),
-#             "organization_name": request.session.get("organization_name", ""),
-#         }
-
-#         return render(request, "request_booking/booking_form.html", {
-#             "venue": venue_name,
-#             "user_data": user_data  # Passing session data to prefill the form
-#         })
 
 
 @csrf_exempt
 def book_venue(request):
     """Handles venue selection and preloads user session details."""
     if request.method == "POST":
+        print('in book_venue function')
         venue_name = request.POST.get("venue_name")
         print(f"Venue selected: {venue_name}")
 
@@ -674,6 +492,11 @@ def book_venue(request):
 
 
 
+
+
+from datetime import datetime
+from django.utils.timezone import now  # Handles timezone-aware datetime
+
 @csrf_exempt
 def process_booking(request):
     """Processes the booking request and saves details in the database."""
@@ -683,7 +506,7 @@ def process_booking(request):
             "other_event_type": request.POST.get("otherEventType"),
             "name": request.session.get("firstName"),  # Full name from session
             "email": request.session.get("email"),  # From session
-            "organization_name": request.session.get("organization_name "),  # From session
+            "organization_name": request.session.get("organization_name"),  # Fixed typo (extra space)
             "phone": request.POST.get("phone"),
             "venue": request.POST.get("venue"),
             "guest_count": request.POST.get("guestCount"),
@@ -693,20 +516,30 @@ def process_booking(request):
 
         # Save to database
         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
+        current_datetime = now()  # Get current date and time
+
+        
+
+        current_time = now().time()
+        time_in_hours = current_time.hour  # Extract hour as an integer
+
+
         Request.objects.create(
             user=request.user,
-            date="2024-01-01",  # Default value (Replace with actual date input)
-            time=12,  # Default value (Replace with actual time input)
-            duration=2,  # Default duration (Replace with actual input)
+            date=now().date(),  # Store current date
+            time=time_in_hours,  # Convert time to integer
+            duration=request.session.get("booking_duration"),  
             venue=venue_obj,
             need=data["purpose"],
             event_details=data["event_type"],
             status="pending",
         )
 
+
         return render(request, "request_booking/user_dashboard.html", {"success": True, "venue": data["venue"]})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
 
 
 
@@ -717,17 +550,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Request
 
-# @login_required
-# def booking_status(request):
-#     """
-#     View to fetch and display all booking requests for the admin.
-#     """
-#     # Fetch all booking requests
-#     requests = Request.objects.all().order_by('-date')  # Show latest bookings first
 
-#     print('requests : ' , requests)
-
-#     return render(request, "request_booking/booking_status.html", {"requests": requests})
 
 @login_required
 def booking_status(request):

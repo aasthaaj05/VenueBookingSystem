@@ -1,64 +1,4 @@
-# from django.shortcuts import render
 
-# # Create your views here.
-
-
-# from django.db import connection
-# from rest_framework.decorators import api_view, permission_classes
-# from rest_framework.response import Response
-# from rest_framework.permissions import IsAuthenticated
-# from rest_framework import status
-# from .models import Venue
-
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])  # Ensure only logged-in faculty can access
-# def view_faculty_requests(request):
-#     faculty_id = request.user.id  # Get logged-in faculty ID
-
-#     # Get venues managed by the logged-in faculty
-#     managed_venues = Venue.objects.filter(department_incharge=faculty_id).values_list('id', flat=True)
-
-#     if not managed_venues:
-#         return Response({"message": "You are not in charge of any venue"}, status=status.HTTP_403_FORBIDDEN)
-
-#     query = """
-#         SELECT request_id, user_id, date, time, venue_id, need, alternate_venues, event_details, status, reasons
-#         FROM requests
-#         WHERE venue_id = ANY(%s)
-#         ORDER BY date, time;
-#     """
-
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, [list(managed_venues)])  # Execute query for managed venues
-#         rows = cursor.fetchall()
-
-#     requests_list = []
-#     for row in rows:
-#         requests_list.append({
-#             "request_id": row[0],
-#             "user_id": row[1],
-#             "date": str(row[2]),
-#             "time": str(row[3]),
-#             "venue_id": row[4],
-#             "need": row[5],
-#             "alternate_venues": row[6],  # JSONB array
-#             "event_details": row[7],
-#             "status": row[8],
-#             "reasons": row[9]
-#         })
-
-#     return Response({"faculty_id": faculty_id, "requests": requests_list}, status=status.HTTP_200_OK)
-
-
-# @api_view(['GET'])
-# def venue_details(request, venue_id):
-#     try:
-#         venue = Venue.objects.get(id=venue_id)
-#         serializer = VenueSerializer(venue)
-#         return Response(serializer.data, status=status.HTTP_200_OK)
-#     except Venue.DoesNotExist:
-#         return Response({"error": "Venue not found"}, status=status.HTTP_404_NOT_FOUND)
-    
 
 
 from rest_framework.decorators import api_view
@@ -276,12 +216,6 @@ def requests_for_gymkhana(request):
 
 
 
-# from django.shortcuts import render
-# from .models import Booking  # Assuming you have a Booking model
-
-# def request_booking(request):
-#     bookings = Booking.objects.all()  # Fetch all bookings from the database
-#     return render(request, 'gymkhana/view_request.html')
 
 
 from django.shortcuts import render

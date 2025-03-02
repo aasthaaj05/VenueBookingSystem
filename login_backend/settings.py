@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'home',
     'users',
     'gymkhana',
     'request_booking',
@@ -105,9 +106,9 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'venue_booking',
-        'USER': 'kaustubh',
-        'PASSWORD': 'KKOct#@20',
+        'NAME': 'venue_login3',
+        'USER': 'root',
+        'PASSWORD': 'Arnav@123',
         'HOST': 'localhost',  # Change if using a remote server
         'PORT': '3306',  # MySQL default port
     }

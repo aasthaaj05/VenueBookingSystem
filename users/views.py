@@ -187,22 +187,41 @@ from .serializers import RegisterSerializer
 
 @api_view(['GET', 'POST'])
 def register_view(request):
+    print('in register_view function')
     if request.method == 'GET':
         return render(request, 'users/register.html')
 
     elif request.method == 'POST':
+        print(request.POST)  # Debugging: Check what data is coming in
+
+        
         serializer = RegisterSerializer(data=request.POST)  # Use request.POST for form data
         
         if serializer.is_valid():
             user = serializer.save()
             login(request, user)
-            print('sjodisoudouououo')
+            print('User auto logged from register_view in successfully')
+
+            # ✅ Storing user details in session
+            request.session['user_id'] = str(user.id)  # Store UUID as string
+            request.session['name'] = user.name
+            request.session['email'] = user.email
+            request.session['organization_name'] = user.organization_name
+            request.session['organization_type'] = user.organization_type
+            request.session['role'] = user.role
+            request.session['is_active'] = user.is_active
+            request.session['created_at'] = user.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            
             # Redirect to dashboard or login page after successful registration
             return redirect('/users/home')  # Change 'dashboard' to your actual view name
 
         # If validation fails, re-render the form with errors
         print('oziufoisuffsffpf')
         return render(request, 'users/register.html', {'errors': serializer.errors})
+
+
+    
+    
 
 
 

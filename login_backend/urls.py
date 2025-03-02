@@ -22,6 +22,7 @@ urlpatterns = [
     path('users/', include('users.urls')),
     path('gymkhana/', include('gymkhana.urls')),
     path('request_booking/', include('request_booking.urls')),
+    path('',include('home.urls')),
 
 
 ]
