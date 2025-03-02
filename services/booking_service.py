@@ -325,3 +325,11 @@ def getForwardRequests(user_id):
         raise e
     
     return json_array
+
+def declineForwardRequest(req_id, user_id):
+    try:
+        res = db.declineForwardRequestFromDB(req_id, user_id)
+    except Exception as e:
+        raise e
+    
+    return True

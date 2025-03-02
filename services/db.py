@@ -399,3 +399,20 @@ def cancelRequestFromDB(req_id):
         connection.commit()
     return True
  """
+
+def declineForwardRequestFromDB(request_id, user_id):
+    user = CustomUser.objects.get(id=user_id)
+    req = Request.objects.get(request_id=request_id)
+    # add a check for user role
+    if (req.status != 'waiting_for_approval'):
+        raise ValueError('Cannot Forward a Request that is already Forwarded')
+    
+    user_req=req.user
+
+    if (user.organization_name != user_req.organization_name):
+        raise ValueError("Cannot Approve Requests other than your Organization")
+    
+    req.status='rejected'
+    req.save()
+
+    return True

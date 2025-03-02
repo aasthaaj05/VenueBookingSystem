@@ -468,6 +468,25 @@ def accept_pending_forward_requests(request):
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
     
+def decline_pending_forward_requests(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST method allowed"}, status=405)
+
+    data = json.loads(request.body)
+    req_id=data.get('req_id')
+    if not req_id:
+        return JsonResponse({'error': 'Missing request ID'}, status=400)
+    user_id=data.get('user_id')
+    if not user_id:
+        return JsonResponse({'error': 'Missing user ID'}, status=400)
+    
+    try:
+        res = booking_service.declineForwardRequest(req_id, user_id)
+        return JsonResponse({'success': res})
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=400)
+    
+    
 
 @csrf_exempt
 def get_pending_forward_requests(request):
