@@ -1,56 +1,30 @@
-from django.shortcuts import render
-
-# Create your views here.
-
-from django.contrib.auth import authenticate, login
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import CustomUser
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
-
-
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+import re
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-from django.contrib.auth import authenticate, login
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import LoginSerializer
 
-from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import LoginSerializer
+from .models import CustomUser
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 
-
-from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
 
 CustomUser = get_user_model()
 
 def store_user_session(request, email):
+    print('in store user session function part 1')
     user = get_object_or_404(CustomUser, email=email)  # Fetch user by email
+
+    print('in store user session function part 2')
     
     # Storing user details in session
     request.session['user_id'] = str(user.id)  # Store UUID as string
@@ -62,15 +36,11 @@ def store_user_session(request, email):
     request.session['is_active'] = user.is_active
     request.session['created_at'] = user.created_at.strftime('%Y-%m-%d %H:%M:%S')
 
+    print('in store user session function part 3')
+
     return JsonResponse({"message": "User details stored in session successfully"})
 
 
-
-
-
-
-
-from django.http import JsonResponse
 
 def print_all_session_data(request):
     """Function to print all session data in the console."""
@@ -89,7 +59,7 @@ def print_all_session_data(request):
 
 @api_view(['GET', 'POST'])  # Accept both GET and POST
 def login_view(request):
-    print('pppppppppppppppppppppppppppppppppppppppp')
+    print('in login_view function\n\n')
     # Handle GET request (render the login page)
     if request.method == 'GET':
         return render(request, 'users/login.html')  # Replace with your actual template path
@@ -127,7 +97,7 @@ def login_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     else:
-        print('iufoijfoisfoijdjijgodjidoj')
+        print('in else part of login_view function')
         # Handle traditional form submission
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -138,7 +108,9 @@ def login_view(request):
 
         request.session['email'] = username
 
+        print('login_view part1')
         store_user_session(request , username)
+        print('login_view part2')
 
 
         print_all_session_data(request)
@@ -151,39 +123,12 @@ def login_view(request):
             return render(request, 'users/login.html', {'error': 'Invalid credentials'})
         
         login(request, user)
-        print('dkcfooiduvodgodugod')
+        print('user logged in! .. login_view func')
         # Redirect to dashboard or home page after successful login
         return redirect('/users/home')  # Replace with your actual success redirect URL name
 
 
 
-
-
-
-
-
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.contrib.auth import login
-from django.contrib import messages
-import re
-
-
-
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib.auth import login
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import RegisterSerializer
 
 @api_view(['GET', 'POST'])
 def register_view(request):
@@ -202,7 +147,7 @@ def register_view(request):
             login(request, user)
             print('User auto logged from register_view in successfully')
 
-            # ✅ Storing user details in session
+            # Storing user details in session
             request.session['user_id'] = str(user.id)  # Store UUID as string
             request.session['name'] = user.name
             request.session['email'] = user.email
@@ -216,13 +161,7 @@ def register_view(request):
             return redirect('/users/home')  # Change 'dashboard' to your actual view name
 
         # If validation fails, re-render the form with errors
-        print('oziufoisuffsffpf')
         return render(request, 'users/register.html', {'errors': serializer.errors})
-
-
-    
-    
-
 
 
 
@@ -236,69 +175,48 @@ def get_users(request):
 
 
 
-
-from django.shortcuts import render
-
 def home(request):
     return render(request, 'users/home.html')
 
 
 
-
-from django.shortcuts import render
-
-# def calendar_view(request):
-#     if request.method == 'GET':
-#         return render(request, 'users/calendar.html')
-#     return render(request, 'users/calendar.html')
-
-from django.http import HttpResponse
-
 def calendar_view(request):
+    print('222222222')
     if request.method == "GET":
         return render(request, 'users/calendar.html')
     
     # If it's a POST request, check if there's a redirect happening here
     if request.method == "POST":
+        print()
+        print()
+        print('in caledar_view function')
+        return render(request, 'users/calendar.html')
         print("Inside calendar_view POST request")
         return HttpResponse("Calendar POST request received")  # Debugging
 
-
-
-from django.shortcuts import render
-from django.http import JsonResponse
-import json
 
 def index(request):
     return render(request, 'users/calendar.html')
 
 
 
-from django.views.decorators.csrf import csrf_exempt
-
-
-
-
 @csrf_exempt  # Disable CSRF protection for this view
 def submit_booking(request):
-    print('fojdofudogjoejg')
+    print('in submit_booking function')
     if request.method == 'POST':
         try:
-            print('iiiii')
+            print('in try method .. submit_booking func')
             data = json.loads(request.body)  # Receive JSON data from frontend
             print('data : ', data)
             selected_date = data.get('date')
             selected_time = data.get('time')
 
-            print(data)
-
-            print('fjjfof')
+            print(data) 
 
             if not selected_date or not selected_time:
                 return JsonResponse({'message': 'Invalid input'}, status=400)
 
             print(f"Booking received - Date: {selected_date}, Time: {selected_time}")
-
             
 
             return JsonResponse({

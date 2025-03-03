@@ -187,10 +187,10 @@
                     </ul>
                 </div>
             </div>
-            <form action="{% url 'book_venue' %}" method="POST">
+            <form action="{% url 'calendar' %}" method="POST">
                 {% csrf_token %}
                 <input type="hidden" name="venue_name" value="{{ venue.name }}">
-                <button type="submit">Book Now</button>
+                <button type="submit">Book Now99999999</button>
             </form>
         </div>
         {% endfor %}
