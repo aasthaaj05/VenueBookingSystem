@@ -304,6 +304,43 @@ from .models import Request, RejectedBooking
 from .serializers import RejectedBookingSerializer
 
 
+
+'''
+class RejectedBooking(models.Model):
+    rejection_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    request = models.OneToOneField(
+        Request, 
+        on_delete=models.CASCADE, 
+        related_name="rejected_request"  # ✅ Unique related_name to avoid conflict
+    )  
+    user = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.CASCADE, 
+        related_name="rejected_requests"  # ✅ Unique related_name
+    )  
+    date = models.DateField()
+    time = models.IntegerField()
+    duration = models.IntegerField()
+    
+    venue = models.ForeignKey(
+        Venue, 
+        on_delete=models.CASCADE, 
+        related_name="rejected_venues"  # ✅ Unique related_name
+    )  
+    
+    event_details = models.TextField()
+    rejection_reason = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Rejected Booking {self.rejection_id} by {self.user} for {self.venue} on {self.date}"
+
+
+'''
+
+
+
 def decline_request(request, request_id):
     if request.method == "POST":
         req = get_object_or_404(Request, request_id=request_id)
@@ -341,6 +378,73 @@ def decline_request(request, request_id):
             messages.error(request, "Error declining request.")
 
     return redirect('/gymkhana/request_booking')
+
+
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from .models import Venue
+import uuid
+import json
+
+import uuid
+import json
+from datetime import datetime
+
+def add_venue(request):
+    if request.method == "GET":
+        return render(request, "gymkhana/add_venue.html")  # Replace "template_name.html" with your actual template file.
+
+    if request.method == "POST":
+
+        print(f"Request Body: {request.body.decode('utf-8')}")
+        print(f"Request POST Data: {request.POST}")
+
+        venue_name = request.POST.get("venue_name")
+        description = request.POST.get("description")
+        photo_url = request.POST.get("photo_url")
+        capacity = request.POST.get("capacity")
+        address = request.POST.get("address")
+        facilities = request.POST.get("facilities")
+        department_incharge_id = request.POST.get("department_incharge")
+
+        print('type of facilities : ',type(facilities))
+
+        facilities=json.loads(facilities),  # Expecting JSON format
+
+
+        # Debugging: Print values
+        print('in add_venue func')
+        print(f"Venue Name: {venue_name}")
+        print(f"Description: {description}")
+        print(f"Photo URL: {photo_url}")
+        print(f"Capacity: {capacity}")
+        print(f"Address: {address}")
+        print(f"Facilities: {facilities}")
+        print(f"Department Incharge ID: {department_incharge_id}")
+
+        try:
+            venue = Venue.objects.create(
+                id=str(uuid.uuid4()),
+                venue_name=venue_name,
+                description=description,
+                photo_url=photo_url,
+                capacity=int(capacity),
+                address=address,
+                
+                facilities = [item.strip() for item in facilities.split(",")] if facilities else [],
+                department_incharge_id=department_incharge_id,
+                created_at=datetime.now(),  # Manually setting current datetime
+                updated_at=datetime.now()   # Manually setting current datetime
+            )
+            print('in try .. in add_venue func')
+            return JsonResponse({"message": "Venue added successfully!"}, status=201)
+        except Exception as e:
+            print('in exception .. add_venue func')
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return render(request, "add_venue.html")
 
 
 

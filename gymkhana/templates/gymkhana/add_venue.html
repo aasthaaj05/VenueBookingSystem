@@ -1,0 +1,57 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Venue</title>
+    <link rel="stylesheet" href="{% static 'users/css/login.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/nav.css' %}">
+    <script src="{% static 'users/js/nav.js' %}" defer></script>
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="#" class="logo">Venue Booking System</a>
+        <ul class="nav-links">
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Services</a></li>
+            <li><a href="#">About Us</a></li>
+            <li><a href="#">Contact Us</a></li>
+        </ul>
+    </nav>
+    
+    <div class="wrapper">
+        <h2>Add Venue</h2>
+        <form action="{% url 'add_venue' %}" method="POST">
+            {% csrf_token %}
+            <div class="input-box">
+                <input id="venue_name" name="venue_name" type="text" placeholder="Enter venue name" required>
+            </div>
+            <div class="input-box">
+                <input id="description" name="description" type="text" placeholder="Enter description" required>
+            </div>
+            <div class="input-box">
+                <input id="photo_url" name="photo_url" type="url" placeholder="Enter photo URL" required>
+            </div>
+            <div class="input-box">
+                <input id="capacity" name="capacity" type="number" placeholder="Enter capacity" required>
+            </div>
+            <div class="input-box">
+                <input id="address" name="address" type="text" placeholder="Enter address" required>
+            </div>
+            <div class="input-box">
+                <input id="facilities" name="facilities" type="text" placeholder="Enter facilities (comma separated)" required>
+            </div>
+            <div class="input-box">
+                <input id="department_incharge" name="department_incharge" type="text" placeholder="Enter department in charge" required>
+            </div>
+            <div class="input-box button">
+                <input type="submit" value="Add Venue">
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>

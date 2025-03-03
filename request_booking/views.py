@@ -1,11 +1,50 @@
 from django.shortcuts import render
-
-# Create your views here.
-
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from services import booking_service
+from django.http import JsonResponse
+from django.db.models import Q
+from datetime import datetime, timedelta
+from .models import Venue
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from datetime import datetime, timedelta
+from .models import  Venue
+from gymkhana.models import Booking
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import json
+from .models import Venue
+
+
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+
+import sys
+from django.http import HttpResponse
+
+import traceback
+
+from django.http import HttpResponse
+
+from django.shortcuts import render
+
+from django.shortcuts import render
+from django.http import HttpResponseNotAllowed
+
+
+
+from django.shortcuts import render
+from django.http import HttpResponseNotAllowed
+
+from django.shortcuts import render
+from django.http import HttpResponseNotAllowed
+from gymkhana.models import Venue  
+
+
 
 # Get list of venues
 def get_venues(request):
@@ -15,6 +54,7 @@ def get_venues(request):
         return JsonResponse(venues, safe=False)
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
+
 
 # Get details of a specific venue
 def get_venue_details(request, venue_id):
@@ -27,28 +67,6 @@ def get_venue_details(request, venue_id):
         return JsonResponse({'error': str(e)}, status=400)
 
 
-from django.http import JsonResponse
-from django.db.models import Q
-from datetime import datetime, timedelta
-from .models import Venue
-
-
-
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from datetime import datetime, timedelta
-from .models import  Venue
-from gymkhana.models import Booking
-
-
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from .models import Venue
 
 @csrf_exempt  # Disable CSRF protection for testing (remove in production)
 def get_available_slots(request):
@@ -69,11 +87,6 @@ def get_available_slots(request):
             print('start_date : ' , start_date)
 
             print(f"Start Date: {start_date}, End Date: {end_date}")
-
-
-
-            # start_time_str = request.POST.get("start_time")  # e.g., "6:00 PM"
-            # end_time_str = request.POST.get("end_time")      # e.g., "7:00 PM"
 
             start_time_str = data.get("start_time")  # e.g., "6:00 PM"
             end_time_str = data.get("end_time")      # e.g., "7:00 PM"
@@ -130,18 +143,13 @@ def get_available_slots(request):
 
                 # Store in session to access in the next view
             request.session['all_slots'] = all_slots
-
-            print('1111111111111111')
-
           
       
 
             return JsonResponse({
                 "message": "Booking successful",
-                "redirect_url": "/request_booking/user_dashboard"
+                "redirect_url": "/request_booking/process_booking"
             })
-            
-           
 
 
         except json.JSONDecodeError:
@@ -150,11 +158,6 @@ def get_available_slots(request):
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
 
-
-
-
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
 
 # Sample venue data (Replace with database queries)
 venues = [
@@ -186,33 +189,11 @@ def book_venue(request):
     
 
 
-from django.shortcuts import render
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
-
-
-import sys
-from django.http import HttpResponse
-
-import traceback
-
-from django.http import HttpResponse
-
-
-
-
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
 def user_dashboard(request):
     if request.method == "GET":
         print("Inside user_dashboard view")
         print("Request path:", request.path)
         print("Request headers:", request.headers)
-        print('ooooooooooooooooooooo')
 
         # Store in session to access in the next view
         all_slots = request.session['all_slots'] 
@@ -239,12 +220,6 @@ def user_dashboard(request):
     return HttpResponseNotAllowed(['GET'])
 
 
-
-
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-from gymkhana.models import Venue  # Replace 'your_app' with your actual app name
 
 
 def user_dashboard(request):
