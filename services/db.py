@@ -6,47 +6,7 @@ import uuid
 
 
 # ✅ Get venue details as JSON
-def getVenueDetailsFromDB(venue_id):
-    query = """
-                SELECT *
-                FROM gymkhana_venue
-                WHERE gymkhana_venue.id=%s
-            """
-    with connection.cursor() as cursor:
-        cursor.execute(query, (venue_id,))
-        columns = [col[0] for col in cursor.description]  # ✅ Get column names
-        result = [dict(zip(columns, row)) for row in cursor.fetchall()]  # ✅ Convert to list of dicts
-
-    return result  # ✅ Returns JSON-like list of dictionaries
-
-# ✅ Get user requests as JSON
-def getUserRequestsFromDB(user_id):
-    query = """
-                SELECT r.request_id, r.date, r.time, r.duration, r.status, v.venue_name
-                FROM request_booking_request r 
-                JOIN gymkhana_venue v ON r.venue_id = v.id
-                WHERE r.user_id=%s;
-            """
-    with connection.cursor() as cursor:
-        cursor.execute(query, (user_id,))
-        columns = [col[0] for col in cursor.description]  # ✅ Get column names
-        result = [dict(zip(columns, row)) for row in cursor.fetchall()]  # ✅ Convert to list of dicts
-
-    return result  # ✅ Returns JSON-like list of dictionaries
-
-# ✅ Get booked slots as JSON
-def getBookedSlotsFromDB(venue_id, start_date, end_date):
-    query = """
-            SELECT r.date, r.time, r.duration
-            FROM gymkhana_booking r
-            WHERE (r.venue_id = %s) AND (r.date BETWEEN %s AND %s);
-            """
-    with connection.cursor() as cursor:
-        cursor.execute(query, (venue_id, start_date, end_date))
-        columns = [col[0] for col in cursor.description]  # ✅ Get column names
-        result = [dict(zip(columns, row)) for row in cursor.fetchall()]  # ✅ Convert to list of dicts
-
-    return result  # ✅ Returns JSON-like list of dictionaries
+# ✅ Returns JSON-like list of dictionaries
 
 
 
