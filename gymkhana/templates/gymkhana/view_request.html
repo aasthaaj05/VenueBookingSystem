@@ -70,7 +70,10 @@
                             </form>
             
                             <!-- Decline Button Opens a Modal -->
-                            <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Decline</button>
+                            <form method="POST" action="{% url 'decline_request' request.request_id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn approve-btn">Reject</button>
+                            </form>
                         {% endif %}
                     </td>
                 </tr>
