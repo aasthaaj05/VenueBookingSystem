@@ -577,3 +577,26 @@ def booking_status(request):
 
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
 
+
+from django.shortcuts import render
+from .models import Venue
+
+def venue_list(request):
+    # Fetch all venue details
+    venues = Venue.objects.all()
+
+    # Format venue data for the template
+    venue_data = []
+    for venue in venues:
+        venue_data.append({
+            "name": venue.venue_name,
+            "capacity": venue.capacity,
+            "facilities": venue.facilities,  # This is a list (JSONField)
+            "images": venue.photo_url.split(',') if venue.photo_url else [],  # Assuming multiple images are comma-separated
+        })
+
+    context = {
+        'venues': venue_data
+    }
+
+    return render(request, 'request_booking/user_dashboard.html', context)  # Replace 'your_template.html' with your actual template filename

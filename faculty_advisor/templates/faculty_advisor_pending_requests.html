@@ -20,8 +20,8 @@
         <ul class="nav-links">
             <li><a href="{% url 'home' %}">Dashboard</a></li>
             <li><a href="{% url 'get_pending_forward_requests' %}">Pending Requests</a></li>
-            <li><a href="{% url 'reports' %}">Reports</a></li>
-            <li><a href="{% url 'logout' %}">Logout</a></li>
+            <li><a href="{% url 'home' %}">home</a></li>
+            <li><a href="{% url 'home' %}">Logout</a></li>
         </ul>
     </nav>
 
@@ -41,14 +41,20 @@
             <tbody>
                 {% for request in pending_requests %}
                 <tr id="row-{{ request.request_id }}">
-                    <td>{{ request.user.username }}</td>
-                    <td>{{ request.venue.venue_name }}</td>
+                    <td>{{ request.user_name }}</td>
+                    <td>{{ request.venue_name }}</td>
                     <td>{{ request.date }}</td>
                     <td>{{ request.duration }} hours</td>
                     <td>{{ request.event_details }}</td>
                     <td>
-                        <button class="btn accept-btn" onclick="handleRequest('{{ request.request_id }}', 'accept')">Accept</button>
-                        <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Decline</button>
+                        <form method="POST" action="{% url 'accept_pending_forward_requests' request.RequestID %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn approve-btn">Approve</button>
+                        </form>
+                        <form method="POST" action="{% url 'decline_pending_forward_requests' request.RequestID %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn approve-btn">Decline</button>
+                        </form>
                     </td>
                 </tr>
                 {% empty %}
