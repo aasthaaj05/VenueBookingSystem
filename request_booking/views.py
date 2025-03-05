@@ -99,6 +99,10 @@ def get_available_slots(request):
             start_time = datetime.strptime(start_time_str, time_format)
             end_time = datetime.strptime(end_time_str, time_format)
 
+            print()
+            print()
+            print('in ')
+
             # Calculate duration in hours
             duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
 
@@ -108,6 +112,13 @@ def get_available_slots(request):
             print('-----')
             print('duration : ' , duration)
 
+            print()
+            print()
+            print('in get_available_slots fuc ')
+            print('start_date : ' , start_date)
+            print('end date : ' , end_date)
+            print('start time : ' , start_time)
+            print('end time : ' , end_time)
             print()
             print()
 
@@ -148,7 +159,7 @@ def get_available_slots(request):
 
             return JsonResponse({
                 "message": "Booking successful",
-                "redirect_url": "/request_booking/process_booking"
+                "redirect_url": "/request_booking/book_venue"
             })
 
 
@@ -180,44 +191,44 @@ def venue_list(request):
 
 
 
-@csrf_exempt
-def book_venue(request):
-    if request.method == "POST":
-        venue_name = request.POST.get("venue_name")
-        # Process the booking logic here (e.g., save to the database)
-        return redirect('venue_list')  # Redirect back to venue list
+# @csrf_exempt
+# def book_venue(request):
+#     if request.method == "POST":
+#         venue_name = request.POST.get("venue_name")
+#         # Process the booking logic here (e.g., save to the database)
+#         return redirect('venue_list')  # Redirect back to venue list
     
 
 
-def user_dashboard(request):
-    if request.method == "GET":
-        print("Inside user_dashboard view")
-        print("Request path:", request.path)
-        print("Request headers:", request.headers)
+# def user_dashboard(request):
+#     if request.method == "GET":
+#         print("Inside user_dashboard view")
+#         print("Request path:", request.path)
+#         print("Request headers:", request.headers)
 
-        # Store in session to access in the next view
-        all_slots = request.session['all_slots'] 
+#         # Store in session to access in the next view
+#         all_slots = request.session['all_slots'] 
 
-        print(all_slots)
+#         print(all_slots)
 
-        venues = [
-            {
-                "name": "Grand Hall",
-                "capacity": 500,
-                "facilities": ["Parking", "Stage", "Lighting"],
-                "images": ["/static/images/hall1.jpg", "/static/images/hall2.jpg"]
-            },
-            {
-                "name": "Conference Room",
-                "capacity": 150,
-                "facilities": ["Projector", "AC", "Wifi"],
-                "images": ["/static/images/room1.jpg", "/static/images/room2.jpg"]
-            }
-        ]
+#         venues = [
+#             {
+#                 "name": "Grand Hall",
+#                 "capacity": 500,
+#                 "facilities": ["Parking", "Stage", "Lighting"],
+#                 "images": ["/static/images/hall1.jpg", "/static/images/hall2.jpg"]
+#             },
+#             {
+#                 "name": "Conference Room",
+#                 "capacity": 150,
+#                 "facilities": ["Projector", "AC", "Wifi"],
+#                 "images": ["/static/images/room1.jpg", "/static/images/room2.jpg"]
+#             }
+#         ]
 
-        return render(request, 'request_booking/user_dashboard.html', {"venues": venues})
+#         return render(request, 'request_booking/user_dashboard.html', {"venues": venues})
 
-    return HttpResponseNotAllowed(['GET'])
+#     return HttpResponseNotAllowed(['GET'])
 
 
 
@@ -437,11 +448,16 @@ from .models import Venue, Request
 
 @csrf_exempt
 def book_venue(request):
+    print()
+    print()
+    print("in book_venue func...")
+    print()
+    print()
     """Handles venue selection and preloads user session details."""
     if request.method == "POST":
         print('in book_venue function')
-        venue_name = request.POST.get("venue_name")
-        print(f"Venue selected: {venue_name}")
+        # venue_name = request.POST.get("venue_name")
+        # print(f"Venue selected: {venue_name}")
 
         # Print session data for debugging
         print("Session Data:", request.session.items())
@@ -464,6 +480,31 @@ def book_venue(request):
             "user_data": user_data  # Passing session data to prefill the form
         })
 
+    if request.method == "GET":
+        print("in GET GET book_venue func...")
+        # Print session data for debugging
+        print("Session Data:", request.session.items())
+        print(request.session.get("name"))
+
+        venue_name = request.session.get("venue_name")
+
+        print("Venue name stored in session:", venue_name)  # Debugging print
+
+
+        # Fetch user details from session
+        user_data = {
+            "name": request.session.get("name"),  # Full name from session
+            "email": request.session.get("email"),
+            "organization_name": request.session.get("organization_name"),
+        }
+
+        print('user data : ' , user_data)
+        
+        return render(request, "request_booking/booking_form.html", {
+            "venue": venue_name,
+            "user_data": user_data  # Passing session data to prefill the form
+        })
+
 
 
 
@@ -474,8 +515,10 @@ from django.utils.timezone import now  # Handles timezone-aware datetime
 
 @csrf_exempt
 def process_booking(request):
+    print('process_booking func : request --> ',request)
     """Processes the booking request and saves details in the database."""
     if request.method == "POST":
+        print('POST : process_booking func : request --> ',request)
         data = {
             "event_type": request.POST.get("eventType"),
             "other_event_type": request.POST.get("otherEventType"),
@@ -498,6 +541,23 @@ def process_booking(request):
         current_time = now().time()
         time_in_hours = current_time.hour  # Extract hour as an integer
 
+        print('in process_booking func : before Request.objects.create')
+
+        print('curr_date : ', now().date())
+
+        current_time = datetime.now()
+        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S.%f")  # Microseconds included
+        print('formatted_time',formatted_time)
+
+        # print('session : ' , request.session)
+        print("Session Data (JSON Format):", json.dumps(dict(request.session), indent=4))  # JSON format
+        # print("Session Data (Pretty Print):")
+        # pprint(dict(request.session))  # Pretty print
+
+        session_dict = json.dumps(dict(request.session))
+        print('type of session_dict' , type(session_dict))
+
+        # booked_date 
 
         Request.objects.create(
             user=request.user,
@@ -508,10 +568,14 @@ def process_booking(request):
             need=data["purpose"],
             event_details=data["event_type"],
             status="pending",
+            created_at = formatted_time,
         )
 
+        print('in process_booking func : after Request.objects.create')
 
         return render(request, "request_booking/user_dashboard.html", {"success": True, "venue": data["venue"]})
+
+    
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 
