@@ -44,6 +44,26 @@ from django.shortcuts import render
 from django.http import HttpResponseNotAllowed
 from gymkhana.models import Venue  
 
+from django.http import JsonResponse
+from django.db.models import Q, F
+from datetime import datetime, timedelta
+from .models import Venue
+
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import Venue, Request
+import json
+
+
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Venue, Request
+
+
 
 
 # Get list of venues
@@ -91,8 +111,55 @@ def get_available_slots(request):
             start_time_str = data.get("start_time")  # e.g., "6:00 PM"
             end_time_str = data.get("end_time")      # e.g., "7:00 PM"
 
-            print('start time : ' , start_time_str)
-            print('end time : ' , end_time_str)
+            # start_hour = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S").strftime("%H")
+            # end_hour = datetime.strptime(end_time_str, "%Y-%m-%d %H:%M:%S").strftime("%H")
+
+            # start_time_str = "2025-03-21 6:00 PM"  # Example input
+
+            # date_part, time_part = start_time_str.split(" ")
+            # start_hour = datetime.strptime(time_part, "%I:%M %p").strftime("%H")
+
+            # Example input
+            # start_time_str = "2025-03-21 6:00 PM"
+            # end_time_str = "2025-03-21 7:00 PM"
+
+            # Extract date and time separately
+            # start_date_part, start_time_part = start_time_str.rsplit(" ", 1)  # Split at the last space
+            # end_date_part, end_time_part = end_time_str.rsplit(" ", 1)  # Split at the last space
+
+            # Convert 12-hour format to 24-hour format
+            start_hour = int(datetime.strptime(start_time_str, "%I:%M %p").strftime("%H"))
+            end_hour = int(datetime.strptime(end_time_str, "%I:%M %p").strftime("%H"))
+
+            print()
+            print()
+
+            print("Start Hour:", start_hour)  # Output: "18"
+            print("End Hour:", end_hour)      # Output: "19"
+
+            print("type of Start Hour:", type(start_hour))  # Output: "18"
+            print("type of End Hour:", type(end_hour))      # Output: "19"
+
+            print("Start Hour:", start_hour)  # Output: "18"
+
+            # Print the results
+            print("Start time:", start_hour)
+            print("End time:", end_hour)
+
+            print()
+            print()
+            print()
+
+
+
+            print('start time : ' , start_hour)
+            print('end time : ' , end_hour)
+
+            request.session['start_date'] = start_date
+            request.session['end_date'] = end_date
+            request.session['start_time'] = start_hour
+            request.session['end_time'] = end_hour
+
 
             # Convert string times to datetime objects
             time_format = "%I:%M %p"  # Format for "6:00 PM"
@@ -104,7 +171,11 @@ def get_available_slots(request):
             print('in ')
 
             # Calculate duration in hours
-            duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
+            # duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
+
+            duration = int((int(end_hour) - int(start_hour))) 
+
+            print('in get_available_slots func duration : ' , duration)
 
             # Store duration in session
             request.session["booking_duration"] = duration
@@ -170,65 +241,12 @@ def get_available_slots(request):
 
 
 
-# Sample venue data (Replace with database queries)
-venues = [
-    {
-        "name": "Grand Hall",
-        "capacity": 500,
-        "facilities": ["Parking", "Stage", "Lighting"],
-        "images": ["/static/images/hall1.jpg", "/static/images/hall2.jpg"]
-    },
-    {
-        "name": "Conference Room",
-        "capacity": 150,
-        "facilities": ["Projector", "AC", "Wifi"],
-        "images": ["/static/images/room1.jpg", "/static/images/room2.jpg"]
-    }
-]
 
 def venue_list(request):
     return render(request, 'venues.html', {'venues': venues})
 
 
 
-# @csrf_exempt
-# def book_venue(request):
-#     if request.method == "POST":
-#         venue_name = request.POST.get("venue_name")
-#         # Process the booking logic here (e.g., save to the database)
-#         return redirect('venue_list')  # Redirect back to venue list
-    
-
-
-# def user_dashboard(request):
-#     if request.method == "GET":
-#         print("Inside user_dashboard view")
-#         print("Request path:", request.path)
-#         print("Request headers:", request.headers)
-
-#         # Store in session to access in the next view
-#         all_slots = request.session['all_slots'] 
-
-#         print(all_slots)
-
-#         venues = [
-#             {
-#                 "name": "Grand Hall",
-#                 "capacity": 500,
-#                 "facilities": ["Parking", "Stage", "Lighting"],
-#                 "images": ["/static/images/hall1.jpg", "/static/images/hall2.jpg"]
-#             },
-#             {
-#                 "name": "Conference Room",
-#                 "capacity": 150,
-#                 "facilities": ["Projector", "AC", "Wifi"],
-#                 "images": ["/static/images/room1.jpg", "/static/images/room2.jpg"]
-#             }
-#         ]
-
-#         return render(request, 'request_booking/user_dashboard.html', {"venues": venues})
-
-#     return HttpResponseNotAllowed(['GET'])
 
 
 
@@ -238,7 +256,8 @@ def user_dashboard(request):
         print("Inside user_dashboard view")
         print("Request path:", request.path)
         print("Request headers:", request.headers)
-        print('ooooooooooooooooooooo')
+        print() 
+        print()
 
         # Retrieve stored venue slot availability from the session
         all_slots = request.session.get('all_slots', {})
@@ -263,24 +282,14 @@ def user_dashboard(request):
                 "images": venue['photo_url'].split(",") if venue['photo_url'] else [],  # Convert CSV string to list
             })
 
+        print()
+        print()
+        print('----')
+
         # Pass formatted venue data to the template
         return render(request, 'request_booking/user_dashboard.html', {"venues": formatted_venues})
 
     return HttpResponseNotAllowed(['GET'])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -309,17 +318,6 @@ def get_available_slots_1(request_data):
         return JsonResponse({'error': str(e)}, status=400)
 
     
-
-
-
-
- 
-
-
-from django.http import JsonResponse
-from django.db.models import Q, F
-from datetime import datetime, timedelta
-from .models import Venue
 
 
 
@@ -377,72 +375,7 @@ def get_user_requests(request):
 
 
 
-
-@csrf_exempt
-def accept_pending_forward_requests(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST method allowed"}, status=405)
-
-    data = json.loads(request.body)
-    req_id=data.get('req_id')
-    if not req_id:
-        return JsonResponse({'error': 'Missing request ID'}, status=400)
-    user_id=data.get('user_id')
-    if not user_id:
-        return JsonResponse({'error': 'Missing user ID'}, status=400)
     
-    try:
-        res = booking_service.forwardRequestToGymkhana(req_id, user_id)
-        return JsonResponse({'success': res})
-    except ValueError as e:
-        return JsonResponse({'error': str(e)}, status=400)
-    
-def decline_pending_forward_requests(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Only POST method allowed"}, status=405)
-
-    data = json.loads(request.body)
-    req_id=data.get('req_id')
-    if not req_id:
-        return JsonResponse({'error': 'Missing request ID'}, status=400)
-    user_id=data.get('user_id')
-    if not user_id:
-        return JsonResponse({'error': 'Missing user ID'}, status=400)
-    
-    try:
-        res = booking_service.declineForwardRequest(req_id, user_id)
-        return JsonResponse({'success': res})
-    except ValueError as e:
-        return JsonResponse({'error': str(e)}, status=400)
-    
-    
-
-@csrf_exempt
-def get_pending_forward_requests(request):
-    user_id=request.GET.get('user_id')
-    if not user_id:
-        return JsonResponse({'error': 'Missing user ID'}, status=400)
-    try:
-        result = booking_service.getForwardRequests(user_id)
-        return JsonResponse(result, safe=False)
-    except ValueError as e:
-        return JsonResponse({'error': str(e)}, status=400)
-    
-
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from .models import Venue, Request
-import json
-
-
-
-
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import Venue, Request
-
 
 
 
@@ -465,9 +398,6 @@ def book_venue(request):
 
         # Fetch user details from session
         user_data = {
-            # "name": request.session.get("name", "Name not found"),  # Full name from session
-            # "email": request.session.get("email", "Email not found"),
-            # "organization_name": request.session.get("organization_name", "Organization not found"),
             "name": request.session.get("name"),  # Full name from session
             "email": request.session.get("email"),
             "organization_name": request.session.get("organization_name"),
@@ -528,7 +458,7 @@ def process_booking(request):
             "phone": request.POST.get("phone"),
             "venue": request.POST.get("venue"),
             "guest_count": request.POST.get("guestCount"),
-            "purpose": request.POST.get("additionalRequests"),
+            "purpose": request.POST.get("purpose"),
         }
         print(data)
 
@@ -557,17 +487,54 @@ def process_booking(request):
         session_dict = json.dumps(dict(request.session))
         print('type of session_dict' , type(session_dict))
 
+        if request.user.role in ['club' , 'fests' , 'student_chapter']:
+            status="waiting_for_approval"
+        else:
+            status="pending"
+
+        '''
+        ('club', 'Club'),
+        ('fests', 'Fests'),
+        ('student_chapter', 'Student Chapter'),
+        ('faculty', 'Faculty'),
+        ('HOD', 'HOD'),
+        ('Dean', 'Dean'),
+        ('VC', 'VC'),
+        ('Registrar', 'Registrar'),
+        ('outsider', 'Outsider'),
+        '''
+
         # booked_date 
+
+        print()
+        print()
+        print(f""" in process_booking func
+            Request.objects.create(
+                user={request.user},
+                date={request.session.get('start_date')},  # Store current date
+                time={request.session.get('start_time')},
+                duration={request.session.get("booking_duration")},  
+                venue={venue_obj},
+                need={data["purpose"]},
+                event_details={data["event_type"]},
+                status={status},
+                created_at={formatted_time},
+            )
+            """)
+        print()
+        print()
+
 
         Request.objects.create(
             user=request.user,
-            date=now().date(),  # Store current date
-            time=time_in_hours,  # Convert time to integer
+            date=request.session.get('start_date'),  # Store current date
+            # time=time_in_hours,  # Convert time to integer
+            time = request.session.get('start_time'),
             duration=request.session.get("booking_duration"),  
             venue=venue_obj,
             need=data["purpose"],
             event_details=data["event_type"],
-            status="pending",
+            status=status,
             created_at = formatted_time,
         )
 

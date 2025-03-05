@@ -29,9 +29,7 @@ urlpatterns = [
     
     path("booking_status/", views.booking_status, name="booking_status"),
 
-    path("forward_requests/", views.get_pending_forward_requests, name="get_pending_forward_requests"),
-    path("forward_requests/<str:req_id>/accept", views.accept_pending_forward_requests, name="accept_pending_forward_requests"),
-    path("forward_requests/<str:req_id>/decline", views.decline_pending_forward_requests, name="decline_pending_forward_requests"),
+
 ]
   
 
