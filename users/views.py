@@ -16,6 +16,8 @@ from rest_framework import status
 from .models import CustomUser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
+from gymkhana.models import Venue
+
 
 
 CustomUser = get_user_model()
@@ -125,7 +127,19 @@ def login_view(request):
         login(request, user)
         print('user logged in! .. login_view func')
         # Redirect to dashboard or home page after successful login
-        return redirect('/users/home')  # Replace with your actual success redirect URL name
+        # return redirect('/users/home')  # Replace with your actual success redirect URL name
+        # print('request.role : ' , request.role)
+        print('request.user.role : ' , request.user.role)
+
+        # faculty_advisor
+
+        # Assuming user role is stored in request.user.role
+        if request.user.role in ["Gymkhana",'gymkhana']:
+            return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
+        elif request.user.role in ["faculty_advisor",'Faculty_advisor']:
+            return redirect('/faculty_advisor/faculty_advisor_dashboard')  # Redirect Gymkhana users to a different page
+        else:
+            return redirect('/users/home')  # Default redirection for other users
 
 
 
@@ -158,7 +172,16 @@ def register_view(request):
             request.session['created_at'] = user.created_at.strftime('%Y-%m-%d %H:%M:%S')
             
             # Redirect to dashboard or login page after successful registration
-            return redirect('/users/home')  # Change 'dashboard' to your actual view name
+            # return redirect('/users/home')  # Change 'dashboard' to your actual view name
+            # Assuming user role is stored in request.user.role
+
+            print('request.user.role : ' , user.role)
+            if user.role in ["Gymkhana",'gymkhana']:
+                return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
+            elif user.role in ["faculty_advisor",'Faculty_advisor']:
+                return redirect('/faculty_advisor/faculty_advisor_dashboard')  # Redirect Gymkhana users to a different page
+            else:
+                return redirect('/users/home')  # Default redirection for other users
 
         # If validation fails, re-render the form with errors
         return render(request, 'users/register.html', {'errors': serializer.errors})
@@ -178,6 +201,43 @@ def get_users(request):
 def home(request):
     return render(request, 'users/home.html')
 
+import json
+
+def print_request_details(request):
+    print("\n----- REQUEST DETAILS -----\n")
+
+    # Print request method and path
+    print(f"Method: {request.method}")
+    print(f"Path: {request.path}")
+    print(f"Content-Type: {request.content_type}")
+
+    # Print headers
+    print("\nHeaders:")
+    for header, value in request.headers.items():
+        print(f"{header}: {value}")
+
+    # Print GET parameters
+    if request.GET:
+        print("\nGET Parameters:")
+        for key, value in request.GET.items():
+            print(f"{key}: {value}")
+
+    # Print POST parameters
+    if request.POST:
+        print("\nPOST Parameters:")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+    # Print raw request body
+    try:
+        body = request.body.decode('utf-8')
+        print("\nRaw Body:", body)
+        if request.content_type == "application/json":
+            print("\nParsed JSON Body:", json.loads(body))  # Pretty print JSON body
+    except json.JSONDecodeError:
+        print("\nBody is not valid JSON")
+
+    print("\n----- END REQUEST DETAILS -----\n")
 
 
 def calendar_view(request):
@@ -192,9 +252,21 @@ def calendar_view(request):
         print('in caledar_view function')
         # session = request.get('venue.name')
         print('request : ', request)
+        print_request_details(request)
         venue_id = request.POST.get("venue_id")  # Get the venue name from the form
+
+        venue_id_no_hyphen = venue_id.replace("-", "")
+        print('venue-id (no hyphen) : ',venue_id_no_hyphen)
         request.session["venue_id"] = venue_id 
         print("Venue id:", venue_id)
+
+
+        venue = get_object_or_404(Venue, id=venue_id)
+        print('venue-name : ',venue.venue_name)  # Output the venue name
+        print()
+        print()
+
+        request.session["venue_name"] = venue.venue_name
 
         print("Venue name stored in session:", request.session.get("venue_name"))  # Debugging print
 

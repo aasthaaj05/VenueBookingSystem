@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Booking System</title>
+    <link rel="stylesheet" href="{% static 'users/css/home.css' %}">
+
+    <!-- Linking JavaScript -->
+    <script src="{% static 'users/js/home.js' %}" defer></script>
+
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="brand">VenueBook</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'request_booking' %}" class="btn signup-btn">View Requests</a></li>
+            
+            <li><a href="{% url 'home' %}#features">FACULTY ADVSIOR</a></li>
+            <li><a href="{% url 'get_pending_forward_requests' %}#about">Bookings</a></li>
+            <li><a href="{% url 'login' %}" class="btn login-btn">Login</a></li>
+            <li><a href="{% url 'register' %}" class="btn signup-btn">Sign Up</a></li>
+            <li><a href="{% url 'register' %}" class="btn signup-btn">Log Out</a></li>
+        </ul>
+    </nav>
+    
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Manage Venue Bookings Seamlessly</h1>
+            <p>Efficient venue management for educational institutions and organizations</p>
+            <div class="cta-buttons">
+                <a href="#" class="btn primary-btn">Get Started</a>
+                <a href="#features" class="btn secondary-btn">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2>Key Features</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Venue Dashboard</h3>
+                <p>View all available venues with real-time availability status</p>
+            </div>
+            <div class="feature-card">
+                <h3>Instant Booking</h3>
+                <p>Request and manage bookings with automated approvals</p>
+            </div>
+            <div class="feature-card">
+                <h3>Admin Control</h3>
+                <p>Comprehensive management interface for authorities</p>
+            </div>
+        </div>
+    </section>
+
+    <script src="{% static 'home/js/home.js' %}"></script>
+</body>
+</html>

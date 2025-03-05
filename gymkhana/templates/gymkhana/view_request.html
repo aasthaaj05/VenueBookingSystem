@@ -63,7 +63,7 @@
                         {% endif %}
                     </td>
                     <td class="action-buttons">
-                        {% if request.status == 'pending' %}
+                        {% if request.status in 'pending,waiting_for_approval' %}
                             <form method="POST" action="{% url 'approve_request' request.request_id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn approve-btn">Approve</button>

@@ -50,6 +50,10 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 
+
+def faculty_advisor_dashboard(request):
+    return render(request, "faculty_advisor/faculty_advisor_dashboard.html")  
+
 # Create your views here.
 @csrf_exempt
 def get_pending_forward_requests(request):
@@ -65,7 +69,7 @@ def get_pending_forward_requests(request):
             'user':request.user
         }
         print(result)
-        return render(request, "faculty_advisor_pending_requests.html", context)
+        return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
     
@@ -91,7 +95,10 @@ def accept_pending_forward_requests(request, req_id):
         return JsonResponse({'success': res})
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
-    
+
+
+
+
 def decline_pending_forward_requests(request, req_id):
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method allowed"}, status=405)

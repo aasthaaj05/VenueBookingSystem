@@ -25,6 +25,8 @@ class CustomUser(AbstractBaseUser):
         ('VC', 'VC'),
         ('Registrar', 'Registrar'),
         ('outsider', 'Outsider'),
+        ('gymkhana', 'Gymkhana'),
+        ('faculty_advisor', 'Faculty_advisor'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

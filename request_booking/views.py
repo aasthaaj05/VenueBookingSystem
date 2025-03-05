@@ -87,12 +87,56 @@ def get_venue_details(request, venue_id):
         return JsonResponse({'error': str(e)}, status=400)
 
 
+import json
+
+def print_request_details(request):
+    print("\n----- REQUEST DETAILS -----\n")
+
+    # Print request method and path
+    print(f"Method: {request.method}")
+    print(f"Path: {request.path}")
+    print(f"Content-Type: {request.content_type}")
+
+    # Print headers
+    print("\nHeaders:")
+    for header, value in request.headers.items():
+        print(f"{header}: {value}")
+
+    # Print GET parameters
+    if request.GET:
+        print("\nGET Parameters:")
+        for key, value in request.GET.items():
+            print(f"{key}: {value}")
+
+    # Print POST parameters
+    if request.POST:
+        print("\nPOST Parameters:")
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+    # Print raw request body
+    try:
+        body = request.body.decode('utf-8')
+        print("\nRaw Body:", body)
+        if request.content_type == "application/json":
+            print("\nParsed JSON Body:", json.loads(body))  # Pretty print JSON body
+    except json.JSONDecodeError:
+        print("\nBody is not valid JSON")
+
+    print("\n----- END REQUEST DETAILS -----\n")
+
+
 
 @csrf_exempt  # Disable CSRF protection for testing (remove in production)
 def get_available_slots(request):
     if request.method == "POST":
         try:
+            print()
+            print()
+            print('in get_available_lots')
+            print_request_details(request)
             print('Request received:', request)
+            reques
 
             # Parse JSON data from request body
             data = json.loads(request.body.decode("utf-8"))  # Correct way to parse JSON
@@ -246,21 +290,44 @@ def get_available_slots(request):
 #     return render(request, 'venues.html', {'venues': venues})
 
 
-@csrf_exempt
+# @csrf_exempt
+# def getUnavailableSlots(request):
+#     if request.method == "GET":
+#         return JsonResponse({"error": "Invalid request method"}, status=405)
+
+#     try:
+#         venue_name=request.session.get('venue_name')
+#         print("VENUE_NAME:", venue_name)
+#         data=json.loads(request.body)
+#         date=data.get('date')
+#         resp = booking_service.getUnavailableSlots(venue_name, date)
+#         print("unavailable slots: ", resp)
+#         return JsonResponse({'unavailable_slots':resp}, safe=False)
+#     except Exception as e:
+#         return JsonResponse({'error': e}, status=400)
+
+
+import json
+from django.http import JsonResponse
+from django.core.exceptions import ObjectDoesNotExist
+
 def getUnavailableSlots(request):
     if request.method == "GET":
         return JsonResponse({"error": "Invalid request method"}, status=405)
 
     try:
-        venue_name=request.session.get('venue_name')
+        venue_name = request.session.get('venue_name')
         print("VENUE_NAME:", venue_name)
-        data=json.loads(request.body)
-        date=data.get('date')
+        data = json.loads(request.body)
+        date = data.get('date')
         resp = booking_service.getUnavailableSlots(venue_name, date)
         print("unavailable slots: ", resp)
-        return JsonResponse({'unavailable_slots':resp}, safe=False)
+        return JsonResponse({'unavailable_slots': resp}, safe=False)
+    except ObjectDoesNotExist as e:
+        return JsonResponse({'error': "Requested object does not exist"}, status=400)
     except Exception as e:
-        return JsonResponse({'error': e}, status=400)
+        return JsonResponse({'error': str(e)}, status=400)  # Convert exception to string
+
 
 
 
@@ -285,6 +352,7 @@ def user_dashboard(request):
 
         # Map the venue data with availability
         formatted_venues = []
+
 
         for venue in venues:
             venue_name = venue['venue_name']

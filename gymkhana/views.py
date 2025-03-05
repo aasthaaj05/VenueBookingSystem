@@ -7,6 +7,59 @@ from rest_framework import status
 from .models import Venue
 from .serializers import VenueSerializer
 
+
+import uuid
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Request, RejectedBooking
+from .serializers import RejectedBookingSerializer
+
+##----------------------------------
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Request, Booking, Rejection
+from .serializers import RequestSerializer, BookingSerializer, RejectionSerializer
+from django.views.decorators.csrf import csrf_exempt
+
+
+from django.shortcuts import get_list_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from collections import defaultdict
+from .models import Request
+from .serializers import RequestSerializer
+
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from collections import defaultdict
+from .models import Request, Venue
+from .serializers import RequestSerializer
+
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from collections import defaultdict
+from .models import Request, Venue
+from .serializers import RequestSerializer
+from users.models import CustomUser
+
+
+from django.shortcuts import render
+from .models import Request
+from django.db.models import Q
+
+
+
 @api_view(['POST'])
 def create_venue(request):
     """
@@ -22,21 +75,6 @@ def create_venue(request):
 
 
 
-
-
-
-
-
-
-##----------------------------------
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from .models import Request, Booking, Rejection
-from .serializers import RequestSerializer, BookingSerializer, RejectionSerializer
-from django.views.decorators.csrf import csrf_exempt
 
 
 @api_view(['POST'])
@@ -118,27 +156,6 @@ def cancel_request(request, request_id):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-from django.shortcuts import get_list_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from collections import defaultdict
-from .models import Request
-from .serializers import RequestSerializer
-
 @api_view(['GET'])
 # @permission_classes([IsAuthenticated])
 def pending_requests_by_date(request):
@@ -159,24 +176,6 @@ def pending_requests_by_date(request):
     return Response(grouped_requests, status=status.HTTP_200_OK)
 
 
-
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from collections import defaultdict
-from .models import Request, Venue
-from .serializers import RequestSerializer
-
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from collections import defaultdict
-from .models import Request, Venue
-from .serializers import RequestSerializer
-from users.models import CustomUser
 
 @api_view(['POST'])  # Accept user_id in the request body
 def requests_for_gymkhana(request):
@@ -216,14 +215,16 @@ def requests_for_gymkhana(request):
 
 
 
-
-
-from django.shortcuts import render
-from .models import Request
-
 def request_booking(request):
-    # ✅ Filter requests where status is 'pending'
-    requests = Request.objects.select_related('venue', 'user').filter(status="pending")  
+    # ✅ Filter reques  ts where status is 'pending'
+    # requests = Request.objects.select_related('venue', 'user').filter(status="pending")  
+
+
+    # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
+    requests = Request.objects.select_related('venue', 'user').filter(
+        Q(status="pending") | Q(status="waiting_for_approval")
+    )
+
 
     context = {
         'requests': [
@@ -295,49 +296,6 @@ def approve_request(request, request_id):
     return redirect('/gymkhana/request_booking')
 
 
-
-import uuid
-from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from .models import Request, RejectedBooking
-from .serializers import RejectedBookingSerializer
-
-
-
-'''
-class RejectedBooking(models.Model):
-    rejection_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    
-    request = models.OneToOneField(
-        Request, 
-        on_delete=models.CASCADE, 
-        related_name="rejected_request"  # ✅ Unique related_name to avoid conflict
-    )  
-    user = models.ForeignKey(
-        CustomUser, 
-        on_delete=models.CASCADE, 
-        related_name="rejected_requests"  # ✅ Unique related_name
-    )  
-    date = models.DateField()
-    time = models.IntegerField()
-    duration = models.IntegerField()
-    
-    venue = models.ForeignKey(
-        Venue, 
-        on_delete=models.CASCADE, 
-        related_name="rejected_venues"  # ✅ Unique related_name
-    )  
-    
-    event_details = models.TextField()
-    rejection_reason = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Rejected Booking {self.rejection_id} by {self.user} for {self.venue} on {self.date}"
-
-
-'''
 
 
 
@@ -453,7 +411,8 @@ def add_venue(request):
 
 
 
-
+def gymkhana_dashboard(request):
+    return render(request, 'gymkhana/gymkhana_dashboard.html')  # Gymkhana dashboard template
 
 
 

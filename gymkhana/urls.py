@@ -1,6 +1,7 @@
 from django.urls import path
 # from .views import view_faculty_requests, venue_details , create_venue
 from .views import approve_request, reject_request, cancel_request,pending_requests_by_date,create_venue, requests_for_gymkhana,request_booking,add_venue, decline_request
+from . import views
 
 urlpatterns = [
     # path('requests/faculty/', view_faculty_requests, name='view_faculty_requests'),
@@ -18,5 +19,7 @@ urlpatterns = [
     path('decline_request/<str:request_id>/' , decline_request , name="decline_request"),
 
     path("add_venue/", add_venue, name="add_venue"),
+
+    path('dashboard/', views.gymkhana_dashboard, name='gymkhana_dashboard'),
 ]
 
