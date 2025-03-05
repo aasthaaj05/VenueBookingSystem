@@ -184,3 +184,18 @@ def declineForwardRequest(req_id, user_id):
         raise e
     
     return True
+
+def getUnavailableSlots(venue_name, date):
+    try:
+        print("DATE:", date)
+        res = db.getBookedSlotsFromDB1(venue_name, date)
+        json_array=[]
+        for row in res:
+            print("row from data base:" ,row)
+            for i in range(row['duration']):
+                json_array.append(str(row['time']+i)+":00")
+
+    except Exception as e:
+        raise e
+    
+    return json_array

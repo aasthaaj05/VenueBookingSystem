@@ -242,12 +242,25 @@ def get_available_slots(request):
 
 
 
-def venue_list(request):
-    return render(request, 'venues.html', {'venues': venues})
+# def venue_list(request):
+#     return render(request, 'venues.html', {'venues': venues})
 
 
+@csrf_exempt
+def getUnavailableSlots(request):
+    if request.method == "GET":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
 
-
+    try:
+        venue_name=request.session.get('venue_name')
+        print("VENUE_NAME:", venue_name)
+        data=json.loads(request.body)
+        date=data.get('date')
+        resp = booking_service.getUnavailableSlots(venue_name, date)
+        print("unavailable slots: ", resp)
+        return JsonResponse({'unavailable_slots':resp}, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': e}, status=400)
 
 
 
@@ -268,7 +281,7 @@ def user_dashboard(request):
         venue_names = all_slots.keys()
 
         # Fetch venues from the database
-        venues = Venue.objects.filter(venue_name__in=venue_names).values('venue_name', 'capacity', 'facilities', 'photo_url')
+        venues = Venue.objects.filter(venue_name__in=venue_names).values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
 
         # Map the venue data with availability
         formatted_venues = []
@@ -276,6 +289,7 @@ def user_dashboard(request):
         for venue in venues:
             venue_name = venue['venue_name']
             formatted_venues.append({
+                "id":venue['id'],
                 "name": venue_name,
                 "capacity": venue['capacity'],
                 "facilities": venue['facilities'],  # Assuming it's stored as a list in JSONField
@@ -589,11 +603,14 @@ def venue_list(request):
     venue_data = []
     for venue in venues:
         venue_data.append({
+            "id": venue.id,
             "name": venue.venue_name,
             "capacity": venue.capacity,
             "facilities": venue.facilities,  # This is a list (JSONField)
             "images": venue.photo_url.split(',') if venue.photo_url else [],  # Assuming multiple images are comma-separated
         })
+
+    print("VENUE DETAILS:", venue_data)
 
     context = {
         'venues': venue_data

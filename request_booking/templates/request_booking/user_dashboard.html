@@ -189,7 +189,7 @@
             </div>
             <form action="{% url 'calendar' %}" method="POST">
                 {% csrf_token %}
-                <input type="hidden" name="venue_name" value="{{ venue.name }}">
+                <input type="hidden" name="venue_id" value="{{ venue.id }}">
                 <button type="submit">Book Now99999999</button>
             </form>
         </div>

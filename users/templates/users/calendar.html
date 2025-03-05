@@ -425,18 +425,10 @@
             let selectedEndTime = null;
 
             // Example of unavailable dates (in a real app, these would come from your backend)
-            const unavailableDates = [
-                new Date(2025, 1, 10).toDateString(),
-                new Date(2025, 1, 15).toDateString(),
-                new Date(2025, 1, 20).toDateString()
-            ];
+            const unavailableDates = [];
 
             // Example of dates with events (in a real app, these would come from your backend)
-            const eventsOnDates = [
-                new Date(2025, 1, 5).toDateString(),
-                new Date(2025, 1, 12).toDateString(),
-                new Date(2025, 1, 25).toDateString()
-            ];
+            const eventsOnDates = [];
 
             // Generate month name
             function getMonthName(month) {
@@ -546,68 +538,170 @@
             }
 
             // Show booking time slots
+        //     function showBookingTimeSlots() {
+        //         if (!selectedDate) {
+        //             showNotification('Please select a date first', 'error');
+        //             return;
+        //         }
+
+        //         bookingDateElement.textContent = selectedDate.toLocaleDateString('en-US', {
+        //             weekday: 'long',
+        //             year: 'numeric',
+        //             month: 'long',
+        //             day: 'numeric'
+        //         });
+
+        //         // Reset selections
+        //         selectedStartTime = null;
+        //         selectedEndTime = null;
+        //         bookingSummary.style.display = 'none';
+
+        //         // Generate time slots (in a real app, available slots would come from your backend)
+        //         startTimeContainer.innerHTML = '';
+        //         endTimeContainer.innerHTML = '';
+                
+        //         const startHour = 9; // 9 AM
+        //         const endHour = 21; // 9 PM
+        //         const interval = 1; // 1 hour intervals
+
+        //         fetch("/request_booking/getUnavailableSlots/", {
+        //             method: "POST",
+        //             headers: {
+        //                 "Content-Type": "application/json",
+        //                 "X-CSRFToken": getCookie("csrftoken"), // Ensure CSRF token is included
+        //             },
+        //             body: JSON.stringify({ date: selectDate }),
+        //         })
+        //         .then(response => response.json())
+        //         .then(data => {
+        //             if (data.error) {
+        //                 console.error("Error fetching unavailable slots:", data.error);
+        //                 return;
+        //             }
+        //         }
+
+        //         // Example of unavailable time slots (in a real app, these would come from your backend)
+        //         const unavailableTimeSlots = data.unavailable_slots || [];
+
+
+        //         // Generate start time slots
+        //         for (let hour = startHour; hour < endHour; hour += interval) {
+        //             const timeSlotElement = document.createElement('div');
+        //             timeSlotElement.classList.add('time-slot');
+
+        //             const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+        //             const amPm = hour < 12 ? 'AM' : 'PM';
+        //             const timeString = `${formattedHour}:00 ${amPm}`;
+
+        //             timeSlotElement.textContent = timeString;
+        //             timeSlotElement.dataset.hour = hour;
+
+        //             // Check if this time slot is unavailable
+        //             const militaryFormat = `${hour}:00`;
+        //             if (unavailableTimeSlots.includes(militaryFormat)) {
+        //                 timeSlotElement.classList.add('unavailable');
+        //             } else {
+        //                 // Add click event for available time slots
+        //                 timeSlotElement.addEventListener('click', () => selectStartTime(timeSlotElement, timeString, hour));
+        //             }
+
+        //             startTimeContainer.appendChild(timeSlotElement);
+        //         }
+
+        //         // Show booking info section
+        //         bookingInfo.style.display = 'block';
+
+        //         // Scroll to booking info section
+        //         bookingInfo.scrollIntoView({ behavior: 'smooth' });
+        //     }
+        // }
+
+        // Show booking time slots
             function showBookingTimeSlots() {
                 if (!selectedDate) {
-                    showNotification('Please select a date first', 'error');
+                    showNotification("Please select a date first", "error");
                     return;
                 }
 
-                bookingDateElement.textContent = selectedDate.toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
+                bookingDateElement.textContent = selectedDate.toLocaleDateString("en-US", {
+                    weekday: "long",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
                 });
 
                 // Reset selections
                 selectedStartTime = null;
                 selectedEndTime = null;
-                bookingSummary.style.display = 'none';
+                bookingSummary.style.display = "none";
 
                 // Generate time slots (in a real app, available slots would come from your backend)
-                startTimeContainer.innerHTML = '';
-                endTimeContainer.innerHTML = '';
-                
+                startTimeContainer.innerHTML = "";
+                endTimeContainer.innerHTML = "";
+
                 const startHour = 9; // 9 AM
                 const endHour = 21; // 9 PM
                 const interval = 1; // 1 hour intervals
 
-                // Example of unavailable time slots (in a real app, these would come from your backend)
-                const unavailableTimeSlots = ['12:00', '13:00', '17:00'];
+                const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
-                // Generate start time slots
-                for (let hour = startHour; hour < endHour; hour += interval) {
-                    const timeSlotElement = document.createElement('div');
-                    timeSlotElement.classList.add('time-slot');
 
-                    const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                    const amPm = hour < 12 ? 'AM' : 'PM';
-                    const timeString = `${formattedHour}:00 ${amPm}`;
+                fetch("/request_booking/getUnavailableSlots/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCookie("csrftoken"), // Ensure CSRF token is included
+                    },
+                    body: JSON.stringify({ date: formattedDate }), // Ensure correct date format
+                })
+                    .then((response) => response.json())
+                    .then((data) => {
+                        if (data.error) {
+                            console.error("Error fetching unavailable slots:", data.error);
+                            return;
+                        }
 
-                    timeSlotElement.textContent = timeString;
-                    timeSlotElement.dataset.hour = hour;
+                        // Example of unavailable time slots (from backend)
+                        const unavailableTimeSlots = data.unavailable_slots || [];
+                        console.log("Unavailable dates:", unavailableDates)
+                        // Generate start time slots
+                        for (let hour = startHour; hour < endHour; hour += interval) {
+                            const timeSlotElement = document.createElement("div");
+                            timeSlotElement.classList.add("time-slot");
 
-                    // Check if this time slot is unavailable
-                    const militaryFormat = `${hour}:00`;
-                    if (unavailableTimeSlots.includes(militaryFormat)) {
-                        timeSlotElement.classList.add('unavailable');
-                    } else {
-                        // Add click event for available time slots
-                        timeSlotElement.addEventListener('click', () => selectStartTime(timeSlotElement, timeString, hour));
-                    }
+                            const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                            const amPm = hour < 12 ? "AM" : "PM";
+                            const timeString = `${formattedHour}:00 ${amPm}`;
 
-                    startTimeContainer.appendChild(timeSlotElement);
-                }
+                            timeSlotElement.textContent = timeString;
+                            timeSlotElement.dataset.hour = hour;
 
-                // Show booking info section
-                bookingInfo.style.display = 'block';
+                            // Check if this time slot is unavailable
+                            const militaryFormat = `${hour}:00`;
+                            if (unavailableTimeSlots.includes(militaryFormat)) {
+                                timeSlotElement.classList.add("unavailable");
+                            } else {
+                                // Add click event for available time slots
+                                timeSlotElement.addEventListener("click", () =>
+                                    selectStartTime(timeSlotElement, timeString, hour, unavailableTimeSlots)
+                                );
+                            }
 
-                // Scroll to booking info section
-                bookingInfo.scrollIntoView({ behavior: 'smooth' });
+                            startTimeContainer.appendChild(timeSlotElement);
+                        }
+
+                        // Show booking info section
+                        bookingInfo.style.display = "block";
+
+                        // Scroll to booking info section
+                        bookingInfo.scrollIntoView({ behavior: "smooth" });
+                    })
+                    .catch((error) => console.error("Error fetching data:", error));
             }
 
+
             // Select a start time
-            function selectStartTime(element, timeString, hour) {
+            function selectStartTime(element, timeString, hour, unavailable_slots) {
                 // Remove selected class from previously selected time slot
                 const previouslySelected = startTimeContainer.querySelector('.time-slot.selected');
                 if (previouslySelected) {
@@ -619,14 +713,14 @@
                 selectedStartTime = timeString;
 
                 // Update end time slots based on selected start time
-                updateEndTimeSlots(hour);
+                updateEndTimeSlots(hour, unavailable_slots);
                 
                 // Update booking summary
                 updateBookingSummary();
             }
 
             // Update end time slots based on selected start time
-            function updateEndTimeSlots(startHour) {
+            function updateEndTimeSlots(startHour, unavailableTimeSlots) {
                 endTimeContainer.innerHTML = '';
                 selectedEndTime = null;
 
@@ -634,7 +728,6 @@
                 const interval = 1; // 1 hour intervals
 
                 // Example of unavailable time slots (in a real app, these would come from your backend)
-                const unavailableTimeSlots = ['12:00', '13:00', '17:00'];
 
                 // Generate end time slots (must be after start time)
                 for (let hour = startHour + 1; hour <= endHour; hour += interval) {

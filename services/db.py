@@ -129,6 +129,15 @@ def getBookedSlotsFromDB(venue_id, start_date, end_date):
     ).exclude(status="cancelled")  # Exclude cancelled bookings
     .values('date', 'time', 'duration'))
 
+def getBookedSlotsFromDB1(venue_name, date):
+    venue=Venue.objects.get(venue_name=venue_name)
+    return list(Booking.objects.filter(
+        venue=venue, 
+        date=date
+    ).exclude(status="cancelled")  # Exclude cancelled bookings
+    .values('date', 'time', 'duration'))
+
+
 
 def cancelRequestFromDB(req_id):
     try:
