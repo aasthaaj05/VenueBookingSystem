@@ -190,6 +190,13 @@ def calendar_view(request):
         print()
         print()
         print('in caledar_view function')
+        # session = request.get('venue.name')
+        print('request : ', request)
+        venue_name = request.POST.get("venue_name")  # Get the venue name from the form
+        request.session["venue_name"] = venue_name  
+
+        print("Venue name stored in session:", request.session.get("venue_name"))  # Debugging print
+
         return render(request, 'users/calendar.html')
         print("Inside calendar_view POST request")
         return HttpResponse("Calendar POST request received")  # Debugging

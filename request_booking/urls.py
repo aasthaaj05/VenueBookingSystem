@@ -23,7 +23,6 @@ urlpatterns = [
     path('calendar/', views.get_available_slots, name='get_available_slots'),
     path('book/', views.book_venue, name='book_venue'),
     path('user_dashboard/', views.user_dashboard, name='user_dashboard'),  
-    # path('requests/<uuid:pk>/', views.RequestDetailView.as_view(), name='request-detail'),
 
     path("book_venue/", views.book_venue, name="book_venue"),
     path("process_booking/", views.process_booking, name="process_booking"),
