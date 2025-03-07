@@ -17,13 +17,14 @@ def faculty_advisor_dashboard(request):
 # Create your views here.
 @csrf_exempt
 def get_pending_forward_requests(request):
-    print("herhwjkfhw")
+    print("n get_pending_forward_requests()")
     print("session:", request.session)
     user_id=request.session.get('user_id')
     if not user_id:
         return JsonResponse({'error': 'Missing user ID'}, status=400)
     try:
         result = booking_service.getForwardRequests(user_id)
+        print('result', result)
         context={
             'pending_requests':result,
             'user':request.user
@@ -51,7 +52,9 @@ def accept_pending_forward_requests(request, req_id):
     
     try:
         res = booking_service.forwardRequestToGymkhana(req_id, user_id)
-        return JsonResponse({'success': res})
+        
+        return redirect('/faculty_advisor/forward_requests')
+        #return JsonResponse({'success': res})
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
 
@@ -70,7 +73,9 @@ def decline_pending_forward_requests(request, req_id):
     
     try:
         res = booking_service.declineForwardRequest(req_id, user_id)
-        return JsonResponse({'success': res})
+
+        return redirect('/faculty_advisor/forward_requests')
+        #return JsonResponse({'success': res})
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
     

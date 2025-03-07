@@ -21,6 +21,8 @@ from .serializers import (
 )
 
 from users.models import CustomUser
+from django.views.decorators.csrf import csrf_exempt
+
 
 
 

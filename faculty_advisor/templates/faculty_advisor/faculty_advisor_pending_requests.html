@@ -7,10 +7,10 @@
     <title>Pending Forward Requests</title>
 
     <!-- Linking CSS -->
-    <link rel="stylesheet" href="{% static 'gymkhana/css/view_requests.css' %}">
+    <link rel="stylesheet" href="{% static 'css/view_requests.css' %}">
 
     <!-- Linking JavaScript -->
-    <script src="{% static 'gymkhana/js/view_requests.js' %}" defer></script>
+    <script src="{% static 'js/view_requests.js' %}" defer></script>
 </head>
 <body>
 
@@ -20,13 +20,19 @@
         <ul class="nav-links">
             <li><a href="{% url 'home' %}">Dashboard</a></li>
             <li><a href="{% url 'get_pending_forward_requests' %}">Pending Requests</a></li>
-            <li><a href="{% url 'home' %}">home</a></li>
+            <li><a href="{% url 'home' %}">Home</a></li>
             <li><a href="{% url 'home' %}">Logout</a></li>
         </ul>
     </nav>
 
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>👋 Welcome, User</h2>
+    </div>
+
     <div class="container">
         <h1>Pending Forward Requests</h1>
+
         <table id="pendingRequestsTable">
             <thead>
                 <tr>
@@ -46,15 +52,17 @@
                     <td>{{ request.date }}</td>
                     <td>{{ request.duration }} hours</td>
                     <td>{{ request.event_details }}</td>
-                    <td>
+                    <td class="action-buttons">
+                        <!-- <button class="btn approve-btn" onclick="approveRequest('{{ request.request_id }}')">Approve</button> -->
                         <form method="POST" action="{% url 'accept_pending_forward_requests' request.RequestID %}">
                             {% csrf_token %}
                             <button type="submit" class="btn approve-btn">Approve</button>
                         </form>
                         <form method="POST" action="{% url 'decline_pending_forward_requests' request.RequestID %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn approve-btn">Decline</button>
+                            <button type="submit" class="btn approve-btn">Reject</button>
                         </form>
+                        <!-- <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Reject</button> -->
                     </td>
                 </tr>
                 {% empty %}
@@ -77,74 +85,7 @@
         </div>
     </div>
 
-    <script>
-        const csrfToken = '{{ csrf_token }}';
-
-        function handleRequest(requestId, action) {
-            const url = action === 'accept'
-                ? `{% url "accept_pending_forward_requests" req_id="REQ_ID_PLACEHOLDER" %}`.replace("REQ_ID_PLACEHOLDER", requestId)
-                : `{% url "decline_pending_forward_requests" req_id="REQ_ID_PLACEHOLDER" %}`.replace("REQ_ID_PLACEHOLDER", requestId);
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ req_id: requestId, user_id: '{{ user.id }}' })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById(`row-${requestId}`).remove();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-
-        function openDeclineModal(requestId) {
-            document.getElementById('modalOverlay').style.display = 'block';
-            document.getElementById('reasonModal').style.display = 'block';
-            document.getElementById('reasonModal').dataset.requestId = requestId;
-        }
-
-        function closeModal() {
-            document.getElementById('modalOverlay').style.display = 'none';
-            document.getElementById('reasonModal').style.display = 'none';
-        }
-
-        function submitDecline() {
-            const requestId = document.getElementById('reasonModal').dataset.requestId;
-            const reason = document.getElementById('reasonText').value.trim();
-            if (!reason) {
-                alert('Please provide a reason for declining.');
-                return;
-            }
-
-            const url = `{% url "decline_pending_forward_requests" req_id="REQ_ID_PLACEHOLDER" %}`.replace("REQ_ID_PLACEHOLDER", requestId);
-
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ req_id: requestId, user_id: '{{ user.id }}', reason: reason })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById(`row-${requestId}`).remove();
-                    closeModal();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        }
-    </script>
+    <script src="{% static 'gymkhana/js/view_requests.js' %}"></script>
 
 </body>
 </html>
