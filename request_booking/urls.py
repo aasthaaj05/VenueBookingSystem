@@ -1,14 +1,4 @@
-# from django.urls import path
-# from . import views
 
-# urlpatterns = [
-#     path('venues/', views.get_venues, name='get_venues'),
-#     # path('venues/<uuid:venue_id>/', views.get_venue_details, name='get_venue_details'),
-#     path('bookings/', views.get_available_slots, name='get_available_slots'),
-#     path('bookings/request/', views.request_slot, name='request_slot'),
-#     path('bookings/cancel/', views.cancel_request, name='cancel_request'),
-#     path('user/requests/', views.get_user_requests, name='get_user_requests'),
-# ]
 
 from django.urls import path
 from . import views

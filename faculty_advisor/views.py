@@ -1,54 +1,14 @@
-from django.shortcuts import render
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from services import booking_service
-from django.http import JsonResponse
-from django.db.models import Q
-from datetime import datetime, timedelta
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from datetime import datetime, timedelta
-from gymkhana.models import Booking
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-
-
 from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-
-import sys
-from django.http import HttpResponse
-
-import traceback
-
-from django.http import HttpResponse
-
-from django.shortcuts import render
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
-
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-from gymkhana.models import Venue  
-
-from django.http import JsonResponse
 from django.db.models import Q, F
 from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
 import json
+import sys
+import traceback
+
+from services import booking_service
+from gymkhana.models import Booking, Venue
 
 
 def faculty_advisor_dashboard(request):
@@ -84,7 +44,6 @@ def accept_pending_forward_requests(request, req_id):
     print("request id:", req_id)
     if not req_id:
         return JsonResponse({'error': 'Missing request ID'}, status=400)
-        print("herhwjkfhw")
     print("session:", request.session)
     user_id=request.session.get('user_id')
     if not user_id:
@@ -104,7 +63,6 @@ def decline_pending_forward_requests(request, req_id):
         return JsonResponse({"error": "Only POST method allowed"}, status=405)
     if not req_id:
         return JsonResponse({'error': 'Missing request ID'}, status=400)
-        print("herhwjkfhw")
     print("session:", request.session)
     user_id=request.session.get('user_id')
     if not user_id:

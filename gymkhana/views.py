@@ -1,62 +1,27 @@
-
-
-
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Venue
-from .serializers import VenueSerializer
-
-
-import uuid
+from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect
+from django.db.models import Q
 from django.contrib import messages
-from .models import Request, RejectedBooking
-from .serializers import RejectedBookingSerializer
 
-##----------------------------------
-from django.shortcuts import get_object_or_404
-from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from .models import Request, Booking, Rejection
-from .serializers import RequestSerializer, BookingSerializer, RejectionSerializer
-from django.views.decorators.csrf import csrf_exempt
-
-
-from django.shortcuts import get_list_or_404
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from collections import defaultdict
-from .models import Request
-from .serializers import RequestSerializer
 
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 from collections import defaultdict
-from .models import Request, Venue
-from .serializers import RequestSerializer
+import uuid
 
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from collections import defaultdict
-from .models import Request, Venue
-from .serializers import RequestSerializer
+from .models import Request, Booking, Venue, Rejection, RejectedBooking
+from .serializers import (
+    RequestSerializer,
+    BookingSerializer,
+    VenueSerializer,
+    RejectionSerializer,
+    RejectedBookingSerializer,
+)
+
 from users.models import CustomUser
 
-
-from django.shortcuts import render
-from .models import Request
-from django.db.models import Q
 
 
 
@@ -215,9 +180,7 @@ def requests_for_gymkhana(request):
 
 
 
-def request_booking(request):
-    # ✅ Filter reques  ts where status is 'pending'
-    # requests = Request.objects.select_related('venue', 'user').filter(status="pending")  
+def request_booking(request): 
 
 
     # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
