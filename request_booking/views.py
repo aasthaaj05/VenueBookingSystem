@@ -1,67 +1,16 @@
-from django.shortcuts import render
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from services import booking_service
-from django.http import JsonResponse
-from django.db.models import Q
-from datetime import datetime, timedelta
-from .models import Venue
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from datetime import datetime, timedelta
-from .models import  Venue
-from gymkhana.models import Booking
-
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
-from .models import Venue
-
-
 from django.shortcuts import render, redirect
+from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-
-import sys
-from django.http import HttpResponse
-
-import traceback
-
-from django.http import HttpResponse
-
-from django.shortcuts import render
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
-
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-
-from django.shortcuts import render
-from django.http import HttpResponseNotAllowed
-from gymkhana.models import Venue  
-
-from django.http import JsonResponse
 from django.db.models import Q, F
 from datetime import datetime, timedelta
-from .models import Venue
-
-from django.shortcuts import render, redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from .models import Venue, Request
 import json
+import sys
+import traceback
 
-
-
-
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from services import booking_service
+from gymkhana.models import Booking
 from .models import Venue, Request
+
 
 
 
@@ -136,7 +85,7 @@ def get_available_slots(request):
             print('in get_available_lots')
             print_request_details(request)
             print('Request received:', request)
-            reques
+            
 
             # Parse JSON data from request body
             data = json.loads(request.body.decode("utf-8"))  # Correct way to parse JSON

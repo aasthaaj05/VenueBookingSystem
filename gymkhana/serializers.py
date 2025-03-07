@@ -1,5 +1,7 @@
 from rest_framework import serializers
-from .models import Venue
+from .models import Venue ,  Request, Booking, Rejection
+from .models import RejectedBooking
+
 
 class VenueSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,8 +9,6 @@ class VenueSerializer(serializers.ModelSerializer):
         fields = ['venue_name', 'description', 'photo_url', 'capacity', 'address', 'facilities', 'department_incharge']
 
 
-from rest_framework import serializers
-from .models import Request, Booking, Rejection
 
 class RequestSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,9 +28,6 @@ class RejectionSerializer(serializers.ModelSerializer):
         model = Rejection
         fields = '__all__'
 
-
-from rest_framework import serializers
-from .models import RejectedBooking
 
 class RejectedBookingSerializer(serializers.ModelSerializer):
     class Meta:
