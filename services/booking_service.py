@@ -13,7 +13,7 @@ from services import db
 import datetime
 
 SLOT_NUM = 12
-SLOT_START = 8
+SLOT_START = 9
 SLOT_DURATION = 1
 
 # date in YYYY-MM-DD format
@@ -43,8 +43,10 @@ def getAvailableSlots(venue_id, start_date, end_date):
         iterator_date += datetime.timedelta(days=1)
 
     for row in slots_booked:
-        for i in range(row['duration']):  # ✅ Use dict keys instead of tuple indexing
-            booking_dict[row['date']][row['time'] + i] = False
+        for i in range(row['duration']): 
+            print("DATE: ",row['date'])
+            print("time:", row['time']) # ✅ Use dict keys instead of tuple indexing
+            booking_dict[row['date']][row['time'] + i - SLOT_START] = False
 
     # convert dictionary to array which can be handled by a template
     for key, value in booking_dict.items():

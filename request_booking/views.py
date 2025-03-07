@@ -136,7 +136,6 @@ def get_available_slots(request):
             print('in get_available_lots')
             print_request_details(request)
             print('Request received:', request)
-            reques
 
             # Parse JSON data from request body
             data = json.loads(request.body.decode("utf-8"))  # Correct way to parse JSON
@@ -622,7 +621,7 @@ def process_booking(request):
 
         print('in process_booking func : after Request.objects.create')
 
-        return render(request, "request_booking/user_dashboard.html", {"success": True, "venue": data["venue"]})
+        return render(request, "request_booking/booking_status/", {"success": True, "venue": data["venue"]})
 
     
 
