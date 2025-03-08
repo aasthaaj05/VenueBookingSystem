@@ -25,7 +25,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-
+def home(request):
+    return render(request , 'gymkhana/index.html')
 
 @api_view(['POST'])
 def create_venue(request):

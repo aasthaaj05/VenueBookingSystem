@@ -18,9 +18,9 @@
     <nav class="navbar">
         <div class="logo">Venue Booking</div>
         <ul class="nav-links">
-            <li><a href="{% url 'home' %}">Dashboard</a></li>
-            <li><a href="{% url 'home' %}">Bookings</a></li>
-            <li><a href="{% url 'home' %}">Reports</a></li>
+            <li><a href="{% url 'gymkhana:home' %}">Dashboard</a></li>
+            <li><a href="{% url 'gymkhana:home' %}">Bookings</a></li>
+            <li><a href="{% url 'gymkhana:home' %}">Reports</a></li>
             <li><a href="{% url 'login' %}">Logout</a></li>
         </ul>
     </nav>
@@ -64,13 +64,13 @@
                     </td>
                     <td class="action-buttons">
                         {% if request.status in 'pending,waiting_for_approval' %}
-                            <form method="POST" action="{% url 'approve_request' request.request_id %}">
+                            <form method="POST" action="{% url 'gymkhana:approve_request' request.request_id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn approve-btn">Approve</button>
                             </form>
             
                             <!-- Decline Button Opens a Modal -->
-                            <form method="POST" action="{% url 'decline_request' request.request_id %}">
+                            <form method="POST" action="{% url 'gymkhana:decline_request' request.request_id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn approve-btn">Reject</button>
                             </form>

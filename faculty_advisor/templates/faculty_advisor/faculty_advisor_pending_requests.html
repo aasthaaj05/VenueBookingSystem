@@ -18,16 +18,16 @@
     <nav class="navbar">
         <div class="logo">Venue Booking</div>
         <ul class="nav-links">
-            <li><a href="{% url 'home' %}">Dashboard</a></li>
-            <li><a href="{% url 'get_pending_forward_requests' %}">Pending Requests</a></li>
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'home' %}">Logout</a></li>
+            <li><a href="{% url 'faculty_advisor:home' %}">Dashboard</a></li>
+            <li><a href="{% url 'faculty_advisor:get_pending_forward_requests' %}">Pending Requests</a></li>
+            <li><a href="{% url 'faculty_advisor:home' %}">Home</a></li>
+            <li><a href="{% url 'faculty_advisor:home' %}">Logout</a></li>
         </ul>
     </nav>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <h2>👋 Welcome, User</h2>
+        <h2>👋 Welcome, {{ user.name }}</h2>
     </div>
 
     <div class="container">
@@ -54,11 +54,11 @@
                     <td>{{ request.event_details }}</td>
                     <td class="action-buttons">
                         <!-- <button class="btn approve-btn" onclick="approveRequest('{{ request.request_id }}')">Approve</button> -->
-                        <form method="POST" action="{% url 'accept_pending_forward_requests' request.RequestID %}">
+                        <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.RequestID %}">
                             {% csrf_token %}
                             <button type="submit" class="btn approve-btn">Approve</button>
                         </form>
-                        <form method="POST" action="{% url 'decline_pending_forward_requests' request.RequestID %}">
+                        <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.RequestID %}">
                             {% csrf_token %}
                             <button type="submit" class="btn approve-btn">Reject</button>
                         </form>

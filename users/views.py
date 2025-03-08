@@ -138,9 +138,10 @@ def login_view(request):
         if request.user.role in ["Gymkhana",'gymkhana']:
             return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
         elif request.user.role in ["faculty_advisor",'Faculty_advisor']:
-            return redirect('/faculty_advisor/faculty_advisor_dashboard')  # Redirect Gymkhana users to a different page
+            return redirect('/faculty_advisor/home')  # Redirect Gymkhana users to a different page
         else:
-            return redirect('/users/home')  # Default redirection for other users
+            # return redirect('/users/home')  # Default redirection for other users
+            return redirect('/request_booking/home')
 
 
 

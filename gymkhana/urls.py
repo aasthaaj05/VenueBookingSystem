@@ -1,6 +1,8 @@
 from django.urls import path
 from . import views
 
+app_name = "gymkhana"
+
 urlpatterns = [
     # path('requests/faculty/', view_faculty_requests, name='view_faculty_requests'),
     # path('venues/<uuid:venue_id>/', venue_details, name='venue_details'),
@@ -18,5 +20,7 @@ urlpatterns = [
     path("add_venue/", views.add_venue, name="add_venue"),
 
     path('dashboard/', views.gymkhana_dashboard, name='gymkhana_dashboard'),
+
+    path('home/', views.home, name='home'),
 ]
 

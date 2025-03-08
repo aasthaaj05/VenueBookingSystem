@@ -19,10 +19,10 @@
     <nav class="navbar">
         <div class="brand">VenueBook</div>
         <ul class="nav-links">
-            <li><a href="{% url 'request_booking' %}" class="btn signup-btn">View Requests</a></li>
+            <li><a href="{% url 'gymkhana:request_booking' %}" class="btn signup-btn">View Requests</a></li>
             
-            <li><a href="{% url 'home' %}#features">GYMKHANA</a></li>
-            <li><a href="{% url 'home' %}#about">Bookings</a></li>
+            <li><a href="{% url 'gymkhana:home' %}#features">GYMKHANA</a></li>
+            <li><a href="{% url 'gymkhana:home' %}#about">Bookings</a></li>
             <li><a href="{% url 'login' %}" class="btn login-btn">Login</a></li>
             <li><a href="{% url 'register' %}" class="btn signup-btn">Sign Up</a></li>
             <li><a href="{% url 'register' %}" class="btn signup-btn">Log Out</a></li>

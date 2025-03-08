@@ -18,7 +18,10 @@ urlpatterns = [
     path("process_booking/", views.process_booking, name="process_booking"),
     
     path("booking_status/", views.booking_status, name="booking_status"),
-    path("getUnavailableSlots/", views.getUnavailableSlots, name="get_unavailable_slots")
+    path("getUnavailableSlots/", views.getUnavailableSlots, name="get_unavailable_slots"),
+
+
+    path('home/', views.index, name='index'),
 ]
   
 

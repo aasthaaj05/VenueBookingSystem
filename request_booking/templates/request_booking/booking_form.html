@@ -173,6 +173,26 @@
             </div>
 
             <div class="form-group">
+                <label for="start_date">Date <span class="required">*</span></label>
+                <input type="date" id="start_date" name="start_date" value="{{ user_data.date }}" required>
+                <div class="error" id="startDateError">Please select a valid date</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="start_time">Start Time <span class="required">*</span></label>
+                <input type="time" id="start_time" name="start_time" value="{{ user_data.start_time }}" required>
+                <div class="error" id="startTimeError">Please enter a valid start time</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="end_time">End Time <span class="required">*</span></label>
+                <input type="time" id="end_time" name="end_time" value="{{ user_data.end_time }}" required>
+                <div class="error" id="endTimeError">Please enter a valid end time</div>
+            </div>
+            
+            
+
+            <div class="form-group">
                 <label for="phone">Phone Number <span class="required">*</span></label>
                 <input type="tel" id="phone" name="phone" required>
                 <div class="error" id="phoneError">Please enter a valid phone number</div>
