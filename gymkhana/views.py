@@ -188,7 +188,7 @@ def request_booking(request):
 
     # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
     requests = Request.objects.select_related('venue', 'user').filter(
-        Q(status="pending") | Q(status="waiting_for_approval")
+        Q(status="pending")
     )
 
 

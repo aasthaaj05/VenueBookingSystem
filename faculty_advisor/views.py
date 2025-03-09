@@ -68,6 +68,8 @@ def get_pending_forward_requests(request):
 
     user_id = request.session.get('user_id')
 
+    print("request:", request.session.items())
+
     if not user_id:
         return JsonResponse({'error': 'Missing user ID'}, status=400)
 
