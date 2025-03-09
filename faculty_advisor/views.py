@@ -73,7 +73,7 @@ def get_pending_forward_requests(request):
 
     try:
         # Step 1: Get venues where the user is the in-charge
-        venues_incharge = Venue.objects.filter(incharge_id=user_id).values_list('id', flat=True)
+        venues_incharge = Venue.objects.filter(department_incharge=user_id).values_list('id', flat=True)
 
         # Step 2: Fetch requests for those venues where status is 'pending'
         pending_requests = Request.objects.filter(venue_id__in=venues_incharge, status='pending')
