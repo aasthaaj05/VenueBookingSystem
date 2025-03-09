@@ -28,18 +28,98 @@ from django.views.decorators.csrf import csrf_exempt
 def home(request):
     return render(request , 'gymkhana/index.html')
 
-@api_view(['POST'])
+
+
 def create_venue(request):
-    """
-    Creates a new venue.
-    Expects JSON payload with: venue_name, description, photo_url, capacity, address, facilities, department_incharge
-    """
-    serializer = VenueSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()  # Automatically generates UUID for id
-        return Response({"message": "Venue created successfully", "venue": serializer.data}, status=status.HTTP_201_CREATED)
+    print('in create_venue function')
+    print('request.mthod : ' , request.method )
+    if request.method == "GET":
+        return render(request,"gymkhana/create_venue.html")
+
+    # if request.method == "POST":
+    #     venue_name = request.POST.get("venue_name")
+    #     description = request.POST.get("description")
+    #     photo_url = request.POST.get("photo_url")
+    #     capacity = request.POST.get("capacity")
+    #     address = request.POST.get("address")
+    #     facilities = request.POST.get("facilities")
+    #     department_incharge = request.POST.get("department_incharge")
+
+    #     # Basic validation to ensure no field is empty
+    #     if not all([venue_name, description, photo_url, capacity, address, facilities, department_incharge]):
+    #         messages.error(request, "All fields are required.")
+    #     else:
+    #         try:
+    #             capacity = int(capacity)  # Ensure capacity is a valid integer
+    #             Venue.objects.create(
+    #                 venue_name=venue_name,
+    #                 description=description,
+    #                 photo_url=photo_url,
+    #                 capacity=capacity,
+    #                 address=address,
+    #                 facilities=facilities,
+    #                 department_incharge=department_incharge
+    #             )
+    #             messages.success(request, "Venue created successfully!")
+    #             return redirect("venue_admin:home")  # Redirect to home or another page
+    #         except ValueError:
+    #             messages.error(request, "Capacity must be a valid number.")
+    if request.method == "POST":
+        venue_name = request.POST.get("venue_name")
+        description = request.POST.get("description")
+        photo_url = request.POST.get("photo_url")
+        capacity = request.POST.get("capacity")
+        address = request.POST.get("address")
+        facilities = request.POST.get("facilities")
+        department_incharge_email = request.POST.get("department_incharge")  # Email ID received from the form
+
+        # Basic validation to ensure no field is empty
+        if not all([venue_name, description, photo_url, capacity, address, facilities, department_incharge_email]):
+            messages.error(request, "All fields are required.")
+        else:
+            try:
+                capacity = int(capacity)  # Ensure capacity is a valid integer
+                
+                # Fetch the CustomUser instance using the provided email
+                department_incharge = CustomUser.objects.filter(email=department_incharge_email).first()
+                
+                if not department_incharge:
+                    messages.error(request, "No user found with this email as Department Incharge.")
+                    return render(request, 'venue_admin/create_venue.html')
+
+                # Create the venue with the mapped department incharge
+                Venue.objects.create(
+                    venue_name=venue_name,
+                    description=description,
+                    photo_url=photo_url,
+                    capacity=capacity,
+                    address=address,
+                    facilities=facilities,
+                    department_incharge=department_incharge  # Store the mapped user
+                )
+                
+                messages.success(request, "Venue created successfully!")
+                return redirect("venue_admin:home")  # Redirect to home or another page
+            
+            except ValueError:
+                messages.error(request, "Capacity must be a valid number.")
+
+    return render(request, 'venue_admin/create_venue.html')
+
+    # return render(request, 'gymkhana/index.html')
+
+# @api_view(['POST'])
+# def create_venue(request):
+#     """
+#     Creates a new venue.
+#     Expects JSON payload with: venue_name, description, photo_url, capacity, address, facilities, department_incharge
+#     """
+#     serializer = VenueSerializer(data=request.data)
+#     if serializer.is_valid():
+#         serializer.save()  # Automatically generates UUID for id
+#         return Response({"message": "Venue created successfully", "venue": serializer.data}, status=status.HTTP_201_CREATED)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -22,5 +22,8 @@ urlpatterns = [
     path('dashboard/', views.gymkhana_dashboard, name='gymkhana_dashboard'),
 
     path('home/', views.home, name='home'),
+    path('create_venue/', views.create_venue, name='create_venue'),
+
+    
 ]
 

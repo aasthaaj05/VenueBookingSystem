@@ -57,7 +57,8 @@ INSTALLED_APPS = [
     'users',
     'gymkhana',
     'request_booking',
-    'faculty_advisor'
+    'faculty_advisor',
+    'venue_admin',
 ]   
 
 AUTH_USER_MODEL = 'users.CustomUser'  # Custom user model

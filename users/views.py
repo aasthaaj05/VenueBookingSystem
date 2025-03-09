@@ -30,7 +30,7 @@ def store_user_session(request, email):
     print('in store user session function part 2')
     
     # Storing user details in session
-    request.session['user_id'] = str(user.id)  # Store UUID as string
+    request.session['user_id'] = str(user.id).replace('-','')  # Store UUID as string
     request.session['name'] = user.name
     request.session['email'] = user.email
     request.session['organization_name'] = user.organization_name
@@ -127,18 +127,17 @@ def login_view(request):
         
         login(request, user)
         print('user logged in! .. login_view func')
-        # Redirect to dashboard or home page after successful login
-        # return redirect('/users/home')  # Replace with your actual success redirect URL name
-        # print('request.role : ' , request.role)
+        
         print('request.user.role : ' , request.user.role)
 
-        # faculty_advisor
 
         # Assuming user role is stored in request.user.role
         if request.user.role in ["Gymkhana",'gymkhana']:
             return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
         elif request.user.role in ["faculty_advisor",'Faculty_advisor']:
             return redirect('/faculty_advisor/home')  # Redirect Gymkhana users to a different page
+        elif request.user.role in ["venue_admin",'Venue_admin']:
+            return redirect('/venue_admin/home')  
         else:
             # return redirect('/users/home')  # Default redirection for other users
             return redirect('/request_booking/home')
@@ -179,9 +178,11 @@ def register_view(request):
 
             print('request.user.role : ' , user.role)
             if user.role in ["Gymkhana",'gymkhana']:
-                return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
+                return redirect('/gymkhana/dashboard')  
             elif user.role in ["faculty_advisor",'Faculty_advisor']:
-                return redirect('/faculty_advisor/faculty_advisor_dashboard')  # Redirect Gymkhana users to a different page
+                return redirect('/faculty_advisor/faculty_advisor_dashboard')  
+            elif request.user.role in ["venue_admin",'Venue_admin']:
+                return redirect('/venue_admin/home')  
             else:
                 return redirect('/users/home')  # Default redirection for other users
 
