@@ -47,22 +47,34 @@
             <tbody>
                 {% for request in pending_requests %}
                 <tr id="row-{{ request.request_id }}">
-                    <td>{{ request.user_name }}</td>
-                    <td>{{ request.venue_name }}</td>
+                    <td>{{ request.user.name }}</td>
+                    <td>{{ request.venue.venue_name }}</td>
                     <td>{{ request.date }}</td>
                     <td>{{ request.duration }} hours</td>
                     <td>{{ request.event_details }}</td>
                     <td class="action-buttons">
                         <!-- <button class="btn approve-btn" onclick="approveRequest('{{ request.request_id }}')">Approve</button> -->
-                        <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.RequestID %}">
+                        {% comment %} <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.request_id %}">
                             {% csrf_token %}
                             <button type="submit" class="btn approve-btn">Approve</button>
                         </form>
-                        <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.RequestID %}">
+                        <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.request_id %}">
                             {% csrf_token %}
                             <button type="submit" class="btn approve-btn">Reject</button>
-                        </form>
+                        </form> {% endcomment %}
                         <!-- <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Reject</button> -->
+                        <div class="action-container">
+                            <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.request_id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn approve-btn">Approve</button>
+                            </form>
+                        
+                            <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.request_id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn reject-btn">Reject</button>
+                            </form>
+                        </div>
+                        
                     </td>
                 </tr>
                 {% empty %}

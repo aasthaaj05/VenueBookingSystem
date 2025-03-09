@@ -128,3 +128,42 @@ th {
     background: #fff;
     border-radius: 10px;
 }
+
+
+
+
+
+
+
+
+
+/* Button Container */
+.action-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Forms should be inline */
+.action-form {
+    display: inline-block;
+}
+
+/* Buttons */
+.btn {
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.approve-btn {
+    background: #27ae60;
+    color: white;
+}
+
+.reject-btn {
+    background: #e74c3c;
+    color: white;
+}

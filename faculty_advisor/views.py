@@ -60,37 +60,91 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from gymkhana.models import Venue  # Import models
 from request_booking.models import Request
+from users.models import CustomUser
+
+# @csrf_exempt
+# def get_pending_forward_requests(request):
+#     print("In get_pending_forward_requests()")
+#     print("session:", request.session)
+
+#     user_id = request.session.get('user_id')
+
+#     print("request:", request.session.items())
+
+#     if not user_id:
+#         return JsonResponse({'error': 'Missing user ID'}, status=400)
+
+#     try:
+#         # Step 1: Get venues where the user is the in-charge
+#         venues_incharge = Venue.objects.filter(department_incharge=user_id).values_list('id', flat=True)
+
+#         # Step 2: Fetch requests for those venues where status is 'pending'
+#         pending_requests = Request.objects.filter(venue_id__in=venues_incharge, status='pending')
+
+#         print("Pending Requests:", pending_requests)
+
+#         context = {
+#             'pending_requests': pending_requests,
+#             'user': request.user
+#         }
+
+#         return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
+
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)}, status=400)
+
+
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def get_pending_forward_requests(request):
     print("In get_pending_forward_requests()")
-    print("session:", request.session)
+    print("Session:", request.session)
 
     user_id = request.session.get('user_id')
 
-    print("request:", request.session.items())
+    print("Request session items:", request.session.items())
 
     if not user_id:
         return JsonResponse({'error': 'Missing user ID'}, status=400)
 
     try:
-        # Step 1: Get venues where the user is the in-charge
-        venues_incharge = Venue.objects.filter(department_incharge=user_id).values_list('id', flat=True)
+        # Fetch logged-in faculty advisor details
+        faculty_ad = CustomUser.objects.get(id=user_id)
 
-        # Step 2: Fetch requests for those venues where status is 'pending'
-        pending_requests = Request.objects.filter(venue_id__in=venues_incharge, status='pending')
+        # Check if the logged-in user is a faculty advisor
+        if faculty_ad.role != "faculty_advisor":
+            return JsonResponse({'error': 'Access Denied'}, status=403)
 
-        print("Pending Requests:", pending_requests)
+        # Fetch all pending requests
+        pending_requests = Request.objects.filter(status='waiting_for_approval')
+
+
+        # Filter requests where the requested user's organization matches the faculty advisor's organization
+        filtered_requests = []
+        for req in pending_requests:
+            requested_user = CustomUser.objects.get(id=req.user_id)  # Get the user who made the request
+            
+            if requested_user.organization_name == faculty_ad.organization_name:
+                filtered_requests.append(req)
+
+        print("Filtered Requests:", filtered_requests)
 
         context = {
-            'pending_requests': pending_requests,
+            'pending_requests': filtered_requests,
             'user': request.user
         }
 
         return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
 
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+
+
 
     
 

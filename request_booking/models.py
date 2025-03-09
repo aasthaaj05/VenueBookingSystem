@@ -28,4 +28,4 @@ class Request(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Request {self.request_id} by {self.user} for {self.venue} ({self.status})"
+        return f"Request {self.request_id} by {self.user.name} for {self.venue.venue_name} ({self.status})"
