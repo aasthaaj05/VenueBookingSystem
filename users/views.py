@@ -62,6 +62,9 @@ def print_all_session_data(request):
 
 @api_view(['GET', 'POST'])  # Accept both GET and POST
 def login_view(request):
+    # Flush existing session
+    request.session.flush()
+    
     print('in login_view function\n\n')
     # Handle GET request (render the login page)
     if request.method == 'GET':
