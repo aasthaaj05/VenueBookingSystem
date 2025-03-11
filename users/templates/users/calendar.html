@@ -718,7 +718,7 @@
                 // Update booking summary
                 updateBookingSummary();
             }
-
+            /*
             // Update end time slots based on selected start time
             function updateEndTimeSlots(startHour, unavailableTimeSlots) {
                 endTimeContainer.innerHTML = '';
@@ -752,6 +752,44 @@
                     endTimeContainer.appendChild(timeSlotElement);
                 }
             }
+            */
+
+                        // Update end time slots based on selected start time
+                        function updateEndTimeSlots(startHour, unavailableTimeSlots) {
+                            endTimeContainer.innerHTML = '';
+                            selectedEndTime = null;
+
+                            const endHour = 21; // 9 PM
+                            const interval = 1; // 1-hour intervals
+
+                            // Find the nearest unavailable slot after the selected start time
+                            let nearestUnavailableHour = endHour; // Default to the latest possible time
+                            for (let time of unavailableTimeSlots) {
+                                let unavailableHour = parseInt(time.split(':')[0]); // Extract the hour part
+                                if (unavailableHour > startHour) {
+                                    nearestUnavailableHour = Math.min(nearestUnavailableHour, unavailableHour);
+                                }
+                            }
+
+                            // Populate end time slots only before the nearest unavailable slot
+                            for (let hour = startHour + 1; hour < nearestUnavailableHour; hour += interval) {
+                                const timeSlotElement = document.createElement('div');
+                                timeSlotElement.classList.add('time-slot');
+
+                                const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
+                                const amPm = hour < 12 ? 'AM' : 'PM';
+                                const timeString = `${formattedHour}:00 ${amPm}`;
+
+                                timeSlotElement.textContent = timeString;
+
+                                // Enable selection of valid time slots
+                                timeSlotElement.addEventListener('click', () => selectEndTime(timeSlotElement, timeString));
+
+                                endTimeContainer.appendChild(timeSlotElement);
+                            }
+                        }
+
+
 
             // Select an end time
             function selectEndTime(element, timeString) {
