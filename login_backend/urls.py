@@ -25,5 +25,6 @@ urlpatterns = [
     path('',include('home.urls')),
     path('faculty_advisor/', include('faculty_advisor.urls')),
     path('venue_admin/', include('venue_admin.urls')),
+    path('auth_otp/', include('auth_otp.urls')),
 
 ]

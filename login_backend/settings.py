@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'request_booking',
     'faculty_advisor',
     'venue_admin',
+    'auth_otp',
 ]   
 
 AUTH_USER_MODEL = 'users.CustomUser'  # Custom user model
