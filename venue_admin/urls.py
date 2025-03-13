@@ -12,5 +12,7 @@ urlpatterns = [
     
     path('home/', views.home, name='home'),
     path('requests/', views.get_requests, name='get_requests'),
+    path('logout/', views.logout_view, name='logout'),
+
 ]
 

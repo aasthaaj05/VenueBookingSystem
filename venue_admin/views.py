@@ -40,51 +40,18 @@ from gymkhana.models import Venue
 
 
 
-# @csrf_exempt
-# def get_pending_forward_requests(request):
-#     print("In get_pending_forward_requests()")
-#     print("Session:", request.session)
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 
-#     user_id = request.session.get('user_id')
-
-#     print("Request session items:", request.session.items())
-
-#     if not user_id:
-#         return JsonResponse({'error': 'Missing user ID'}, status=400)
-
-#     try:
-#         # Fetch logged-in faculty advisor details
-#         faculty_ad = CustomUser.objects.get(id=user_id)
-
-#         # Check if the logged-in user is a faculty advisor
-#         if faculty_ad.role != "faculty_advisor":
-#             return JsonResponse({'error': 'Access Denied'}, status=403)
-
-#         # Fetch all pending requests
-#         pending_requests = Request.objects.filter(status='waiting_for_approval')
-
-
-#         # Filter requests where the requested user's organization matches the faculty advisor's organization
-#         filtered_requests = []
-#         for req in pending_requests:
-#             requested_user = CustomUser.objects.get(id=req.user_id)  # Get the user who made the request
-            
-#             if requested_user.organization_name == faculty_ad.organization_name:
-#                 filtered_requests.append(req)
-
-#         print("Filtered Requests:", filtered_requests)
-
-#         context = {
-#             'pending_requests': filtered_requests,
-#             'user': request.user
-#         }
-
-#         return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
-
-#     except CustomUser.DoesNotExist:
-#         return JsonResponse({'error': 'User not found'}, status=404)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=400)
+def logout_view(request):
+    # Clear the session data
+    request.session.flush()
+    
+    # Logout the user
+    logout(request)
+    
+    # Redirect to login or homepage
+    return redirect('/users/login')  # Change 'login' to the actual login page name
 
 
 
@@ -93,6 +60,54 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from request_booking.models import Request
 from users.models import CustomUser  # Ensure the CustomUser model is properly imported
+
+
+@csrf_exempt
+def get_pending_forward_requests(request):
+    print("In get_pending_forward_requests()")
+    print("Session:", request.session)
+
+    user_id = request.session.get('user_id')
+
+    print("Request session items:", request.session.items())
+
+    if not user_id:
+        return JsonResponse({'error': 'Missing user ID'}, status=400)
+
+    try:
+        # Fetch logged-in faculty advisor details
+        faculty_ad = CustomUser.objects.get(id=user_id)
+
+        # Check if the logged-in user is a faculty advisor
+        if faculty_ad.role != "faculty_advisor":
+            return JsonResponse({'error': 'Access Denied'}, status=403)
+
+        # Fetch all pending requests
+        pending_requests = Request.objects.filter(status='waiting_for_approval')
+
+
+        # Filter requests where the requested user's organization matches the faculty advisor's organization
+        filtered_requests = []
+        for req in pending_requests:
+            requested_user = CustomUser.objects.get(id=req.user_id)  # Get the user who made the request
+            
+            if requested_user.organization_name == faculty_ad.organization_name:
+                filtered_requests.append(req)
+
+        print("Filtered Requests:", filtered_requests)
+
+        context = {
+            'pending_requests': filtered_requests,
+            'user': request.user
+        }
+
+        return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
+
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
+    except Exception as e:
+        print('---line 145 ----')
+        return JsonResponse({'error': str(e)}, status=400)
 
 @csrf_exempt
 def get_requests(request):
@@ -119,9 +134,14 @@ def get_requests(request):
         print('venue admin.id : ' , venue_admin_id_str)
 
 
-        # Check if the logged-in user is a venue admin
-        if venue_admin.role != "venue_admin":
+        # # Check if the logged-in user is a venue admin
+        # if venue_admin.role != "venue_admin" or :
+        #     return JsonResponse({'error': 'Access Denied'}, status=403)
+
+
+        if venue_admin.role.lower() != "venue_admin":
             return JsonResponse({'error': 'Access Denied'}, status=403)
+
 
 
         print('aaaaaaaaaa')
@@ -148,6 +168,13 @@ def get_requests(request):
 
         print("Managed Venues:", managed_venues)
         print("Pending Requests:", pending_requests)
+
+        print()
+        print()
+        print('managed_venues : ' , managed_venues)
+        print('pending_requests : ' , pending_requests)
+        print()
+        print()
 
         context = {
             'pending_requests': pending_requests,

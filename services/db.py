@@ -87,21 +87,37 @@ def requestSlotFromDB(venue_id, user_id, date, time, duration, alternate_venues,
 
 
 def forwardRequestToGymkhanaFromDB(request_id, user_id):
+    print('in services : db.py forwardRequestToGymkhanaFromDB() ')
     user = CustomUser.objects.get(id=user_id)
     req = Request.objects.get(request_id=request_id)
+
+    if user.role.lower() == 'faculty_advisor':
     # add a check for user role
-    if (req.status != 'waiting_for_approval'):
-        raise ValueError('Cannot Forward a Request that is already Forwarded')
-    
-    user_req=req.user
+        if (req.status != 'waiting_for_approval'):
+            raise ValueError('Cannot Forward a Request that is already Forwarded')
+        
+        user_req=req.user
 
-    if (user.organization_name != user_req.organization_name):
-        raise ValueError("Cannot Approve Requests other than your Organization")
-    
-    req.status='pending'
-    req.save()
+        if (user.organization_name != user_req.organization_name):
+            raise ValueError("Cannot Approve Requests other than your Organization")
+        
+        req.status='pending'
+        req.save()
 
-    return True
+        return True
+    elif user.role.lower() == 'venue_admin':
+        if (req.status != 'pending'):
+            raise ValueError('Cannot Forward a Request that is not forwarded')
+        
+        user_req=req.user
+
+     
+        
+        req.status='accepted'
+        req.save()
+
+        return True
+
 
 def getForwardRequestsFromDB(user_id):
     try:
@@ -167,18 +183,41 @@ def cancelRequestFromDB(req_id):
 
 
 def declineForwardRequestFromDB(request_id, user_id):
+    print('in services : declineForwardRequestFromDB() ')
     user = CustomUser.objects.get(id=user_id)
     req = Request.objects.get(request_id=request_id)
-    # add a check for user role
-    if (req.status != 'waiting_for_approval'):
-        raise ValueError('Cannot Forward a Request that is already Forwarded')
-    
-    user_req=req.user
 
-    if (user.organization_name != user_req.organization_name):
-        raise ValueError("Cannot Approve Requests other than your Organization")
-    
-    req.status='rejected'
-    req.save()
+    if user.role.lower() == 'faculty_advisor':
+        print('user role : faculty_advisor')
+        
+        # add a check for user role
+        if (req.status != 'waiting_for_approval'):
+            raise ValueError('Cannot Forward a Request that is already Forwarded')
+        
+        user_req=req.user
+
+        if (user.organization_name != user_req.organization_name):
+            raise ValueError("Cannot Approve Requests other than your Organization")
+        
+        req.status='rejected'
+        req.save()
+
+        return True
+
+    elif user.role.lower() == 'venue_admin':
+        print('user role : venue_admin')
+
+        # add a check for user role
+        if (req.status != 'pending'):
+            raise ValueError('Cannot Forward a Request that is already not approved')
+        
+        user_req=req.user
+
+        
+        
+        req.status='rejected'
+        req.save()
+
+        return True
 
     return True

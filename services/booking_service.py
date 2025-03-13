@@ -151,6 +151,12 @@ def getUserRequests(user_id):
 
 def forwardRequestToGymkhana(req_id, user_id):
     try:
+        print('in services : booking_service : forwardRequestToGymkhana()')
+        print('user id : ',user_id)
+        print('req id : ',req_id)
+        req_id = req_id.replace('-','')
+        print('req id : ',req_id)
+
         res = db.forwardRequestToGymkhanaFromDB(req_id, user_id)
     except Exception as e:
         raise e
