@@ -131,9 +131,41 @@ def create_venue(request):
 def approve_request(request, request_id):
     """Approve a request and create a booking."""
     req = get_object_or_404(Request, request_id=request_id)
+    print("##############################################\nhifjwiofjewiofjewojewfoewkoe")
+    start_time = req.time
+    end_time = req.time + req.duration
 
     if req.status != 'pending':
         return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
+    pending_requests = Request.objects.filter(
+        venue=req.venue,
+        date=req.date,
+        status='pending'
+    ).exclude(request_id=req.request_id)
+
+    conflicting_requests = []
+    for existing in pending_requests:
+        existing_start = existing.time
+        existing_end = existing.time + existing.duration
+        
+        # ✅ Overlap conditions for slot-based conflict:
+        if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time)  :
+            conflicting_requests.append(existing)
+
+    if conflicting_requests:
+        # Reject all conflicting requests
+        for conflict in conflicting_requests:
+            conflict.status = 'rejected'
+            conflict.reasons = 'Slot is unavailable due to conflicting booking.'
+            conflict.save()
+
+            # Add to Rejection table
+            Rejection.objects.create(
+                request=conflict,
+                user=conflict.user,
+                reason='Slot is unavailable due to conflicting booking.',
+                msg='Booking conflict with another approved request.'
+            )
 
     req.status = 'approved'
     req.save()
@@ -306,8 +338,42 @@ from .models import Request, Booking
 from .serializers import BookingSerializer
 
 def approve_request(request, request_id):
+    print("hewfhewofewjfjewofjefoewjfowjow##################################################################################")
+
     if request.method == "POST":
         req = get_object_or_404(Request, request_id=request_id)
+        start_time = req.time
+        end_time = req.time + req.duration
+        pending_requests = Request.objects.filter(
+            venue=req.venue,
+            date=req.date,
+            status='pending'
+            ).exclude(request_id=req.request_id)
+
+        conflicting_requests = []
+        for existing in pending_requests:
+            existing_start = existing.time
+            existing_end = existing.time + existing.duration
+            
+            # ✅ Overlap conditions for slot-based conflict:
+            if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time)  :
+                conflicting_requests.append(existing)
+
+        if conflicting_requests:
+            # Reject all conflicting requests
+            for conflict in conflicting_requests:
+                conflict.status = 'rejected'
+                conflict.reasons = 'Slot is unavailable due to conflicting booking.'
+                conflict.save()
+
+                # Add to Rejection table
+                Rejection.objects.create(
+                    request=conflict,
+                    user=conflict.user,
+                    reason='Slot is unavailable due to conflicting booking.',
+                    msg='Booking conflict with another approved request.'
+                )
+
 
         # Prepare data for serializer
         booking_data = {
