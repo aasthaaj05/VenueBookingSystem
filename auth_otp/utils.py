@@ -10,8 +10,8 @@ def send_otp(email , request):
     request.session['otp'] = otp
     
     # Email configuration
-    sender_email = "arnavp22.comp@coeptech.ac.in"           # Enter Outlook Email
-    sender_password = "!col2ar@315prd!"        # Enter Outlook Email Password
+    sender_email = ""           # Enter Outlook Email
+    sender_password = ""        # Enter Outlook Email Password
     receiver_email = email
     smtp_server = "smtp.office365.com"
     smtp_port = 587  # Outlook.com SMTP port
