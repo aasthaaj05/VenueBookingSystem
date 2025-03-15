@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approved Bookings</title>
+
+    <!-- Linking CSS -->
+    <link rel="stylesheet" href="{% static 'css/view_requests.css' %}">
+
+    <!-- Linking JavaScript -->
+    <script src="{% static 'js/view_requests.js' %}" defer></script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Venue Booking</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'faculty_advisor:home' %}">Dashboard</a></li>
+            <li><a href="{% url 'faculty_advisor:get_pending_forward_requests' %}">Pending Requests</a></li>
+            <li><a href="{% url 'faculty_advisor:home' %}">Home</a></li>
+            <li><a href="{% url 'faculty_advisor:logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>👋 Welcome, {{ user.name }}</h2>
+        <h3>Managed Venues</h3>
+        <ul>
+            {% for venue in managed_venues %}
+                <li>{{ venue.venue_name }}</li>
+            {% empty %}
+                <li>No venues assigned.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="container">
+        <h1>Approved Venue Bookings</h1>
+
+        <table id="approvedBookingsTable">
+            <thead>
+                <tr>
+                    <th>Requester</th>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Duration</th>
+                    <th>Event Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in approved_bookings %}
+                <tr id="row-{{ request.request_id }}">
+                    <td>{{ request.user.name }}</td>
+                    <td>{{ request.venue.venue_name }}</td>
+                    <td>{{ request.date }}</td>
+                    <td>{{ request.duration }} hours</td>
+                    <td>{{ request.event_details }}</td>
+                    <td class="action-buttons">
+                        <form method="POST" action="{% url 'faculty_advisor:cancel_booking' request.request_id %}" class="action-form">
+                            {% csrf_token %}
+                            <button type="submit" class="btn reject-btn">Cancel Booking</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No approved bookings found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script src="{% static 'js/view_requests.js' %}"></script>
+
+</body>
+</html>

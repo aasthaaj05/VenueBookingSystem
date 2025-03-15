@@ -37,6 +37,7 @@ def get_requests(request):
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from gymkhana.models import Venue
+from request_booking.models import Request
 
 
 
@@ -71,16 +72,16 @@ def get_pending_forward_requests(request):
 
     print("Request session items:", request.session.items())
 
-    if not user_id:
-        return JsonResponse({'error': 'Missing user ID'}, status=400)
+    # if not user_id:
+    #     return JsonResponse({'error': 'Missing user ID'}, status=400)
 
     try:
         # Fetch logged-in faculty advisor details
         faculty_ad = CustomUser.objects.get(id=user_id)
 
         # Check if the logged-in user is a faculty advisor
-        if faculty_ad.role != "faculty_advisor":
-            return JsonResponse({'error': 'Access Denied'}, status=403)
+        # if faculty_ad.role != "faculty_advisor":
+        #     return JsonResponse({'error': 'Access Denied'}, status=403)
 
         # Fetch all pending requests
         pending_requests = Request.objects.filter(status='waiting_for_approval')
@@ -100,6 +101,7 @@ def get_pending_forward_requests(request):
             'pending_requests': filtered_requests,
             'user': request.user
         }
+        print('aaaaaaaaaaaaaaaaaaaaaaaaaaa')
 
         return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
 
@@ -188,3 +190,33 @@ def get_requests(request):
         return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
+    
+
+
+
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from gymkhana.models import Venue
+
+@login_required
+def approved_bookings_view(request):
+    print('in approved_bookings_view()')
+    user = request.user
+
+    # Fetch venues where the user is the department in charge
+    managed_venues = Venue.objects.filter(department_incharge=user)
+    print('managed_venues : ' , managed_venues)
+
+    # Fetch approved bookings for those venues
+    approved_bookings = Request.objects.filter(venue__in=managed_venues, status="accepted")
+    print('approved_bookings : ', approved_bookings)
+
+    context = {
+        "user": user,
+        "managed_venues": managed_venues,
+        "approved_bookings": approved_bookings
+    }
+    print('context : ' , context)
+    
+    return render(request, "venue_admin/approved_bookings.html", context)
+

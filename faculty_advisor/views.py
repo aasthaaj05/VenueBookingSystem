@@ -93,22 +93,27 @@ def get_pending_forward_requests(request):
 
 @csrf_exempt
 def accept_pending_forward_requests(request, req_id):
+    print('fac ad : in accept_pending_forward_requests() ')
     if request.method != "POST":
         return JsonResponse({"error": "Only POST method allowed"}, status=405)
 
     print("request id:", req_id)
+    req_id = req_id.replace('-','')
     if not req_id:
         return JsonResponse({'error': 'Missing request ID'}, status=400)
     print("session:", request.session)
     user_id=request.session.get('user_id')
+    user_id = user_id.replace('-','')
+
     if not user_id:
+        print('in fac : if not user_id error ')
         return JsonResponse({'error': 'Missing user ID'}, status=400)
     
     try:
         req_id = req_id.replace('-','')
         res = booking_service.forwardRequestToGymkhana(req_id, user_id)
         
-        return redirect('/faculty_advisor/forward_requests')
+        return redirect('/faculty_advisor/  ')
         #return JsonResponse({'success': res})
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
@@ -134,6 +139,7 @@ def decline_pending_forward_requests(request, req_id):
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
     
+
     
 
 
