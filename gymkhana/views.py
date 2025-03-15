@@ -338,7 +338,6 @@ from .models import Request, Booking
 from .serializers import BookingSerializer
 
 def approve_request(request, request_id):
-    print("hewfhewofewjfjewofjefoewjfowjow##################################################################################")
 
     if request.method == "POST":
         req = get_object_or_404(Request, request_id=request_id)

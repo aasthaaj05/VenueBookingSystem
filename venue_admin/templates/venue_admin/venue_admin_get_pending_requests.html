@@ -18,10 +18,10 @@
     <nav class="navbar">
         <div class="logo">Venue Booking</div>
         <ul class="nav-links">
-            <li><a href="{% url 'faculty_advisor:home' %}">Dashboard</a></li>
-            <li><a href="{% url 'faculty_advisor:get_pending_forward_requests' %}">Pending Requests</a></li>
-            <li><a href="{% url 'faculty_advisor:home' %}">Home</a></li>
-            <li><a href="{% url 'faculty_advisor:home' %}">Logout</a></li>
+            <li><a href="{% url 'venue_admin:home' %}">Dashboard</a></li>
+            <li><a href="{% url 'venue_admin:get_requests' %}">Pending Requests</a></li>
+            <li><a href="{% url 'venue_admin:home' %}">Home</a></li>
+            <li><a href="{% url 'venue_admin:logout' %}">Logout</a></li>
         </ul>
     </nav>
 
@@ -64,12 +64,12 @@
                         </form> {% endcomment %}
                         <!-- <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Reject</button> -->
                         <div class="action-container">
-                            <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.request_id %}" class="action-form">
+                            <form method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}" class="action-form">
                                 {% csrf_token %}
                                 <button type="submit" class="btn approve-btn">Approve</button>
                             </form>
                         
-                            <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.request_id %}" class="action-form">
+                            <form method="POST" action="{% url 'venue_admin:reject_request' request.request_id %}" class="action-form">
                                 {% csrf_token %}
                                 <button type="submit" class="btn reject-btn">Reject</button>
                             </form>
