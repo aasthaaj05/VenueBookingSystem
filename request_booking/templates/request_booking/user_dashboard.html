@@ -137,11 +137,25 @@
             font-size: 14px;
         }
 
+        body, html {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000; /* Ensures it stays on top of other elements */
+        }
+        
+
     </style>
 </head>
 
 <body>
-    <nav class="nav">
+    {% comment %} <nav class="nav">
         <i class="uil uil-bars navOpenBtn"></i>
         <a href="#" class="logo">Venue Booking System</a>
         <ul class="nav-links">
@@ -156,8 +170,10 @@
         <div class="search-box">
             <i class="uil uil-search search-icon"></i>
             <input type="text" placeholder="Search here..." />
-        </div>
-    </nav>
+        </div> 
+    </nav> {% endcomment %}
+
+    {% include 'request_booking/nav.html' %}
 
     <div class="header">
         Available Venues

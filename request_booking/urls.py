@@ -3,6 +3,9 @@
 from django.urls import path
 from . import views
 
+app_name = "request_booking"  # This registers the namespace
+
+
 urlpatterns = [
     path('venues/', views.get_venues, name='get_venues'),
     path('venues/<str:venue_id>/', views.get_venue_details, name='get_venue_details'),  # ✅ Change int to uuid

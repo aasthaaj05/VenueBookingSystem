@@ -1,7 +1,8 @@
 /* General Styles */
 body {
     font-family: 'Poppins', sans-serif;
-    background: #f4f7fc;
+    /* background: #f4f7fc; */
+    background: red;
     color: #333;
     margin: 0;
     padding: 0;
@@ -16,7 +17,7 @@ body {
     background: #34495e;
     padding: 15px 30px;
     color: white;
-    box-sizing: border-box; /* Added critical fix */
+    box-sizing: border-box;
     width: 100vw; /* Full viewport width */
     position: fixed;
     top: 0;
@@ -219,7 +220,6 @@ tr:hover {
     background: #c0392b;
 }
 
-
 /* Responsive Design */
 @media (max-width: 768px) {
     .navbar {
@@ -245,15 +245,4 @@ tr:hover {
         max-width: 95%;
         margin-top: 160px;
     }
-    
-}
-
-
-.navbar {
-    height: 60px; /* Adjust as per design */
-    position: fixed;
-    width: 100%;
-    top: 0;
-    left: 0;
-    z-index: 1000;
 }

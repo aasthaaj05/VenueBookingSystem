@@ -19,7 +19,7 @@
 </head>
 
 <body>
-    <nav class="nav">
+    {% comment %} <nav class="nav">
         <i class="uil uil-bars navOpenBtn"></i>
         <a href="#" class="logo">Venue Booking System</a>
         <ul class="nav-links">
@@ -35,7 +35,9 @@
             <i class="uil uil-search search-icon"></i>
             <input type="text" placeholder="Search here..." />
         </div>
-    </nav>
+    </nav> {% endcomment %}
+    {% include 'home/nav.html' %}
+
 
     <div class="wrapper">
         <h2>Registration</h2>

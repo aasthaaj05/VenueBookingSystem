@@ -22,7 +22,10 @@
 </head>
 
 <body>
-    <nav class="nav">
+
+    {% include 'home/nav.html' %}
+
+    {% comment %} <nav class="nav">
         <i class="uil uil-bars navOpenBtn"></i>
         <a href="#" class="logo">Venue Booking System</a>
         <ul class="nav-links">
@@ -38,7 +41,7 @@
             <i class="uil uil-search search-icon"></i>
             <input type="text" placeholder="Search here..." />
         </div>
-    </nav>
+    </nav> {% endcomment %}
     <div class="wrapper">
         <h2>Login</h2>
         <form action="{% url 'login' %}" method="POST">
