@@ -113,7 +113,7 @@ def accept_pending_forward_requests(request, req_id):
         req_id = req_id.replace('-','')
         res = booking_service.forwardRequestToGymkhana(req_id, user_id)
         
-        return redirect('/faculty_advisor/  ')
+        return redirect('/faculty_advisor/forward_requests/')
         #return JsonResponse({'success': res})
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)

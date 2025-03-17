@@ -193,34 +193,68 @@ def logout_view(request):
 #         return JsonResponse({'error': str(e)}, status=400)
 
 
+# def reject_request(request, request_id):
+#     print("""Reject a request and store the reason in the rejection table.""")
+#     req = get_object_or_404(Request, request_id=request_id)
+
+#     print("""23r23fr23frq23r Reject a request and store the reason in the rejection table.""")
+
+#     if req.status != 'pending':
+#         return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
+
+#     # reason = request.data.get('reason', '')
+#     # msg = request.data.get('msg', '')
+
+#     # if not reason:
+#     #     return Response({"error": "Rejection reason is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+#     print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+#     req.status = 'rejected'
+#     req.reasons = ''
+#     req.save()
+
+#     rejection = Rejection.objects.create(
+#         request=req,
+#         user=req.user,
+#         msg='Slot already booked'
+#     )
+
+#     return Response({
+#         "message": "Request rejected successfully.",
+#         "rejection": RejectionSerializer(rejection).data
+#     }, status=status.HTTP_200_OK)
+
+from django.http import JsonResponse
+
 def reject_request(request, request_id):
-    """Reject a request and store the reason in the rejection table."""
+    print("""Reject a request and store the reason in the rejection table.""")
     req = get_object_or_404(Request, request_id=request_id)
 
+    print("""23r23fr23frq23r Reject a request and store the reason in the rejection table.""")
+
     if req.status != 'pending':
-        return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({"error": "Request is not in a pending state."}, status=400)
 
-    reason = request.data.get('reason', '')
-    msg = request.data.get('msg', '')
-
-    # if not reason:
-    #     return Response({"error": "Rejection reason is required."}, status=status.HTTP_400_BAD_REQUEST)
+    print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
     req.status = 'rejected'
-    req.reasons = reason
+    req.reasons = ''
     req.save()
 
     rejection = Rejection.objects.create(
         request=req,
         user=req.user,
-        reason=reason,
-        msg=msg
+        msg='Slot already booked'
     )
 
-    return Response({
+    data = {
         "message": "Request rejected successfully.",
         "rejection": RejectionSerializer(rejection).data
-    }, status=status.HTTP_200_OK)
+    }
+
+    return JsonResponse(data, status=200)
+
 
 
 @api_view(['POST'])
@@ -455,7 +489,7 @@ def approved_bookings_view(request):
     try:
         user = CustomUser.objects.get(id=user_id)
     except CustomUser.DoesNotExist:
-        return render(request, 'faculty_advisor/approved_bookings.html', {
+        return render(request, 'venue_admin/approved_bookings.html', {
             'user': None,
             'managed_venues': [],
             'approved_bookings': []
@@ -477,4 +511,4 @@ def approved_bookings_view(request):
         'approved_bookings': approved_bookings
     }
 
-    return render(request, 'faculty_advisor/approved_bookings.html', context)
+    return render(request, 'venue_admin/approved_bookings.html', context)
