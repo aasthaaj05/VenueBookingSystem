@@ -57,7 +57,7 @@
                     <td>{{ request.need }}</td>
                     <td>
                         {% if request.status == 'pending' %}
-                            <form method="POST" action="{% url 'cancel_request' request.request_id %}">
+                            <form method="POST" action="{% url 'request_booking:cancel_request' request.request_id %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn cancel-btn">Cancel</button>
                             </form>

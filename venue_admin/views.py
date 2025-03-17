@@ -354,6 +354,38 @@ from django.contrib import messages
 from gymkhana.models import Request, Booking
 from gymkhana.serializers import BookingSerializer
 
+def forward_request_to_alternate(request):
+    if request.alternate_venue_1:
+        # Create a new request based on the existing one
+        new_request = Request.objects.create(
+            user=request.user,
+            date=request.date,
+            time=request.time,
+            duration=request.duration,
+            venue=request.alternate_venue_1,
+            need=request.need,
+            alternate_venue_1=request.alternate_venue_2,
+            alternate_venue_2=None,
+            event_details=request.event_details,
+            status='pending',
+            reasons="Forwarded from another venue"
+        )
+        # Update the original request status
+        request.status = 'forwarded'
+        request.save()
+        return new_request
+    else:
+        request.status = 'rejected'
+        request.reasons = 'Slot is unavailable due to conflicting booking.'
+        request.save()
+        Rejection.objects.create(
+            request=request,
+            user=request.user,
+            reason='Slot is unavailable due to conflicting booking.',
+            msg='Booking conflict with another approved request.'
+        )
+        
+
 def approve_request(request, request_id):
 
     if request.method == "POST":
@@ -380,17 +412,8 @@ def approve_request(request, request_id):
         if conflicting_requests:
             # Reject all conflicting requests
             for conflict in conflicting_requests:
-                conflict.status = 'rejected'
-                conflict.reasons = 'Slot is unavailable due to conflicting booking.'
-                conflict.save()
+                forward_request_to_alternate(conflict)
 
-                # Add to Rejection table
-                Rejection.objects.create(
-                    request=conflict,
-                    user=conflict.user,
-                    reason='Slot is unavailable due to conflicting booking.',
-                    msg='Booking conflict with another approved request.'
-                )
 
 
         # Prepare data for serializer

@@ -9,7 +9,8 @@ class Request(models.Model):
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('forwarded', 'Forwarded')
     ]   
 
     request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -388,6 +388,34 @@ def book_venue(request):
     print()
     print()
     """Handles venue selection and preloads user session details."""
+    # if request.method == "GET":
+    #     print('in book_venue function')
+    #     # venue_name = request.POST.get("venue_name")
+    #     # print(f"Venue selected: {venue_name}")
+
+    #     # Print session data for debugging
+    #     print("Session Data:", request.session.items())
+    #     print(request.session.get("name"))
+    #     venues = Venue.objects.all()  # Fetch all venues from the database
+
+    #     # Fetch user details from session
+    #     user_data = {
+    #         "name": request.session.get("name"),  # Full name from session
+    #         "email": request.session.get("email"),
+    #         "organization_name": request.session.get("organization_name"),
+    #         "date": request.session.get("start_date"),  # Extracting start date
+    #         "start_time": request.session.get("start_time"),  # Extracting start time
+    #         "end_time": request.session.get("end_time"),  # Extracting end time
+    #     }
+
+    #     print('user data : ' , user_data)
+
+    #     return render(request, "request_booking/booking_form.html", {
+    #         "venue": venue_name,
+    #         "user_data": user_data,
+    #         'venues':venues,# Passing session data to prefill the form
+    #     })
+
     if request.method == "POST":
         print('in book_venue function')
         # venue_name = request.POST.get("venue_name")
@@ -396,6 +424,7 @@ def book_venue(request):
         # Print session data for debugging
         print("Session Data:", request.session.items())
         print(request.session.get("name"))
+        venues = Venue.objects.all()  # Fetch all venues from the database
 
         # Fetch user details from session
         user_data = {
@@ -411,7 +440,8 @@ def book_venue(request):
 
         return render(request, "request_booking/booking_form.html", {
             "venue": venue_name,
-            "user_data": user_data  # Passing session data to prefill the form
+            "user_data": user_data,
+            'venues':venues,# Passing session data to prefill the form
         })
 
     if request.method == "GET":
@@ -419,6 +449,7 @@ def book_venue(request):
         # Print session data for debugging
         print("Session Data:", request.session.items())
         print(request.session.get("name"))
+        venues = Venue.objects.all()
 
         venue_name = request.session.get("venue_name")
 
@@ -440,7 +471,8 @@ def book_venue(request):
         
         return render(request, "request_booking/booking_form.html", {
             "venue": venue_name,
-            "user_data": user_data  # Passing session data to prefill the form
+            "user_data": user_data,
+            'venues':venues,  # Passing session data to prefill the form
         })
 
 
@@ -464,6 +496,8 @@ def process_booking(request):
             "email": request.session.get("email"),  # From session
             "organization_name": request.session.get("organization_name"),  # Fixed typo (extra space)
             "phone": request.POST.get("phone"),
+            "alternate_venue_1": request.POST.get("alternateVenue1"),
+            "alternate_venue_2": request.POST.get("alternateVenue2"),
             "venue": request.POST.get("venue"),
             "guest_count": request.POST.get("guestCount"),
             "purpose": request.POST.get("purpose"),
@@ -472,6 +506,9 @@ def process_booking(request):
 
         # Save to database
         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
+        alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
+        alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
+
         current_datetime = now()  # Get current date and time
 
         
@@ -540,6 +577,8 @@ def process_booking(request):
             time = request.session.get('start_time'),
             duration=request.session.get("booking_duration"),  
             venue=venue_obj,
+            alternate_venue_1=alt_venue_1,
+            alternate_venue_2=alt_venue_2,
             need=data["purpose"],
             event_details=data["event_type"],
             status=status,
