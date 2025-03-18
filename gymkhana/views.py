@@ -295,14 +295,16 @@ def requests_for_gymkhana(request):
 
 
 
-def request_booking(request): 
-
-
-    # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
+def request_booking(request):
+    # Filter requests where status is 'pending' OR 'waiting for approval'
     requests = Request.objects.select_related('venue', 'user').filter(
         Q(status="pending")
     )
 
+    # Fetch approved requests
+    approved_requests = Request.objects.select_related('venue', 'user').filter(
+        Q(status="approved")
+    )
 
     context = {
         'requests': [
@@ -318,9 +320,26 @@ def request_booking(request):
                 'event_details': req.event_details,
                 'status': req.status,
                 'reasons': req.reasons if req.status == 'rejected' else None,
-                'purpose' : req.need
+                'purpose': req.need
             }
             for req in requests
+        ],
+        'approved_requests': [
+            {
+                'request_id': str(req.request_id),
+                'date': req.date.strftime('%Y-%m-%d'),
+                'time': f"{req.time}:00",  # Formatting time
+                'venue': {
+                    'name': req.venue.venue_name if hasattr(req.venue, 'venue_name') else 'Unknown Venue',
+                    'capacity': req.venue.capacity if hasattr(req.venue, 'capacity') else 'N/A',
+                },
+                'user': {'organization_name': req.user.organization_name},
+                'event_details': req.event_details,
+                'status': req.status,
+                'reasons': req.reasons if req.status == 'rejected' else None,
+                'purpose': req.need
+            }
+            for req in approved_requests
         ]
     }
     print('context : ', context)  # Debugging output
