@@ -49,7 +49,6 @@
             font-weight: bold;
             text-align: center;
             color: #333;
-            margin-top: 5rem;
         }
 
         .venue-info {
@@ -97,6 +96,48 @@
             animation-play-state: paused;
         }
 
+        /* Container for all venue cards */
+.venues-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;  /* Ensures that if the screen is small, items wrap onto the next line */
+    gap: 20px;        /* Space between venue cards */
+   
+}
+
+/* Individual venue card */
+.venue-card {
+    width: 30%;  /* Default width for larger screens */
+    border: 1px solid #ccc;  /* Optional styling */
+    padding: 10px;
+    box-sizing: border-box;  /* Ensures padding doesn't affect width */
+}
+
+/* Media queries for smaller screen sizes */
+@media (max-width: 1200px) {
+    .venue-card {
+        width: 45%;  /* Two cards per row on medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .venue-card {
+        width: 100%;  /* One card per row on small screens */
+    }
+}
+
+/* Optional: additional styles for better responsiveness */
+@media (max-width: 480px) {
+    .carousel-wrapper {
+        width: 100%;  /* Make carousel occupy full width on smaller screens */
+    }
+
+    .carousel-container {
+        width: 100%;  /* Ensure carousel is responsive */
+    }
+}
+
+
         @keyframes sliding {
             30% { transform: translateX(0); }
             35% { transform: translateX(-400px); }
@@ -132,7 +173,11 @@
     </div>
     
     {% if venues %}
+    <div class="venues-container">
+
+    
         {% for venue in venues %}
+        <div class="venue-card">
         <div class="carousel-wrapper">
             <div class="carousel-container">
                 <div class="carousel">
@@ -163,7 +208,8 @@
             </form>
         </div>
         {% endfor %}
-    {% else %}
+    </div>
+{% else %}
         <div style="text-align: center; font-size: 20px; color: red; margin-top: 20px;">
             <strong>Oops, no venues are available for the selected date.</strong>
         </div>
