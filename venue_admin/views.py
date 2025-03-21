@@ -26,6 +26,13 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
+
+sender_email = "coep"  # Outlook Email
+sender_password = ""      # Outlook Email Password
+smtp_server = "smtp.office365.com"
+smtp_port = 587  # Outlook SMTP port
+
+
 def home(request):
     return render(request , 'venue_admin/index.html')
 
@@ -58,173 +65,6 @@ def logout_view(request):
 
 
 
-# from django.shortcuts import render
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# from request_booking.models import Request
-# from users.models import CustomUser  # Ensure the CustomUser model is properly imported
-
-
-# @csrf_exempt
-# def get_pending_forward_requests(request):
-#     print("In get_pending_forward_requests()")
-#     print("Session:", request.session)
-
-#     user_id = request.session.get('user_id')
-
-#     print("Request session items:", request.session.items())
-
-#     if not user_id:
-#         return JsonResponse({'error': 'Missing user ID'}, status=400)
-
-#     try:
-#         # Fetch logged-in faculty advisor details
-#         faculty_ad = CustomUser.objects.get(id=user_id)
-
-#         # Check if the logged-in user is a faculty advisor
-#         if faculty_ad.role != "faculty_advisor":
-#             return JsonResponse({'error': 'Access Denied'}, status=403)
-
-#         # Fetch all pending requests
-#         pending_requests = Request.objects.filter(status='waiting_for_approval')
-
-
-#         # Filter requests where the requested user's organization matches the faculty advisor's organization
-#         filtered_requests = []
-#         for req in pending_requests:
-#             requested_user = CustomUser.objects.get(id=req.user_id)  # Get the user who made the request
-            
-#             if requested_user.organization_name == faculty_ad.organization_name:
-#                 filtered_requests.append(req)
-
-#         print("Filtered Requests:", filtered_requests)
-
-#         context = {
-#             'pending_requests': filtered_requests,
-#             'user': request.user
-#         }
-
-#         return render(request, "faculty_advisor/faculty_advisor_pending_requests.html", context)
-
-#     except CustomUser.DoesNotExist:
-#         return JsonResponse({'error': 'User not found'}, status=404)
-#     except Exception as e:
-#         print('---line 145 ----')
-#         return JsonResponse({'error': str(e)}, status=400)
-
-# @csrf_exempt
-# def get_requests(request):
-#     print("In Venue admin : get_requests()")
-#     print("Session:", request.session)
-    
-#     user_id = str(request.session.get('user_id'))
-#     print('user_id : ', user_id)
-
-#     print("Request session items:", request.session.items())
-
-#     if not user_id:
-#         return JsonResponse({'error': 'Missing user ID'}, status=400)
-
-#     try:
-#         print('bbbbbbb')
-#         print()
-#         print()
-#         # Fetch logged-in venue admin details
-#         venue_admin = CustomUser.objects.get(id=user_id)
-#         print('venue admin : ' , venue_admin)
-#         print('venue admin.id : ' , venue_admin.id)
-#         venue_admin_id_str = str(venue_admin.id).replace('-', '')  # Convert to string before replacing
-#         print('venue admin.id : ' , venue_admin_id_str)
-
-
-#         # # Check if the logged-in user is a venue admin
-#         # if venue_admin.role != "venue_admin" or :
-#         #     return JsonResponse({'error': 'Access Denied'}, status=403)
-
-
-#         if venue_admin.role.lower() != "venue_admin":
-#             return JsonResponse({'error': 'Access Denied'}, status=403)
-
-
-
-#         print('aaaaaaaaaa')
-#         print()
-#         print()
-
-#         # Get venues where this venue admin is the department incharge
-#         managed_venues = Venue.objects.filter(department_incharge=venue_admin_id_str)
-
-#         print('ccccccccc')
-#         print()
-#         print()
-
-#         # Extract venue IDs
-#         managed_venue_ids = managed_venues.values_list('id', flat=True)
-
-
-#         print('ddddddd')
-#         print()
-#         print()
-
-#         # Get pending requests for these venues
-#         pending_requests = Request.objects.filter(venue_id__in=managed_venue_ids, status="pending")
-
-#         print("Managed Venues:", managed_venues)
-#         print("Pending Requests:", pending_requests)
-
-#         print()
-#         print()
-#         print('managed_venues : ' , managed_venues)
-#         print('pending_requests : ' , pending_requests)
-#         print()
-#         print()
-
-#         context = {
-#             'pending_requests': pending_requests,
-#             'user': request.user
-#         }
-
-
-#         return render(request, "venue_admin/venue_admin_get_pending_requests.html", context)
-
-#     except CustomUser.DoesNotExist:
-#         return JsonResponse({'error': 'User not found'}, status=404)
-#     except Exception as e:
-#         return JsonResponse({'error': str(e)}, status=400)
-
-
-# def reject_request(request, request_id):
-#     print("""Reject a request and store the reason in the rejection table.""")
-#     req = get_object_or_404(Request, request_id=request_id)
-
-#     print("""23r23fr23frq23r Reject a request and store the reason in the rejection table.""")
-
-#     if req.status != 'pending':
-#         return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
-
-#     # reason = request.data.get('reason', '')
-#     # msg = request.data.get('msg', '')
-
-#     # if not reason:
-#     #     return Response({"error": "Rejection reason is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-#     print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-#     req.status = 'rejected'
-#     req.reasons = ''
-#     req.save()
-
-#     rejection = Rejection.objects.create(
-#         request=req,
-#         user=req.user,
-#         msg='Slot already booked'
-#     )
-
-#     return Response({
-#         "message": "Request rejected successfully.",
-#         "rejection": RejectionSerializer(rejection).data
-#     }, status=status.HTTP_200_OK)
-
 from django.http import JsonResponse
 
 def reject_request(request, request_id):
@@ -248,12 +88,17 @@ def reject_request(request, request_id):
         msg='Slot already booked'
     )
 
+    # ✅ Send rejection email to requester
+    send_booking_rejected_email(req)
+
     data = {
         "message": "Request rejected successfully.",
         "rejection": RejectionSerializer(rejection).data
     }
 
-    return JsonResponse(data, status=200)
+
+    # return JsonResponse(data, status=200)
+    return redirect('/venue_admin/requests')
 
 
 
@@ -381,6 +226,208 @@ def request_booking(request):
 
 
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_booking_accepted_email(req):
+    print()
+    print()
+    print('--------start : send_booking_accepted_email-----------')
+    requester_email = req.user.email  # Get requester's email
+    print('requester_email : ' , requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Approved ✅"
+
+    body = f"""
+    Dear {req.user.name},
+
+    Your venue booking request has been approved! 🎉
+
+    Booking Details:
+    - Booking ID: {req.request_id}
+    - Venue: {req.venue.venue_name}
+    - Date: {req.date}
+    - Time: {req.time}
+    - Duration: {req.duration} hours
+    - Event Details: {req.event_details}
+
+    Please ensure you arrive on time and follow the venue guidelines.
+
+    If you have any questions, feel free to contact the venue in-charge.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Booking approval email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+
+    print('-----end send_booking_accepted_email--------')
+    print()
+    print()
+
+# Example usage:
+# send_booking_accepted_email(req)
+
+
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_booking_rejected_email(req):
+    print()
+    print()
+    print('--------start : send_booking_rejected_email-----------')
+    requester_email = req.user.email  # Get requester's email
+    print('requester_email : ', requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Rejected ❌"
+
+    body = f"""
+    Dear {req.user.name},
+
+    We regret to inform you that your venue booking request has been rejected due to scheduling conflicts.  
+
+    Request Details:
+    - Booking ID: {req.request_id}
+    - Venue: {req.venue.venue_name}
+    - Date: {req.date}
+    - Time: {req.time}:00
+    - Duration: {req.duration} hours
+    - Event Details: {req.event_details}
+
+    Reason for Rejection: The requested venue is unavailable at the specified time.  
+
+    What you can do next?
+    - Try booking a different venue.  
+    - Choose an alternative date/time.  
+    - Contact the venue in-charge for further assistance.
+
+    We apologize for the inconvenience. Feel free to reach out for any queries.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Booking rejection email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('-----end send_booking_rejected_email--------')
+    print()
+    print()
+
+
+
+
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+def send_request_forwarded_email(req, new_venue):
+    print()
+    print()
+    print("\n-------- Start: send_request_forwarded_email --------")
+    
+    requester_email = req.user.email  # Get requester's email
+    print('Requester Email:', requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Request Forwarded 🔄"
+
+    body = f"""
+    Dear {req.user.name},
+
+    Your venue booking request for {req.venue.venue_name} on {req.date} at {req.time} could not be accommodated due to a scheduling conflict. 
+
+    However, we have forwarded your request to an alternative venue:  
+    {new_venue.venue_name}  
+
+    Your request is now under review for the new venue, and we will notify you once a decision is made.
+
+    New Request Details:
+    - Venue: {new_venue.venue_name}
+    - Date: {req.date}
+    - Time: {req.time}
+    - Duration: {req.duration} hours
+    - Event Details: {req.event_details}
+
+    If you have any concerns or need further assistance, feel free to contact us.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Forwarding email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print("-------- End: send_request_forwarded_email --------\n")
+    print()
+    print()
+
+
+
+
+
+
 import uuid
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
@@ -389,6 +436,8 @@ from gymkhana.models import Request, Booking
 from gymkhana.serializers import BookingSerializer
 
 def forward_request_to_alternate(request):
+
+    print('.........in forward_request_to_alternate().......')
     if request.alternate_venue_1:
         # Create a new request based on the existing one
         new_request = Request.objects.create(
@@ -407,6 +456,10 @@ def forward_request_to_alternate(request):
         # Update the original request status
         request.status = 'forwarded'
         request.save()
+
+        # ✅ Send email to notify requester about forwarding
+        send_request_forwarded_email(request, new_request.venue)
+
         return new_request
     else:
         request.status = 'rejected'
@@ -419,8 +472,12 @@ def forward_request_to_alternate(request):
             msg='Booking conflict with another approved request.'
         )
         
+    print('.........Ended in forward_request_to_alternate().......')
 
 def approve_request(request, request_id):
+    print()
+    print()
+    print('-------in approve_request()-------')
 
     if request.method == "POST":
         req = get_object_or_404(Request, request_id=request_id)
@@ -475,12 +532,19 @@ def approve_request(request, request_id):
                 print("✅ Booking saved successfully, request updated!")  # Debugging
                 messages.success(request, "Booking approved and request status updated!")
 
+                send_booking_accepted_email(req)
+                print()
+                print()
+
             return redirect('/venue_admin/requests')
         else:
             print("❌ Serializer errors:", serializer.errors)  # Debugging
             messages.error(request, "Error approving request.")
 
     return redirect('/venue_admin/requests')
+
+
+
 
 def approved_bookings_view(request):
     user_id = request.user.id
@@ -503,6 +567,7 @@ def approved_bookings_view(request):
         venue__in=managed_venues,
         status='active'
     ).select_related('user', 'venue')
+
 
     # ✅ Pass data to context
     context = {

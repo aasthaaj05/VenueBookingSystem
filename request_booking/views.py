@@ -228,6 +228,13 @@ import json
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 
+
+
+sender_email = ""  # Outlook Email
+sender_password = "coep"      # Outlook Email Password
+smtp_server = "smtp.office365.com"
+smtp_port = 587  # Outlook SMTP port
+
 def getUnavailableSlots(request):
     if request.method == "GET":
         return JsonResponse({"error": "Invalid request method"}, status=405)
@@ -388,33 +395,7 @@ def book_venue(request):
     print()
     print()
     """Handles venue selection and preloads user session details."""
-    # if request.method == "GET":
-    #     print('in book_venue function')
-    #     # venue_name = request.POST.get("venue_name")
-    #     # print(f"Venue selected: {venue_name}")
-
-    #     # Print session data for debugging
-    #     print("Session Data:", request.session.items())
-    #     print(request.session.get("name"))
-    #     venues = Venue.objects.all()  # Fetch all venues from the database
-
-    #     # Fetch user details from session
-    #     user_data = {
-    #         "name": request.session.get("name"),  # Full name from session
-    #         "email": request.session.get("email"),
-    #         "organization_name": request.session.get("organization_name"),
-    #         "date": request.session.get("start_date"),  # Extracting start date
-    #         "start_time": request.session.get("start_time"),  # Extracting start time
-    #         "end_time": request.session.get("end_time"),  # Extracting end time
-    #     }
-
-    #     print('user data : ' , user_data)
-
-    #     return render(request, "request_booking/booking_form.html", {
-    #         "venue": venue_name,
-    #         "user_data": user_data,
-    #         'venues':venues,# Passing session data to prefill the form
-    #     })
+    
 
     if request.method == "POST":
         print('in book_venue function')
@@ -584,6 +565,7 @@ def process_booking(request):
             status=status,
             created_at = formatted_time,
         )
+        send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
 
         print('in process_booking func : after Request.objects.create')
 
@@ -592,6 +574,105 @@ def process_booking(request):
     
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+
+
+
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.utils.timezone import now
+
+def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time):
+    # Get venue in-charge email
+    venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
+    print()
+    print('---------in send_booking_request_email()------')
+    print()
+    print('venue_incharge_email : ' , venue_incharge_email)
+    print()
+    
+    if not venue_incharge_email:
+        print("Venue in-charge email not found.")
+        return
+
+    # Retrieve booking details from session
+    start_date = request.session.get('start_date')
+    start_time = request.session.get('start_time')
+    booking_duration = request.session.get('booking_duration')
+
+   
+
+ 
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = venue_incharge_email
+    msg['Subject'] = "New Venue Booking Request"
+
+    body = f"""
+    Dear {venue_obj.department_incharge.name},
+
+    A new venue booking request has been submitted.
+
+    Request Details:
+    - Requested by: {request.user.name} ({request.user.email})
+    - Venue: {venue_obj.venue_name}
+    - Date: {start_date}
+    - Time: {start_time}
+    - Duration: {booking_duration} hours
+    - Purpose: {data["purpose"]}
+    - Event Type: {data["event_type"]}
+    - Alternate Venue 1: {alt_venue_1.venue_name if alt_venue_1 else 'None'}
+    - Alternate Venue 2: {alt_venue_2.venue_name if alt_venue_2 else 'None'}
+    - Status: {status}
+    - Requested At: {formatted_time}
+
+    Please review the request and take the necessary action.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+
+    print(f"Venue booking request email sent to {venue_incharge_email}")
+
+    print('---------Ended ---- send_booking_request_email()------')
+
+# Example usage:
+# send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, "Pending")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
