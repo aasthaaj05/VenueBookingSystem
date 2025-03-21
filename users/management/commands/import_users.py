@@ -13,6 +13,7 @@ class Command(BaseCommand):
         
         try:
             df = pd.read_excel(file_path)
+            print('df : ' , df)
 
             for index, row in df.iterrows():
                 if CustomUser.objects.filter(email=row['email']).exists():

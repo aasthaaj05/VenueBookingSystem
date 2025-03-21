@@ -2,23 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .utils import send_otp  # Import the send_otp function
 
-# def change_password_view(request):
-#     if request.method == 'POST':
-#         new_password = request.POST.get('new_password')
-#         confirm_password = request.POST.get('confirm_password')
 
-#         if new_password and confirm_password:
-#             if new_password == confirm_password:
-#                 # Implement password update logic here
-#                 # Example: Update password in the database
-#                 messages.success(request, 'Password changed successfully!')
-#                 return redirect('send-otp')
-#             else:
-#                 messages.error(request, 'Passwords do not match.')
-#         else:
-#             messages.error(request, 'Please fill out all fields.')
-
-#     return render(request, 'change_password.html')
 
 
 
@@ -52,21 +36,7 @@ def change_password_view(request):
 
 
 
-# def send_otp_view(request):
-#     print('in send_otp_view() ')
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         if email:
-#             try:
-#                 send_otp(email , request)
-#                 # Store the email in session for verification step
-#                 request.session['email'] = email
-#                 messages.success(request, 'OTP sent successfully!')
-#                 # Redirect to verify-otp instead of send-otp
-#                 return redirect('verify-otp')
-#             except Exception as e:
-#                 messages.error(request, f'Failed to send OTP: {e}')
-#     return render(request, 'auth_otp/send_otp.html')
+
 
 
 from django.shortcuts import render, redirect

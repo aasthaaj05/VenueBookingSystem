@@ -108,18 +108,6 @@ def create_venue(request):
 
     # return render(request, 'gymkhana/index.html')
 
-# @api_view(['POST'])
-# def create_venue(request):
-#     """
-#     Creates a new venue.
-#     Expects JSON payload with: venue_name, description, photo_url, capacity, address, facilities, department_incharge
-#     """
-#     serializer = VenueSerializer(data=request.data)
-#     if serializer.is_valid():
-#         serializer.save()  # Automatically generates UUID for id
-#         return Response({"message": "Venue created successfully", "venue": serializer.data}, status=status.HTTP_201_CREATED)
-    
-#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 
