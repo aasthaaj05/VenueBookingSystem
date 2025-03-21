@@ -27,8 +27,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 
-sender_email = "arnavp22.comp@coeptech.ac.in"  # Outlook Email
-sender_password = "!gui2#@lk1!gui2#@lk1"      # Outlook Email Password
+sender_email = "coep"  # Outlook Email
+sender_password = ""      # Outlook Email Password
 smtp_server = "smtp.office365.com"
 smtp_port = 587  # Outlook SMTP port
 

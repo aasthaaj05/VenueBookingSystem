@@ -230,8 +230,8 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 
-sender_email = "arnavp22.comp@coeptech.ac.in"  # Outlook Email
-sender_password = "!gui2#@lk1!gui2#@lk1"      # Outlook Email Password
+sender_email = ""  # Outlook Email
+sender_password = "coep"      # Outlook Email Password
 smtp_server = "smtp.office365.com"
 smtp_port = 587  # Outlook SMTP port
 
