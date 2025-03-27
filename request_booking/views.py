@@ -724,11 +724,12 @@ def venue_list(request):
     # Format venue data for the template
     venue_data = []
     for venue in venues:
+        facilities_list = [facility.strip() for facility in venue.facilities.split(',')] if venue.facilities else [] 
         venue_data.append({
             "id": venue.id,
             "name": venue.venue_name,
             "capacity": venue.capacity,
-            "facilities": venue.facilities,  # This is a list (JSONField)
+            "facilities": facilities_list,  # This is a list (JSONField)
             "images": venue.photo_url.split(',') if venue.photo_url else [],  # Assuming multiple images are comma-separated
         })
 
