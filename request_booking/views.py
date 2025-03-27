@@ -729,7 +729,7 @@ def venue_list(request):
             "id": venue.id,
             "name": venue.venue_name,
             "capacity": venue.capacity,
-            "facilities": facilities_list,  # This is a list (JSONField)
+            "facilities": facilities_list, 
             "images": venue.photo_url.split(',') if venue.photo_url else [],  # Assuming multiple images are comma-separated
         })
 
