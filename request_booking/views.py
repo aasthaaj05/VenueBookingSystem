@@ -350,12 +350,12 @@ def request_slot(request):
 
 # Cancel a booking request (POST)
 @csrf_exempt
-def cancel_request(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'Only POST method allowed'}, status=405)
+def cancel_request(request, request_id):
+    # if request.method != 'POST':
+    #     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
 
-    data = json.loads(request.body)
-    req_id = data.get('req_id')
+    # data = json.loads(request.body)
+    req_id = request_id
     req_id = req_id.replace('-', '')  # Remove all hyphens
 
 
@@ -364,7 +364,7 @@ def cancel_request(request):
 
     try:
         result = booking_service.cancelRequest(req_id)
-        return JsonResponse({'success': result})
+        return redirect('/request_booking/booking_status')
     except ValueError as e:
         return JsonResponse({'error': str(e)}, status=400)
 
@@ -550,9 +550,7 @@ def process_booking(request):
         print()
         print()
 
-
-        Request.objects.create(
-            user=request.user,
+        checker=Request.objects.filter(user=request.user,
             date=request.session.get('start_date'),  # Store current date
             # time=time_in_hours,  # Convert time to integer
             time = request.session.get('start_time'),
@@ -562,12 +560,25 @@ def process_booking(request):
             alternate_venue_2=alt_venue_2,
             need=data["purpose"],
             event_details=data["event_type"],
-            status=status,
-            created_at = formatted_time,
-        )
-        send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
+            status=status).exists()
+        if not checker:
+            Request.objects.create(
+                user=request.user,
+                date=request.session.get('start_date'),  # Store current date
+                # time=time_in_hours,  # Convert time to integer
+                time = request.session.get('start_time'),
+                duration=request.session.get("booking_duration"),  
+                venue=venue_obj,
+                alternate_venue_1=alt_venue_1,
+                alternate_venue_2=alt_venue_2,
+                need=data["purpose"],
+                event_details=data["event_type"],
+                status=status,
+                created_at = formatted_time,
+            )
+            send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
 
-        print('in process_booking func : after Request.objects.create')
+            print('in process_booking func : after Request.objects.create')
 
         # return render(request, "request_booking/booking_status.html", {"success": True, "venue": data["venue"]})
         return redirect("/request_booking/booking_status")  

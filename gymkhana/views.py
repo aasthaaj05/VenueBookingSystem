@@ -123,6 +123,16 @@ def approve_request(request, request_id):
     start_time = req.time
     end_time = req.time + req.duration
 
+    checker = Booking.objects.filter(
+        date=req.date,
+        time=req.time,
+        duration=req.duration,
+        venue=req.venue,
+    ).exists()
+
+    if checker:
+        return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
+
     if req.status != 'pending':
         return Response({"error": "Request is not in a pending state."}, status=status.HTTP_400_BAD_REQUEST)
     pending_requests = Request.objects.filter(
