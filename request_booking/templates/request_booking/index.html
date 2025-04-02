@@ -33,21 +33,188 @@
 
   <!-- Main CSS File -->
   <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+
+  <style>
+    /* Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(26, 115, 232, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Background blobs for the overlay */
+    .modal-overlay::before, .modal-overlay::after {
+      content: "";
+      position: absolute;
+      width: 50vw;
+      height: 50vw;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    
+    .modal-overlay::before {
+      top: -15vw;
+      right: -15vw;
+    }
+    
+    .modal-overlay::after {
+      bottom: -15vw;
+      left: -15vw;
+    }
+    
+    .modal-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 30px;
+      text-align: center;
+      z-index: 1;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-container {
+      transform: translateY(0);
+    }
+    
+    .icon-container {
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .window-icon {
+      width: 60px;
+      height: 60px;
+      border: 2.5px solid #1a73e8;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1a73e8;
+    }
+    
+    .window-face {
+      font-size: 24px;
+      line-height: 1;
+    }
+    
+    .circle-icon {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background-color: #1a73e8;
+      border: 2px solid white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 16px;
+    }
+    
+    .modal-container h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .modal-container p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .modal-container button {
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    
+    .cancel-btn {
+      background-color: #f1f3f4;
+      border: none;
+      color: #5f6368;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #e8eaed;
+    }
+    
+    .logout-btn {
+      background-color: #1a73e8;
+      border: none;
+      color: white;
+    }
+    
+    .logout-btn:hover {
+      background-color: #1765cc;
+      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .modal-container {
+        padding: 30px 20px;
+      }
+      
+      .modal-container h2 {
+        font-size: 20px;
+      }
+      
+      .modal-container p {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      
+      .buttons {
+        flex-direction: column;
+      }
+      
+      .modal-container button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 
 
 
   
- 
 
-  <!-- =======================================================
-  * Template Name: Arsha
-  * Template URL: https://bootstrapmade.com/arsha-free-bootstrap-html-template-corporate/
-  * Updated: Feb 22 2025 with Bootstrap v5.3.3
-  * Author: BootstrapMade.com
-  * License: https://bootstrapmade.com/license/
-  ======================================================== -->
-</head>
 
 <body class="index-page">
 
@@ -145,7 +312,7 @@
 
     <!-- About Section -->
     <!-- About Section -->
-<section id="about" class="about section">
+{% comment %} <section id="about" class="about section">
 
   <!-- Section Title -->
   <div class="container section-title" data-aos="fade-up">
@@ -175,14 +342,14 @@
           <li><i class="bi bi-check2-circle"></i> <span>Administration: The Gymkhana is managed by university functionaries, including a Vice-President responsible for overseeing its operations.</span></li>
         </ul>
         <p>In summary, the COEP Gymkhana plays a pivotal role in enriching the student experience by providing diverse opportunities for engagement beyond the classroom, thereby contributing to the overall development of its students.</p>
-        {% comment %} <a href="#" class="read-more"><span>Read More</span><i class="bi bi-arrow-right"></i></a> {% endcomment %}
+        <a href="#" class="read-more"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
       </div>
 
     </div>
 
   </div>
 
-</section>
+</section> {% endcomment %}
 <!-- /About Section -->
 
     {% comment %} <!-- Why Us Section -->
@@ -614,94 +781,7 @@
     </section><!-- /Portfolio Section --> {% endcomment %}
 
     <!-- Team Section -->
-    <section id="team" class="team section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Team</h2>
-        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-      </div><!-- End Section Title -->
-
-      <div class="container">
-
-        <div class="row gy-4">
-
-          {% load static %}
-
-          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
-              <div class="team-member d-flex align-items-start">
-                  <div class="pic"><img src="{% static 'assets/img/person/person-m-7.webp' %}" class="img-fluid" alt=""></div>
-                  <div class="member-info">
-                      <h4>Walter White</h4>
-                      <span>Chief Executive Officer</span>
-                      <p>Explicabo voluptatem mollitia et repellat qui dolorum quasi</p>
-                      <div class="social">
-                          <a href=""><i class="bi bi-twitter-x"></i></a>
-                          <a href=""><i class="bi bi-facebook"></i></a>
-                          <a href=""><i class="bi bi-instagram"></i></a>
-                          <a href=""> <i class="bi bi-linkedin"></i> </a>
-                      </div>
-                  </div>
-              </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
-              <div class="team-member d-flex align-items-start">
-                  <div class="pic"><img src="{% static 'assets/img/person/person-f-8.webp' %}" class="img-fluid" alt=""></div>
-                  <div class="member-info">
-                      <h4>Sarah Jhonson</h4>
-                      <span>Product Manager</span>
-                      <p>Aut maiores voluptates amet et quis praesentium qui senda para</p>
-                      <div class="social">
-                          <a href=""><i class="bi bi-twitter-x"></i></a>
-                          <a href=""><i class="bi bi-facebook"></i></a>
-                          <a href=""><i class="bi bi-instagram"></i></a>
-                          <a href=""> <i class="bi bi-linkedin"></i> </a>
-                      </div>
-                  </div>
-              </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="300">
-              <div class="team-member d-flex align-items-start">
-                  <div class="pic"><img src="{% static 'assets/img/person/person-m-6.webp' %}" class="img-fluid" alt=""></div>
-                  <div class="member-info">
-                      <h4>William Anderson</h4>
-                      <span>CTO</span>
-                      <p>Quisquam facilis cum velit laborum corrupti fuga rerum quia</p>
-                      <div class="social">
-                          <a href=""><i class="bi bi-twitter-x"></i></a>
-                          <a href=""><i class="bi bi-facebook"></i></a>
-                          <a href=""><i class="bi bi-instagram"></i></a>
-                          <a href=""> <i class="bi bi-linkedin"></i> </a>
-                      </div>
-                  </div>
-              </div>
-          </div><!-- End Team Member -->
-
-          <div class="col-lg-6" data-aos="fade-up" data-aos-delay="400">
-              <div class="team-member d-flex align-items-start">
-                  <div class="pic"><img src="{% static 'assets/img/person/person-f-4.webp' %}" class="img-fluid" alt=""></div>
-                  <div class="member-info">
-                      <h4>Amanda Jepson</h4>
-                      <span>Accountant</span>
-                      <p>Dolorum tempora officiis odit laborum officiis et et accusamus</p>
-                      <div class="social">
-                          <a href=""><i class="bi bi-twitter-x"></i></a>
-                          <a href=""><i class="bi bi-facebook"></i></a>
-                          <a href=""><i class="bi bi-instagram"></i></a>
-                          <a href=""> <i class="bi bi-linkedin"></i> </a>
-                      </div>
-                  </div>
-              </div>
-          </div><!-- End Team Member -->
-
-
-        </div>
-
-      </div>
-
-    </section><!-- /Team Section -->
+    <!-- /Team Section -->
 
     {% comment %} <!-- Pricing Section -->
     <section id="pricing" class="pricing section light-background">
@@ -1112,90 +1192,7 @@
     </section><!-- /Recent Blog Postst Section -->
 
     <!-- Contact Section -->
-    <section id="contact" class="contact section">
-
-      <!-- Section Title -->
-      <div class="container section-title" data-aos="fade-up">
-        <h2>Contact</h2>
-        <p>COEP Technological University, Pune</p>
-      </div><!-- End Section Title -->
-
-      <div class="container" data-aos="fade-up" data-aos-delay="100">
-
-        <div class="row gy-4">
-
-          <div class="col-lg-5">
-
-            <div class="info-wrap">
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="200">
-                <i class="bi bi-geo-alt flex-shrink-0"></i>
-                <div>
-                  <h3>Address</h3>
-                  <p>Wellesley Rd, Shivajinagar, Pune, Maharashtra 411005</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="300">
-                <i class="bi bi-telephone flex-shrink-0"></i>
-                <div>
-                  <h3>Call Us</h3>
-                  <p>+91-20-25507000</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="400">
-                <i class="bi bi-envelope flex-shrink-0"></i>
-                <div>
-                  <h3>Email Us</h3>
-                  <p>info@example.com</p>
-                </div>
-              </div><!-- End Info Item -->
-
-              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3783.7122294318234!2d73.85532057514328!3d18.528904382573817!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2c070b4e22d4b%3A0x6cb4c2e662990229!2sCOEP%20Technological%20University!5e0!3m2!1sen!2sin!4v1709200000000!5m2!1sen!2sin"></iframe>
-            </div>
-          </div>
-
-          <div class="col-lg-7">
-            <form action="forms/contact.php" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
-              <div class="row gy-4">
-
-                <div class="col-md-6">
-                  <label for="name-field" class="pb-2">Your Name</label>
-                  <input type="text" name="name" id="name-field" class="form-control" required="">
-                </div>
-
-                <div class="col-md-6">
-                  <label for="email-field" class="pb-2">Your Email</label>
-                  <input type="email" class="form-control" name="email" id="email-field" required="">
-                </div>
-
-                <div class="col-md-12">
-                  <label for="subject-field" class="pb-2">Subject</label>
-                  <input type="text" class="form-control" name="subject" id="subject-field" required="">
-                </div>
-
-                <div class="col-md-12">
-                  <label for="message-field" class="pb-2">Message</label>
-                  <textarea class="form-control" name="message" rows="10" id="message-field" required=""></textarea>
-                </div>
-
-                <div class="col-md-12 text-center">
-                  <div class="loading">Loading</div>
-                  <div class="error-message"></div>
-                  <div class="sent-message">Your message has been sent. Thank you!</div>
-
-                  <button type="submit">Send Message</button>
-                </div>
-
-              </div>
-            </form>
-          </div><!-- End Contact Form -->
-
-        </div>
-
-      </div>
-
-    </section><!-- /Contact Section -->
+    <!-- /Contact Section -->
 
   </main>
 
@@ -1290,6 +1287,72 @@
 
   {% load static %}
 
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-container">
+    <div class="icon-container">
+      <div class="window-icon">
+        <div class="window-face">•-•</div>
+      </div>
+      <div class="circle-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </div>
+    </div>
+    
+    <h2>Logout Confirmation</h2>
+    <p>Are you sure you want to log out? Your current session will be terminated.</p>
+    
+    <div class="buttons">
+      <button class="cancel-btn" id="cancelBtn">Cancel</button>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to show the modal
+  function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.classList.add('active');
+    // Prevent scrolling on the body when modal is open
+    document.body.style.overflow = 'hidden';
+  }
+  
+  // Function to hide the modal
+  function hideLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.classList.remove('active');
+    // Restore scrolling
+    document.body.style.overflow = '';
+  }
+  
+  // Set up event listeners
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    hideLogoutModal();
+  });
+  
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    // Redirect to the logout URL
+    window.location.href = "{% url 'venue_admin:logout' %}";
+  });
+  
+  // Connect the logout button to show the modal
+  document.getElementById('logoutButton').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent the default link action
+    showLogoutModal();
+  });
+  
+  // Close the modal when clicking outside
+  document.getElementById('logoutModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      hideLogoutModal();
+    }
+  });
+</script>
+
 <!-- Vendor JS Files -->
 <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
 <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
@@ -1302,6 +1365,8 @@
 
 <!-- Main JS File -->
 <script src="{% static 'assets/js/main.js' %}"></script>
+
+
 
 
 

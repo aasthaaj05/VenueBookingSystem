@@ -110,9 +110,9 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'venue_booking',
-        'USER': 'kaustubh',
-        'PASSWORD': 'KKOct#@20',
+        'NAME': 'venue_booking2',
+        'USER': 'root',
+        'PASSWORD': 'Arnav@123',
         'HOST': 'localhost',  # Change if using a remote server
         'PORT': '3306',  # MySQL default port
     }
@@ -160,6 +160,18 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# settings.py
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.office365.com'  # Change as per your SMTP provider
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'arnavp22.comp@coeptech.ac.in'  # Your sender email
+EMAIL_HOST_PASSWORD = 'your-email-password'  # Your email password (use environment variables for security)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Set default sender email
 
 
 

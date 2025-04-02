@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Forward Requests</title>
+
+    <!-- Linking CSS -->
+    <link rel="stylesheet" href="{% static 'css/view_requests.css' %}">
+
+    <!-- Linking JavaScript -->
+    <script src="{% static 'js/view_requests.js' %}" defer></script>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="logo">Venue Booking</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'venue_admin:home' %}">Dashboard</a></li>
+            <li><a href="{% url 'venue_admin:get_requests' %}">Pending Requests</a></li>
+            <li><a href="{% url 'venue_admin:home' %}">Home</a></li>
+            <li><a href="{% url 'venue_admin:logout' %}">Logout</a></li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>👋 Welcome, {{ user.name }}</h2>
+    </div>
+
+    <div class="container">
+        <h1>Pending Forward Requests</h1>
+
+        <table id="pendingRequestsTable">
+            <thead>
+                <tr>
+                    <th>Requester</th>
+                    <th>Venue</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                    <th>Duration</th>
+                    <th>Event Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in pending_requests %}
+                <tr id="row-{{ request.request_id }}">
+                    <td>{{ request.user.name }}</td>
+                    <td>{{ request.venue.venue_name }}</td>
+                    <td>{{ request.date }}</td>
+                    <td>{{ request.time }}</td>
+                    <td>{{ request.duration }} hours</td>
+                    <td>{{ request.event_details }}</td>
+                    <td class="action-buttons">
+                        <!-- <button class="btn approve-btn" onclick="approveRequest('{{ request.request_id }}')">Approve</button> -->
+                        {% comment %} <form method="POST" action="{% url 'faculty_advisor:accept_pending_forward_requests' request.request_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn approve-btn">Approve</button>
+                        </form>
+                        <form method="POST" action="{% url 'faculty_advisor:decline_pending_forward_requests' request.request_id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn approve-btn">Reject</button>
+                        </form> {% endcomment %}
+                        <!-- <button class="btn decline-btn" onclick="openDeclineModal('{{ request.request_id }}')">Reject</button> -->
+                        <div class="action-container">
+                            <form method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn approve-btn">Approve</button>
+                            </form>
+                        
+                            <form method="POST" action="{% url 'venue_admin:reject_request' request.request_id %}" class="action-form">
+                                {% csrf_token %}
+                                <button type="submit" class="btn reject-btn">Reject</button>
+                            </form>
+                        </div>
+                        
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No pending forward requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Modal for Declining Reason -->
+    <div class="modal-overlay" id="modalOverlay"></div>
+    <div class="modal" id="reasonModal">
+        <h3>State Reason for Decline</h3>
+        <textarea id="reasonText"></textarea>
+        <div class="modal-buttons">
+            <button class="btn submit-btn" onclick="submitDecline()">Submit</button>
+            <button class="btn cancel-btn" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="{% static 'gymkhana/js/view_requests.js' %}"></script>
+
+</body>
+</html>

@@ -35,17 +35,24 @@
 
             <nav id="navmenu" class="navmenu">
                 <ul>
-                    <li><a href="#hero" class="active">Home</a></li>
-                    {% comment %} <li><a href="#about">About</a></li> {% endcomment %}
-                    <li><a href="#services">Services</a></li>
-                    {% comment %} <li><a href="#team">Team</a></li> {% endcomment %}
-                    <li><a href="#recent-blog-postst">Venues</a></li>
-                    {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
-                    <li><a href="{% url 'request_booking:user_dashboard' %}" class="btn signup-btn">Book Venue</a></li>
-                    <li><a href="{% url 'request_booking:booking_status' %}">Booking Status</a></li>
+                  <li><a href="#hero" class="active">Home</a></li>
+                  {% comment %} <li><a href="#about">About</a></li> {% endcomment %}
+                  <li><a href="#services">Services</a></li>
+                  
+                  {% comment %} <li><a href="#team">Team</a></li> {% endcomment %}
+                  
+                  <li><a href="#recent-blog-postst">Venues</a></li>
+                  
+                  {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
+        
+                  <li><a href="{% url 'venue_admin:get_requests' %}" class="btn signup-btn">View Requests</a></li>
+                    
+                  <li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>
+                  <li><a href="{% url 'venue_admin:approved_bookings' %}">Bookings</a></li>
+        
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-            </nav>
+              </nav>
 
             {% comment %} <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}#about">Log Out</a> {% endcomment %}
             <a class="btn-getstarted" id="logoutButton" href="#">Log Out</a>

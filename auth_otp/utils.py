@@ -3,18 +3,47 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.core.validators import EmailValidator
+from django.core.exceptions import ValidationError
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.conf import settings  # Import settings
+
+# Email validation function
+def validate_email(email):
+    try:
+        # Validate the email format
+        EmailValidator()(email)
+    except ValidationError:
+        return False
+    return True
+
+
+sender_email = settings.EMAIL_HOST_USER
+sender_password = settings.EMAIL_HOST_PASSWORD
+smtp_server = settings.EMAIL_HOST
+smtp_port = settings.EMAIL_PORT
+
 def send_otp(email , request):
     # Generate a random 6-digit OTP
     otp = ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
+    if not validate_email(email):
+        raise ValueError("Invalid email address format.")
+
     request.session['otp'] = otp
     
     # Email configuration
-    sender_email = ""           # Enter Outlook Email
-    sender_password = ""        # Enter Outlook Email Password
+    # sender_email = ""           # Enter Outlook Email
+    # sender_password = ""        # Enter Outlook Email Password
     receiver_email = email
-    smtp_server = "smtp.office365.com"
-    smtp_port = 587  # Outlook.com SMTP port
+    # smtp_server = "smtp.office365.com"
+    # smtp_port = 587  # Outlook.com SMTP port
 
     # Create message container
     msg = MIMEMultipart()
@@ -40,11 +69,13 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 def send_venue_booking_confirmation(email, venue_name):
-    sender_email = ""  # Enter Outlook Email
-    sender_password = ""      # Enter Outlook Email Password
+    if not validate_email(email):
+        raise ValueError("Invalid email address format.")
+    # sender_email = ""  # Enter Outlook Email
+    # sender_password = ""      # Enter Outlook Email Password
     receiver_email = email
-    smtp_server = "smtp.office365.com"
-    smtp_port = 587  # Outlook.com SMTP port
+    # smtp_server = "smtp.office365.com"
+    # smtp_port = 587  # Outlook.com SMTP port
 
     # Create message container
     msg = MIMEMultipart()

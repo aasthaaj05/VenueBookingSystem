@@ -24,13 +24,18 @@ from gymkhana.models import Request, Booking, Venue, Rejection, RejectedBooking
 from users.models import CustomUser
 from django.views.decorators.csrf import csrf_exempt
 
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.conf import settings  # Import settings
 
 
 
-sender_email = "coep"  # Outlook Email
-sender_password = ""      # Outlook Email Password
-smtp_server = "smtp.office365.com"
-smtp_port = 587  # Outlook SMTP port
+
+sender_email = settings.EMAIL_HOST_USER
+sender_password = settings.EMAIL_HOST_PASSWORD
+smtp_server = settings.EMAIL_HOST
+smtp_port = settings.EMAIL_PORT
 
 
 def home(request):
@@ -480,6 +485,7 @@ def approve_request(request, request_id):
     print('-------in approve_request()-------')
 
     if request.method == "POST":
+        print('in approve_request() ----')
         req = get_object_or_404(Request, request_id=request_id)
         start_time = req.time
         end_time = req.time + req.duration

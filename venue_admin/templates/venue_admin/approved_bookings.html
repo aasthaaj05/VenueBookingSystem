@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <!-- Navbar -->
+    {% comment %} <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">Venue Booking</div>
         <ul class="nav-links">
@@ -22,7 +22,10 @@
             <li><a href="{% url 'venue_admin:get_requests' %}">Pending Requests</a></li>
             <li><a href="{% url 'venue_admin:home' %}">Home</a></li>
         </ul>
-    </nav>
+    </nav> {% endcomment %}
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'venue_admin/nav.html' %}
+      </header>
 
     <!-- Sidebar -->
     <div class="sidebar">
