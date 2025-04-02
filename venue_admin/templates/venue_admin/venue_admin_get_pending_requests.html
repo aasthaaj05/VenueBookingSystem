@@ -282,9 +282,9 @@
             {% endif %}
             
         </div>
-    </div> {% endcomment %}
-
-    <!-- Sidebar -->
+    </div> 
+<!-- 
+  
 <div class="sidebar">
     <h2>👋 Welcome, {{ user.name }}</h2>
 </div>
@@ -326,7 +326,6 @@
     </table>
 </div>
 
-<!-- Dialog Box for Booking Details -->
 <div id="bookingDialog" class="dialog-overlay">
     <div class="dialog-content">
         <div class="dialog-header">
@@ -335,18 +334,18 @@
         </div>
         <div class="dialog-body">
             <div class="booking-details" id="bookingDetails">
-                <!-- Content will be populated dynamically -->
+
             </div>
         </div>
         <div class="dialog-footer">
-            <!-- Forms will be populated dynamically via JavaScript -->
-            <form id="rejectForm" method="POST" style="margin-right: 10px;" action="">
+            <form id="rejectForm" method="POST" style="margin-right: 10px;" action="{% url 'venue_admin:reject_request' request.request_id %}">
                 {% csrf_token %}
                 <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
             </form>
-            <form id="approveForm" method="POST" action="">
+            <form id="approveForm" method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}">
                 {% csrf_token %}
                 <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
+            </form>
             </form>
         </div>
     </div>
@@ -452,4 +451,126 @@
         });
     </script>
 </body>
-</html>
+</html> --> {% endcomment %}
+
+<!-- Sidebar -->
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>👋 Welcome, {{ user.name }}</h2>
+</div>
+<div class="container">
+    <h1>Pending Forward Requests</h1>
+    <table id="pendingRequestsTable">
+        <thead>
+            <tr>
+                <th>Requester</th>
+                <th>Venue</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Duration</th>
+                <th>Event Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in pending_requests %}
+            <tr id="row-{{ request.request_id }}">
+                <td>{{ request.user.name }}</td>
+                <td>{{ request.venue.venue_name }}</td>
+                <td>{{ request.date }}</td>
+                <td>{{ request.time }}</td>
+                <td>{{ request.duration }} hours</td>
+                <td>{{ request.event_details }}</td>
+                <td class="action-buttons">
+                    <div class="action-container">
+                        <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
+                            '{{ request.request_id }}', '{{ request.user.name }}', '{{ request.user.email }}', 
+                            '{{ request.user.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
+                            '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', 
+                            '{{ request.event_type }}', '{{ request.expected_crowd }}', '{{ request.event_requirements }}', 
+                            '{{ request.additional_info }}'
+                        )">View Details</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No pending forward requests found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Dialog Box for Booking Details -->
+<div id="bookingDialog" class="dialog-overlay">
+    <div class="dialog-content">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Booking Details</h2>
+            <button class="dialog-close" onclick="closeDialog()">&times;</button>
+        </div>
+        <div class="dialog-body">
+            <div class="booking-details" id="bookingDetails">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+        <div class="dialog-footer">
+            <form id="rejectForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
+            </form>
+            <form id="approveForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, requirements, additionalInfo) {
+        // Build the details HTML
+        const detailsHtml = `
+            <div class="detail-group"><div class="detail-label">Requester Name</div><div class="detail-value">${name}</div></div>
+            <div class="detail-group"><div class="detail-label">Email</div><div class="detail-value">${email}</div></div>
+            <div class="detail-group"><div class="detail-label">Phone Number</div><div class="detail-value">${phone}</div></div>
+            <div class="detail-group"><div class="detail-label">Venue</div><div class="detail-value">${venue}</div></div>
+            <div class="detail-group"><div class="detail-label">Date</div><div class="detail-value">${date}</div></div>
+            <div class="detail-group"><div class="detail-label">Time</div><div class="detail-value">${time}</div></div>
+            <div class="detail-group"><div class="detail-label">Duration</div><div class="detail-value">${duration} hours</div></div>
+            <div class="detail-group"><div class="detail-label">Event Type</div><div class="detail-value">${eventType}</div></div>
+            <div class="detail-group"><div class="detail-label">Expected Crowd</div><div class="detail-value">${expectedCrowd} people</div></div>
+            <div class="detail-group detail-notes"><div class="detail-label">Event Requirements</div><div class="detail-value">${requirements}</div></div>
+            <div class="detail-group detail-notes"><div class="detail-label">Event Description</div><div class="detail-value">${eventDetails}</div></div>
+            <div class="detail-group detail-notes"><div class="detail-label">Additional Information</div><div class="detail-value">${additionalInfo}</div></div>
+        `;
+        
+        // Update the dialog content
+        document.getElementById('bookingDetails').innerHTML = detailsHtml;
+        
+        // Set correct request ID in forms
+        document.getElementById('rejectForm').action = `/venue_admin/reject_request/${requestId}`;
+        document.getElementById('approveForm').action = `/venue_admin/approve_request/${requestId}`;
+        
+        // Show the dialog
+        document.getElementById('bookingDialog').style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeDialog() {
+        document.getElementById('bookingDialog').style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('bookingDialog').addEventListener('click', function(event) {
+        if (event.target === this) {
+            closeDialog();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && document.getElementById('bookingDialog').style.display === 'flex') {
+            closeDialog();
+        }
+    });
+</script>
