@@ -9,7 +9,7 @@ from django.db import models
 from users.models import CustomUser  # Importing Users table
 
 class Venue(models.Model):
-    id = models.UUIDField(primary_key=True,default=uuid.uuid4, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     venue_name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     photo_url = models.TextField(blank=True, null=True)  # Store image URLs
@@ -17,12 +17,16 @@ class Venue(models.Model):
     address = models.TextField()
     facilities = models.JSONField(default=list)  # Store facilities as JSON array
     department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")  # FK to Users
-
+    building_name = models.CharField(max_length=255, blank=True, null=True)  # New field
+    floor_number = models.IntegerField(blank=True, null=True)  # New field
+    room_number = models.CharField(max_length=50, blank=True, null=True)  # New field
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.venue_name
+
     
 
 

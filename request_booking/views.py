@@ -252,16 +252,16 @@ def getUnavailableSlots(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)  # Convert exception to string
 
+def get_buildings(request):
+    buildings = Venue.objects.values_list('building_name', flat=True).distinct()
+    return render(request, 'request_booking/building.html', {'buildings': buildings})
 
 
 
-def user_dashboard(request):
+def user_dashboard(request, building_name=None):  # Accept building_name
     if request.method == "GET":
         print("Inside user_dashboard view")
-        print("Request path:", request.path)
-        print("Request headers:", request.headers)
-        print() 
-        print()
+        print("Building Name:", building_name)  # Debugging output
 
         # Retrieve stored venue slot availability from the session
         all_slots = request.session.get('all_slots', {})
@@ -271,34 +271,33 @@ def user_dashboard(request):
         # Extract venue names from all_slots
         venue_names = all_slots.keys()
 
-        # Fetch venues from the database
-        venues = Venue.objects.filter(venue_name__in=venue_names).values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
+        # Fetch venues from the database filtered by building_name
+        venues = Venue.objects.filter(venue_name__in=venue_names)
+
+        if building_name:
+            venues = venues.filter(building_name=building_name)  # Filter venues by building
+
+        venues = venues.values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
 
         # Map the venue data with availability
         formatted_venues = []
 
-
         for venue in venues:
             venue_name = venue['venue_name']
             formatted_venues.append({
-                "id":venue['id'],
+                "id": venue['id'],
                 "name": venue_name,
                 "capacity": venue['capacity'],
-                "facilities": venue['facilities'],  # Assuming it's stored as a list in JSONField
-                "images": venue['photo_url'].split(",") if venue['photo_url'] else [],  # Convert CSV string to list
+                "facilities": venue['facilities'],
+                "images": venue['photo_url'].split(",") if venue['photo_url'] else [],
             })
 
-        print()
-        print()
-        print('----')
-
-        # Pass formatted venue data to the template
-        return render(request, 'request_booking/user_dashboard.html', {"venues": formatted_venues})
+        return render(request, 'request_booking/user_dashboard.html', {
+            "venues": formatted_venues,
+            "building_name": building_name  # Pass building name to template
+        })
 
     return HttpResponseNotAllowed(['GET'])
-
-
-
 
 
 
