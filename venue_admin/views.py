@@ -222,6 +222,7 @@ def request_booking(request):
                     'name': req.user.name if req.user else 'Unknown',
                     'organization_name': req.user.organization_name if req.user else 'Unknown'
                 },
+                'guest_count':req.guest_count,
                 'event_details': req.event_details if req.event_details else 'N/A',
                 'status': req.status,
                 'reasons': req.reasons if req.status == 'rejected' else None,

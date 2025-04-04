@@ -744,6 +744,12 @@ from .models import Request, Venue
 
 @login_required
 def process_booking(request):
+    print()
+    print()
+    print('in process_booking() ')
+    print()
+    print()
+    print()
     if request.method == "POST":
         user = request.user  # Get the logged-in user
         print(f"User: {user}")
@@ -815,7 +821,8 @@ def process_booking(request):
                 need=organization_name,  # Using need to store organization name
                 alternate_venue_1=alternate_venue_1,
                 alternate_venue_2=alternate_venue_2,
-                event_details=event_details
+                event_details=event_details,
+                guest_count = guest_count,
             ).exists()
 
             if existing_request:
@@ -837,7 +844,8 @@ def process_booking(request):
                 need=organization_name,  # Using need to store organization name
                 alternate_venue_1=alternate_venue_1,
                 alternate_venue_2=alternate_venue_2,
-                event_details=event_details
+                event_details=event_details,
+                guest_count = guest_count,
             )
 
             print(f"Booking Request Created: {booking_request}")
