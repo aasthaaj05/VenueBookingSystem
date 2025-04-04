@@ -60,118 +60,37 @@ def print_all_session_data(request):
 
 
 
-# @api_view(['GET', 'POST'])  # Accept both GET and POST
-# def login_view(request):
-#     # Flush existing session
-#     request.session.flush()
-    
-#     print('in login_view function\n\n')
-#     # Handle GET request (render the login page)
-#     if request.method == 'GET':
-#         return render(request, 'users/login.html')  # Replace with your actual template path
-    
-#     # Handle POST request (form submission or API call)
-#     if request.content_type == 'application/json':
-#         print('handle post -- login')
-#         # Handle API request with JSON data
-#         serializer = LoginSerializer(data=request.data)
-        
-#         if serializer.is_valid():
-#             email = serializer.validated_data['email']
-#             password = serializer.validated_data['password']
-            
-#             user = authenticate(request, username=email, password=password)
-#             if user is None:
-#                 return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-#             login(request, user)
-
-
-#             # Store user details in session
-#             request.session['name'] = user.get_full_name()
-#             request.session['email'] = user.email
-#             request.session['organization_name'] = user.profile.organization_name  # Assuming user has a profile with organization_name
-
-#             print('login_view function : ')
-#             print('name : ' , request.session.get('name'))
-#             print('email : ' , request.session.get('email'))
-#             print('organization_name : ' , request.session.get('organization_name'))
-#             print('----------')
-
-#             return Response({"message": "Login successful", "user_id": str(user.id)}, status=status.HTTP_200_OK)
-        
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-#     else:
-#         print('in else part of login_view function')
-#         # Handle traditional form submission
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
-
-#         print('in login_view else part')
-#         print('username : ', username)
-#         print('password : ' , password)
-
-#         request.session['email'] = username
-
-#         print('login_view part1')
-#         store_user_session(request , username)
-#         print('login_view part2')
-
-
-#         print_all_session_data(request)
-        
-
-        
-#         user = authenticate(request, username=username, password=password)
-#         if user is None:
-#             # Redirect back to login page with error
-#             return render(request, 'users/login.html', {'error': 'Invalid credentials'})
-        
-#         login(request, user)
-#         print('user logged in! .. login_view func')
-        
-#         print('request.user.role : ' , request.user.role)
-
-
-#         # Assuming user role is stored in request.user.role
-#         if request.user.role in ["Gymkhana",'gymkhana']:
-#             return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
-#         elif request.user.role in ["faculty_advisor",'Faculty_advisor']:
-#             return redirect('/faculty_advisor/home')  # Redirect Gymkhana users to a different page
-#         elif request.user.role in ["venue_admin",'Venue_admin']:
-#             return redirect('/venue_admin/home')  
-#         else:
-#             # return redirect('/users/home')  # Default redirection for other users
-#             return redirect('/request_booking/home')
-
-
-@api_view(['GET', 'POST'])
+@api_view(['GET', 'POST'])  # Accept both GET and POST
 def login_view(request):
+    # Flush existing session
     request.session.flush()
-
+    
     print('in login_view function\n\n')
-
+    # Handle GET request (render the login page)
     if request.method == 'GET':
-        return render(request, 'users/login.html')  
-
+        return render(request, 'users/login.html')  # Replace with your actual template path
+    
+    # Handle POST request (form submission or API call)
     if request.content_type == 'application/json':
         print('handle post -- login')
+        # Handle API request with JSON data
         serializer = LoginSerializer(data=request.data)
-
+        
         if serializer.is_valid():
             email = serializer.validated_data['email']
             password = serializer.validated_data['password']
-
+            
             user = authenticate(request, username=email, password=password)
             if user is None:
                 return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
             
             login(request, user)
 
+
+            # Store user details in session
             request.session['name'] = user.get_full_name()
             request.session['email'] = user.email
-            request.session['organization_name'] = user.profile.organization_name  
+            request.session['organization_name'] = user.profile.organization_name  # Assuming user has a profile with organization_name
 
             print('login_view function : ')
             print('name : ' , request.session.get('name'))
@@ -182,25 +101,110 @@ def login_view(request):
             return Response({"message": "Login successful", "user_id": str(user.id)}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+    
     else:
+        print('in else part of login_view function')
+        # Handle traditional form submission
         username = request.POST.get('username')
         password = request.POST.get('password')
 
+        print('in login_view else part')
+        print('username : ', username)
+        print('password : ' , password)
+
+        request.session['email'] = username
+
+        
+
+
+        print_all_session_data(request)
+        
+
+        
         user = authenticate(request, username=username, password=password)
         if user is None:
-            return render(request, 'users/login.html', {'error': 'Invalid credentials'})  # Redirect back with error
+            # Redirect back to login page with error
+            # return render(request, 'users/login.html', {'error': 'Invalid credentials'})
+            return render(request, 'users/login.html')
         
         login(request, user)
+        print('user logged in! .. login_view func')
 
-        if request.user.role in ["Gymkhana", 'gymkhana']:
-            return redirect('/gymkhana/dashboard')  
-        elif request.user.role in ["faculty_advisor", 'Faculty_advisor']:
-            return redirect('/faculty_advisor/home')  
-        elif request.user.role in ["venue_admin", 'Venue_admin']:
+        print('login_view part1')
+        store_user_session(request , username)
+        print('login_view part2')
+        
+        print('request.user.role : ' , request.user.role)
+
+
+        # Assuming user role is stored in request.user.role
+        if request.user.role in ["Gymkhana",'gymkhana']:
+            return redirect('/gymkhana/dashboard')  # Redirect Gymkhana users to a different page
+        elif request.user.role in ["faculty_advisor",'Faculty_advisor']:
+            return redirect('/faculty_advisor/home')  # Redirect Gymkhana users to a different page
+        elif request.user.role in ["venue_admin",'Venue_admin']:
             return redirect('/venue_admin/home')  
         else:
+            # return redirect('/users/home')  # Default redirection for other users
             return redirect('/request_booking/home')
+
+
+# @api_view(['GET', 'POST'])
+# def login_view(request):
+#     request.session.flush()
+
+#     print('in login_view function\n\n')
+
+#     if request.method == 'GET':
+#         return render(request, 'users/login.html')  
+
+#     if request.content_type == 'application/json':
+#         print('handle post -- login')
+#         serializer = LoginSerializer(data=request.data)
+
+#         if serializer.is_valid():
+#             email = serializer.validated_data['email']
+#             password = serializer.validated_data['password']
+
+#             user = authenticate(request, username=email, password=password)
+#             if user is None:
+#                 return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+#             login(request, user)
+
+#             # request.session['name'] = user.get_full_name()
+#             # request.session['email'] = user.email
+#             # request.session['organization_name'] = user.profile.organization_name  
+#             request.session['email'] = username
+
+#             print('login_view function : ')
+#             print('name : ' , request.session.get('name'))
+#             print('email : ' , request.session.get('email'))
+#             print('organization_name : ' , request.session.get('organization_name'))
+#             print('----------')
+
+#             return Response({"message": "Login successful", "user_id": str(user.id)}, status=status.HTTP_200_OK)
+        
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     else:
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+
+#         user = authenticate(request, username=username, password=password)
+#         if user is None:
+#             return render(request, 'users/login.html', {'error': 'Invalid credentials'})  # Redirect back with error
+        
+#         login(request, user)
+
+#         if request.user.role in ["Gymkhana", 'gymkhana']:
+#             return redirect('/gymkhana/dashboard')  
+#         elif request.user.role in ["faculty_advisor", 'Faculty_advisor']:
+#             return redirect('/faculty_advisor/home')  
+#         elif request.user.role in ["venue_admin", 'Venue_admin']:
+#             return redirect('/venue_admin/home')  
+#         else:
+#             return redirect('/request_booking/home')
 
 
 

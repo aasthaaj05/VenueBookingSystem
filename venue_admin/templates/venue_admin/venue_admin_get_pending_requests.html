@@ -501,10 +501,10 @@
                 <td class="action-buttons">
                     <div class="action-container">
                         <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
-                            '{{ request.request_id }}', '{{ request.user.name }}', '{{ request.user.email }}', 
-                            '{{ request.user.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
+                            '{{ request.request_id }}', '{{ request.user.name }}', '{{ request.email }}', 
+                            '{{ request.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
                             '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', 
-                            '{{ request.event_type }}', '{{ request.expected_crowd }}', '{{ request.event_requirements }}', 
+                            '{{ request.event_type }}', '{{ request.expected_crowd }}', 
                             '{{ request.additional_info }}'
                         )">View Details</button>
                     </div>
@@ -591,9 +591,10 @@
 </div>
 
 <script>
+    
     let currentRequestId = null;
 
-    function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, requirements, additionalInfo) {
+    function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo) {
         // Store the current request ID
         currentRequestId = requestId;
         
@@ -608,7 +609,6 @@
             <div class="detail-group"><div class="detail-label">Duration</div><div class="detail-value">${duration} hours</div></div>
             <div class="detail-group"><div class="detail-label">Event Type</div><div class="detail-value">${eventType}</div></div>
             <div class="detail-group"><div class="detail-label">Expected Crowd</div><div class="detail-value">${expectedCrowd} people</div></div>
-            <div class="detail-group detail-notes"><div class="detail-label">Event Requirements</div><div class="detail-value">${requirements}</div></div>
             <div class="detail-group detail-notes"><div class="detail-label">Event Description</div><div class="detail-value">${eventDetails}</div></div>
             <div class="detail-group detail-notes"><div class="detail-label">Additional Information</div><div class="detail-value">${additionalInfo}</div></div>
         `;

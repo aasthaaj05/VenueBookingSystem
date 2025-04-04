@@ -145,6 +145,10 @@ def pending_requests_by_date(request):
 
 
 
+import json
+
+
+
 @api_view(['GET'])  # Accept user_id in the request body
 def requests_for_venue(request):
     """
@@ -204,9 +208,12 @@ def request_booking(request):
         'pending_requests': [
             {
                 'request_id': str(req.request_id),
+                'email':req.email,
+                'phone_number':req.phone_number,
+                'event_type':req.event_type,
                 'date': req.date.strftime('%Y-%m-%d'),
                 'time': f"{req.time}:00",  # Format time as HH:00
-                'duration': f"{req.duration} hours",  # ✅ Include duration directly
+                'duration': f"{req.duration}",  # ✅ Include duration directly
                 'venue': {
                     'venue_name': req.venue.venue_name if req.venue else 'Unknown Venue',
                     'capacity': req.venue.capacity if req.venue else 'N/A',
@@ -218,15 +225,22 @@ def request_booking(request):
                 'event_details': req.event_details if req.event_details else 'N/A',
                 'status': req.status,
                 'reasons': req.reasons if req.status == 'rejected' else None,
-                'purpose': req.need if req.need else 'N/A'
+                'purpose': req.need if req.need else 'N/A',
+                'additional_info':req.additional_info,
             }
             for req in requests
         ]
     }
 
-    print('context : ', context)  # Debugging output
+    # print('context : ', context)  # Debugging output
+    print("Context:")
+    print(json.dumps(context, indent=4))
 
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html', context)
+    # return render(request, 'venue_admin/venue_admin_get_pending_requests.html', {
+    #     'pending_requests': json.dumps(context['pending_requests'])
+    # })
+
 
 
 

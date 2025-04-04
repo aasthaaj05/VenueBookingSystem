@@ -55,10 +55,18 @@ class Request(models.Model):
     # phone_number = models.CharField(max_length=15)  # Contact number
     phone_number = models.CharField(max_length=15, blank=True, null=True)
 
+    full_name = models.CharField(max_length=255, blank=True, null=True)  # New field
+    organization_name = models.CharField(max_length=255, blank=True, null=True)  # New field
+
+    event_details = models.TextField(blank=True, null=True)  # Updated: made optional
+    purpose = models.TextField(blank=True, null=True)  # New field
+
     
     # event_type = models.CharField(max_length=100)  # Type of event
     
     event_type = models.CharField(max_length=255, blank=True, null=True)
+
+    guest_count = models.IntegerField(default=0)  # New field
 
     additional_info = models.TextField(blank=True, null=True)  # Additional details
 
