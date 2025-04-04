@@ -47,17 +47,19 @@
         <nav id="navmenu" class="navmenu">
             <ul>
                 <li><a href="#hero" class="active">Home</a></li>
-                <li><a href="#about">About</a></li>
+                {% comment %} <li><a href="#about">About</a></li> {% endcomment %}
                 <li><a href="#services">Services</a></li>
-                <li><a href="#team">Team</a></li>
+                <li><a href="#faq-2">FAQ</a></li>
                 {% comment %} <li><a href="{% url 'home:venues' %}">Venues</a></li> {% endcomment %}
-                <li><a href="#contact">Contact</a></li>
-                <li><a href="{% url 'register' %}">Register</a></li>
-                <li><a href="{% url 'login' %}">Login</a></li>
+                <li><a href="#recent-blog-postst">Venues</a></li>
+                {% comment %} <li><a href="{% url 'register' %}">Register</a></li> {% endcomment %}
+                {% comment %} <li><a href="{% url 'login' %}">Login</a></li> {% endcomment %}
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
 
-        <a class="btn-getstarted" href="#about">Get Started</a>
+        {% comment %} <a class="btn-getstarted" href="#about">Get Started</a> {% endcomment %}
+        <a class="btn-getstarted" href="{% url 'login' %}">Login</a>
+
     </div>
 </header>

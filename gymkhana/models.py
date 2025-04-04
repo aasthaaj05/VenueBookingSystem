@@ -8,6 +8,50 @@ import uuid
 from django.db import models
 from users.models import CustomUser  # Importing Users table
 
+# class Venue(models.Model):
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+#     venue_name = models.CharField(max_length=255, unique=True)
+#     description = models.TextField(blank=True, null=True)
+#     photo_url = models.TextField(blank=True, null=True)  # Store image URLs
+#     capacity = models.IntegerField()
+#     address = models.TextField()
+#     facilities = models.JSONField(default=list)  # Store facilities as JSON array
+#     department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")  # FK to Users
+#     building_name = models.CharField(max_length=255, blank=True, null=True)  # New field
+#     floor_number = models.IntegerField(blank=True, null=True)  # New field
+#     room_number = models.CharField(max_length=50, blank=True, null=True)  # New field
+    
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+
+#     def __str__(self):
+#         return self.venue_name
+
+
+import uuid
+from django.db import models
+from users.models import CustomUser  # Importing Users table
+
+from django.db import models
+
+class Building(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=255, unique=True)  # Unique building name
+    location = models.TextField()  # Address or location details
+    total_floors = models.IntegerField(blank=True, null=True)  # Number of floors
+    photo_url = models.TextField(blank=True, null=True)  # Store image URLs
+    description = models.TextField(blank=True, null=True)  # Additional details
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+
+
+# Update the Venue model to use a ForeignKey to Building
 class Venue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     venue_name = models.CharField(max_length=255, unique=True)
@@ -17,15 +61,18 @@ class Venue(models.Model):
     address = models.TextField()
     facilities = models.JSONField(default=list)  # Store facilities as JSON array
     department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")  # FK to Users
-    building_name = models.CharField(max_length=255, blank=True, null=True)  # New field
-    floor_number = models.IntegerField(blank=True, null=True)  # New field
-    room_number = models.CharField(max_length=50, blank=True, null=True)  # New field
-    
+    # building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="venues")  # New relation to Building
+    building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="venues", null=True, blank=True)
+
+    floor_number = models.IntegerField(blank=True, null=True)
+    room_number = models.CharField(max_length=50, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.venue_name
+
 
     
 

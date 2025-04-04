@@ -134,12 +134,13 @@
 
         <form id="bookingForm" method="POST" action="{% url 'request_booking:process_booking' %}">
             {% csrf_token %}
-
+        
             <div class="form-group">
                 <label for="venue">Venue Name <span class="required">*</span></label>
-                <input type="text" id="venue" name="venue" value="{{ venue }}" readonly class="form-control">
+                {% comment %} <input type="hidden" name="venue" value="{{ venue.id }}"> {% endcomment %}
+                <input type="text" id="venue" value="{{ venue }}" readonly class="form-control">
             </div>
-            
+        
             <div class="form-group">
                 <label for="eventType">Event Type <span class="required">*</span></label>
                 <select id="eventType" name="eventType" required>
@@ -151,82 +152,48 @@
                     <option value="sports_event">Sports Event</option>
                     <option value="other">Other</option>
                 </select>
-                <div class="error" id="eventTypeError">Please select an event type</div>
             </div>
-
+        
             <div class="form-group">
                 <label for="fullName">Full Name <span class="required">*</span></label>
-                <input type="text" id="fullName" name="fullName" value = "{{ user_data.name }}" required>
-                <div class="error" id="fullNameError">Please enter your full name</div>
+                <input type="text" id="fullName" name="fullName" value="{{ user_data.name }}" required>
             </div>
-
+        
             <div class="form-group">
                 <label for="email">Email <span class="required">*</span></label>
                 <input type="email" id="email" name="email" value="{{ user_data.email }}" required>
-                <div class="error" id="emailError">Please enter a valid email</div>
             </div>            
-
+        
             <div class="form-group">
                 <label for="organization_name">Organization Name <span class="required">*</span></label>
-                <input type="text" id="organization_name" name="organization_name" value = "{{ user_data.organization_name }}" required>
-                <div class="error" id="fullNameError">Please enter a valid Organization Name</div>
+                <input type="text" id="organization_name" name="organization_name" required>
             </div>
-
+        
             <div class="form-group">
                 <label for="start_date">Date <span class="required">*</span></label>
-                <input type="date" id="start_date" name="start_date" value="{{ user_data.date }}" required>
-                <div class="error" id="startDateError">Please select a valid date</div>
+                <input type="date" id="start_date" name="start_date" value = "{{  user_data.date }}" readonly required>
             </div>
-            
+        
             <div class="form-group">
                 <label for="start_time">Start Time <span class="required">*</span></label>
-                <input type="time" id="start_time" name="start_time" value="{{ user_data.start_time }}" required>
-                <div class="error" id="startTimeError">Please enter a valid start time</div>
+                <input type="time" id="start_time" name="start_time" value = "{{  user_data.start_time }}" readonly required>
             </div>
-            
+        
             <div class="form-group">
                 <label for="end_time">End Time <span class="required">*</span></label>
-                <input type="time" id="end_time" name="end_time" value="{{ user_data.end_time }}" required>
-                <div class="error" id="endTimeError">Please enter a valid end time</div>
+                <input type="time" id="end_time" name="end_time" value = "{{  user_data.end_time }}" readonly required>
             </div>
-            
-            
-
+        
             <div class="form-group">
                 <label for="phone">Phone Number <span class="required">*</span></label>
-                <input type="tel" id="phone" name="phone" required>
-                <div class="error" id="phoneError">Please enter a valid phone number</div>
+                <input type="tel" id="phone" name="phone" value="{{ user_data.phone_number }}" required>
             </div>
-
+        
             <div class="form-group">
                 <label for="guestCount">Estimated Number of Attendees <span class="required">*</span></label>
                 <input type="number" id="guestCount" name="guestCount" min="1" required>
-                <div class="error" id="guestCountError">Please enter the estimated number of attendees</div>
             </div>
-
-            <!-- <div class="form-group">
-                <label for="alternateVenue1">Alternate Venue 1 <span class="required">*</span></label>
-                <select id="alternateVenue1" name="alternateVenue1" required>
-                    <option value="" disabled selected>Select an alternate venue</option>
-                    <option value="auditorium">Auditorium</option>
-                    <option value="conference_hall">Conference Hall</option>
-                    <option value="seminar_room">Seminar Room</option>
-                    <option value="academic_complex_classroom">Academic complex classroom</option>
-                </select>
-                <div class="error" id="alternateVenue1Error">Please select an alternate venue</div>
-            </div>
-            
-            <div class="form-group">
-                <label for="alternateVenue2">Alternate Venue 2</label>
-                <select id="alternateVenue2" name="alternateVenue2">
-                    <option value="" disabled selected>Select an alternate venue</option>
-                    <option value="auditorium">Auditorium</option>
-                    <option value="conference_hall">Conference Hall</option>
-                    <option value="seminar_room">Seminar Room</option>
-                    <option value="academic_complex_classroom">Academic complex classroom</option>
-                </select>
-            </div> -->
-
+        
             <div class="form-group">
                 <label for="alternateVenue1">Alternate Venue 1 <span class="required">*</span></label>
                 <select id="alternateVenue1" name="alternateVenue1" required>
@@ -235,9 +202,8 @@
                         <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
                     {% endfor %}
                 </select>
-                <div class="error" id="alternateVenue1Error">Please select an alternate venue</div>
             </div>
-            
+        
             <div class="form-group">
                 <label for="alternateVenue2">Alternate Venue 2</label>
                 <select id="alternateVenue2" name="alternateVenue2">
@@ -247,25 +213,24 @@
                     {% endfor %}
                 </select>
             </div>
-            
+        
             <div class="form-group">
                 <label for="eventDetails">Event Details <span class="required">*</span></label>
                 <textarea id="eventDetails" name="eventDetails" required></textarea>
-                <div class="error" id="eventDetailsError">Please provide details about the event</div>
             </div>
-            
-
+        
             <div class="form-group">
                 <label for="purpose">Explain the purpose of the booking</label>
-                <textarea id="purpose" name="purpose" class="additional-requests"></textarea>
+                <textarea id="purpose" name="purpose"></textarea>
             </div>
-
+        
             <div class="form-footer">
                 <p class="required-note"><span class="required">*</span> Required fields</p>
                 <button type="submit">Submit Booking Request</button>
                 <button type="button" onclick="window.location.href='/users/home'">Home</button>
             </div>
         </form>
+        
     </div>
 </body>
 </html>

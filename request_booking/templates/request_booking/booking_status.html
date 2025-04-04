@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <!-- Navbar -->
+    {% comment %} <!-- Navbar -->
     <nav class="navbar">
         <div class="logo">Venue Booking</div>
         <ul class="nav-links">
@@ -23,7 +23,10 @@
             <li><a href="{% url 'home' %}">Reports</a></li>
             <li><a href="{% url 'login' %}">Logout</a></li>
         </ul>
-    </nav>
+    </nav> {% endcomment %}
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
+      </header>
 
     <div class="sidebar">
         <h2>👋 Welcome, {{ person_name }}</h2>

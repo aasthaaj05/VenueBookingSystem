@@ -252,30 +252,86 @@ def getUnavailableSlots(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)  # Convert exception to string
 
+# def get_buildings(request):
+#     buildings = Venue.objects.values_list('building_name', flat=True).distinct()
+#     return render(request, 'request_booking/building.html', {'buildings': buildings})
+
+from django.shortcuts import render
+from gymkhana.models import Building  # Import Building model
+
 def get_buildings(request):
-    buildings = Venue.objects.values_list('building_name', flat=True).distinct()
+    buildings = Building.objects.values_list('name', flat=True).distinct()  # Fetch building names
     return render(request, 'request_booking/building.html', {'buildings': buildings})
 
 
+
+
+# def user_dashboard(request, building_name=None):  # Accept building_name
+#     if request.method == "GET":
+#         print("Inside user_dashboard view")
+#         print("Building Name:", building_name)  # Debugging output
+
+#         # Retrieve stored venue slot availability from the session
+#         all_slots = request.session.get('all_slots', {})
+
+#         print(all_slots)
+
+#         # Extract venue names from all_slots
+#         venue_names = all_slots.keys()
+
+#         # Fetch venues from the database filtered by building_name
+#         venues = Venue.objects.filter(venue_name__in=venue_names)
+
+#         if building_name:
+#             venues = venues.filter(bui=building_name)  # Filter venues by building
+
+#         venues = venues.values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
+
+#         # Map the venue data with availability
+#         formatted_venues = []
+
+#         for venue in venues:
+#             venue_name = venue['venue_name']
+#             formatted_venues.append({
+#                 "id": venue['id'],
+#                 "name": venue_name,
+#                 "capacity": venue['capacity'],
+#                 "facilities": venue['facilities'],
+#                 "images": venue['photo_url'].split(",") if venue['photo_url'] else [],
+#             })
+
+#         return render(request, 'request_booking/user_dashboard.html', {
+#             "venues": formatted_venues,
+#             "building_name": building_name  # Pass building name to template
+#         })
+
+#     return HttpResponseNotAllowed(['GET'])
+
+from django.http import HttpResponseNotAllowed
+from django.shortcuts import render
+from gymkhana.models import Venue
 
 def user_dashboard(request, building_name=None):  # Accept building_name
     if request.method == "GET":
         print("Inside user_dashboard view")
         print("Building Name:", building_name)  # Debugging output
 
-        # Retrieve stored venue slot availability from the session
-        all_slots = request.session.get('all_slots', {})
-
-        print(all_slots)
+        # # Retrieve stored venue slot availability from the session
+        # all_slots = request.session.get('all_slots', {})
+        # print(all_slots)
 
         # Extract venue names from all_slots
-        venue_names = all_slots.keys()
+        # venue_names = all_slots.keys()
 
         # Fetch venues from the database filtered by building_name
-        venues = Venue.objects.filter(venue_name__in=venue_names)
+        # venues = Venue.objects.filter(venue_name__in=venue_names)
+        # print('venues : ' , venues)
+
+        # Fetch all venues from the database
+        venues = Venue.objects.all()
 
         if building_name:
-            venues = venues.filter(building_name=building_name)  # Filter venues by building
+            venues = venues.filter(building__name=building_name)  # ✅ Correct field reference
 
         venues = venues.values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
 
@@ -298,6 +354,7 @@ def user_dashboard(request, building_name=None):  # Accept building_name
         })
 
     return HttpResponseNotAllowed(['GET'])
+
 
 
 
@@ -463,127 +520,325 @@ def book_venue(request):
 from datetime import datetime
 from django.utils.timezone import now  # Handles timezone-aware datetime
 
-@csrf_exempt
-def process_booking(request):
-    print('process_booking func : request --> ',request)
-    """Processes the booking request and saves details in the database."""
-    if request.method == "POST":
-        print('POST : process_booking func : request --> ',request)
-        data = {
-            "event_type": request.POST.get("eventType"),
-            "other_event_type": request.POST.get("otherEventType"),
-            "name": request.session.get("firstName"),  # Full name from session
-            "email": request.session.get("email"),  # From session
-            "organization_name": request.session.get("organization_name"),  # Fixed typo (extra space)
-            "phone": request.POST.get("phone"),
-            "alternate_venue_1": request.POST.get("alternateVenue1"),
-            "alternate_venue_2": request.POST.get("alternateVenue2"),
-            "venue": request.POST.get("venue"),
-            "guest_count": request.POST.get("guestCount"),
-            "purpose": request.POST.get("purpose"),
-        }
-        print(data)
+# @csrf_exempt
+# def process_booking(request):
+#     print('process_booking func : request --> ',request)
+#     """Processes the booking request and saves details in the database."""
+#     if request.method == "POST":
+#         print('POST : process_booking func : request --> ',request)
+#         data = {
+#             "event_type": request.POST.get("eventType"),
+#             "other_event_type": request.POST.get("otherEventType"),
+#             "name": request.session.get("firstName"),  # Full name from session
+#             "email": request.session.get("email"),  # From session
+#             "organization_name": request.session.get("organization_name"),  # Fixed typo (extra space)
+#             "phone": request.POST.get("phone"),
+#             "alternate_venue_1": request.POST.get("alternateVenue1"),
+#             "alternate_venue_2": request.POST.get("alternateVenue2"),
+#             "venue": request.POST.get("venue"),
+#             "guest_count": request.POST.get("guestCount"),
+#             "purpose": request.POST.get("purpose"),
+#         }
+#         print(data)
 
-        # Save to database
-        venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
-        alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
-        alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
+#         # Save to database
+#         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
+#         alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
+#         alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
 
-        current_datetime = now()  # Get current date and time
+#         current_datetime = now()  # Get current date and time
 
         
 
-        current_time = now().time()
-        time_in_hours = current_time.hour  # Extract hour as an integer
+#         current_time = now().time()
+#         time_in_hours = current_time.hour  # Extract hour as an integer
 
-        print('in process_booking func : before Request.objects.create')
+#         print('in process_booking func : before Request.objects.create')
 
-        print('curr_date : ', now().date())
+#         print('curr_date : ', now().date())
 
-        current_time = datetime.now()
-        formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S.%f")  # Microseconds included
-        print('formatted_time',formatted_time)
+#         current_time = datetime.now()
+#         formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S.%f")  # Microseconds included
+#         print('formatted_time',formatted_time)
 
-        # print('session : ' , request.session)
-        print("Session Data (JSON Format):", json.dumps(dict(request.session), indent=4))  # JSON format
-        # print("Session Data (Pretty Print):")
-        # pprint(dict(request.session))  # Pretty print
+#         # print('session : ' , request.session)
+#         print("Session Data (JSON Format):", json.dumps(dict(request.session), indent=4))  # JSON format
+#         # print("Session Data (Pretty Print):")
+#         # pprint(dict(request.session))  # Pretty print
 
-        session_dict = json.dumps(dict(request.session))
-        print('type of session_dict' , type(session_dict))
+#         session_dict = json.dumps(dict(request.session))
+#         print('type of session_dict' , type(session_dict))
 
-        if request.user.role in ['club' , 'fests' , 'student_chapter']:
-            status="waiting_for_approval"
-        else:
-            status="pending"
+#         if request.user.role in ['club' , 'fests' , 'student_chapter']:
+#             status="waiting_for_approval"
+#         else:
+#             status="pending"
 
-        '''
-        ('club', 'Club'),
-        ('fests', 'Fests'),
-        ('student_chapter', 'Student Chapter'),
-        ('faculty', 'Faculty'),
-        ('HOD', 'HOD'),
-        ('Dean', 'Dean'),
-        ('VC', 'VC'),
-        ('Registrar', 'Registrar'),
-        ('outsider', 'Outsider'),
-        '''
+#         '''
+#         ('club', 'Club'),
+#         ('fests', 'Fests'),
+#         ('student_chapter', 'Student Chapter'),
+#         ('faculty', 'Faculty'),
+#         ('HOD', 'HOD'),
+#         ('Dean', 'Dean'),
+#         ('VC', 'VC'),
+#         ('Registrar', 'Registrar'),
+#         ('outsider', 'Outsider'),
+#         '''
 
-        # booked_date 
+#         # booked_date 
 
-        print()
-        print()
-        print(f""" in process_booking func
-            Request.objects.create(
-                user={request.user},
-                date={request.session.get('start_date')},  # Store current date
-                time={request.session.get('start_time')},
-                duration={request.session.get("booking_duration")},  
-                venue={venue_obj},
-                need={data["purpose"]},
-                event_details={data["event_type"]},
-                status={status},
-                created_at={formatted_time},
-            )
-            """)
-        print()
-        print()
+#         print()
+#         print()
+#         print(f""" in process_booking func
+#             Request.objects.create(
+#                 user={request.user},
+#                 date={request.session.get('start_date')},  # Store current date
+#                 time={request.session.get('start_time')},
+#                 duration={request.session.get("booking_duration")},  
+#                 venue={venue_obj},
+#                 need={data["purpose"]},
+#                 event_details={data["event_type"]},
+#                 status={status},
+#                 created_at={formatted_time},
+#             )
+#             """)
+#         print()
+#         print()
 
-        checker=Request.objects.filter(user=request.user,
-            date=request.session.get('start_date'),  # Store current date
-            # time=time_in_hours,  # Convert time to integer
-            time = request.session.get('start_time'),
-            duration=request.session.get("booking_duration"),  
-            venue=venue_obj,
-            alternate_venue_1=alt_venue_1,
-            alternate_venue_2=alt_venue_2,
-            need=data["purpose"],
-            event_details=data["event_type"],
-            status=status).exists()
-        if not checker:
-            Request.objects.create(
-                user=request.user,
-                date=request.session.get('start_date'),  # Store current date
-                # time=time_in_hours,  # Convert time to integer
-                time = request.session.get('start_time'),
-                duration=request.session.get("booking_duration"),  
-                venue=venue_obj,
-                alternate_venue_1=alt_venue_1,
-                alternate_venue_2=alt_venue_2,
-                need=data["purpose"],
-                event_details=data["event_type"],
-                status=status,
-                created_at = formatted_time,
-            )
-            send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
+#         checker=Request.objects.filter(user=request.user,
+#             date=request.session.get('start_date'),  # Store current date
+#             # time=time_in_hours,  # Convert time to integer
+#             time = request.session.get('start_time'),
+#             duration=request.session.get("booking_duration"),  
+#             venue=venue_obj,
+#             alternate_venue_1=alt_venue_1,
+#             alternate_venue_2=alt_venue_2,
+#             need=data["purpose"],
+#             event_details=data["event_type"],
+#             status=status).exists()
+#         if not checker:
+#             Request.objects.create(
+#                 user=request.user,
+#                 date=request.session.get('start_date'),  # Store current date
+#                 # time=time_in_hours,  # Convert time to integer
+#                 time = request.session.get('start_time'),
+#                 duration=request.session.get("booking_duration"),  
+#                 venue=venue_obj,
+#                 alternate_venue_1=alt_venue_1,
+#                 alternate_venue_2=alt_venue_2,
+#                 need=data["purpose"],
+#                 event_details=data["event_type"],
+#                 status=status,
+#                 created_at = formatted_time,
+#             )
+#             send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
 
-            print('in process_booking func : after Request.objects.create')
+#             print('in process_booking func : after Request.objects.create')
 
-        # return render(request, "request_booking/booking_status.html", {"success": True, "venue": data["venue"]})
-        return redirect("/request_booking/booking_status")  
+#         # return render(request, "request_booking/booking_status.html", {"success": True, "venue": data["venue"]})
+#         return redirect("/request_booking/booking_status")  
     
 
-    return JsonResponse({"error": "Invalid request"}, status=400)
+#     return JsonResponse({"error": "Invalid request"}, status=400)
+
+from datetime import datetime
+import json
+from django.http import JsonResponse
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.timezone import now  # Handles timezone-aware datetime
+from .models import Request, Venue
+
+# @csrf_exempt
+# def process_booking(request):
+#     if request.method == "POST":
+#         print('POST : process_booking func : request --> ', request)
+
+#         # Extracting data from POST request and session
+#         data = {
+#             "event_type": request.POST.get("eventType"),
+#             "other_event_type": request.POST.get("otherEventType"),
+#             "name": request.session.get("firstName"),
+#             "email": request.session.get("email"),  # Fetch email
+#             "phone_number": request.POST.get("phone"),  # Fetch phone number
+#             "organization_name": request.session.get("organization_name"),
+#             "alternate_venue_1": request.POST.get("alternateVenue1"),
+#             "alternate_venue_2": request.POST.get("alternateVenue2"),
+#             "venue": request.POST.get("venue"),
+#             "guest_count": request.POST.get("guestCount"),
+#             "purpose": request.POST.get("purpose"),
+#             "additional_info": request.POST.get("additionalInfo"),  # Extra details
+#         }
+
+#         print("Received data:", data)
+
+#         # Fetch venue objects
+#         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
+#         alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
+#         alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
+
+#         # Determine request status based on user role
+#         if request.user.role in ['club', 'fests', 'student_chapter']:
+#             status = "waiting_for_approval"
+#         else:
+#             status = "pending"
+
+#         # Checking if a similar request exists
+#         checker = Request.objects.filter(
+#             user=request.user,
+#             date=request.session.get("start_date"),
+#             time=request.session.get("start_time"),
+#             duration=request.session.get("booking_duration"),
+#             venue=venue_obj,
+#             alternate_venue_1=alt_venue_1,
+#             alternate_venue_2=alt_venue_2,
+#             need=data["purpose"],
+#             event_details=data["event_type"],
+#             status=status,
+#             phone_number=data["phone_number"],  # Match phone number
+#             email=data["email"],  # Match email
+#             additional_info=data["additional_info"],  # Match extra info
+#         ).exists()
+
+#         if not checker:
+#             # Creating a new request entry
+#             booking_request = Request.objects.create(
+#                 user=request.user,
+#                 date=request.session.get("start_date"),
+#                 time=request.session.get("start_time"),
+#                 duration=request.session.get("booking_duration"),
+#                 venue=venue_obj,
+#                 alternate_venue_1=alt_venue_1,
+#                 alternate_venue_2=alt_venue_2,
+#                 need=data["purpose"],
+#                 event_details=data["event_type"],
+#                 status=status,
+#                 phone_number=data["phone_number"],  # Store phone number
+#                 email=data["email"],  # Store email
+#                 additional_info=data["additional_info"],  # Store additional info
+#             )
+
+#             # Send confirmation email
+#             send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status, now())
+
+#             print('Booking request successfully created:', booking_request)
+
+#         return redirect("/request_booking/booking_status")
+
+#     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from .models import Request, Venue
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from .models import Request, Venue
+
+@login_required
+def process_booking(request):
+    if request.method == "POST":
+        user = request.user  # Get the logged-in user
+        print(f"User: {user}")
+
+
+        venue_id = Venue.objects.get(venue_name = request.session.get("venue_name") ) 
+
+        event_type = request.POST.get("eventType")
+        full_name = request.POST.get("fullName")
+        email = request.POST.get("email", user.email)
+        organization_name = request.POST.get("organization_name")
+        date = request.POST.get("start_date")
+        start_time = request.POST.get("start_time")
+        end_time = request.POST.get("end_time")
+        phone_number = request.POST.get("phone")
+        guest_count = request.POST.get("guestCount")
+        alt_venue_1_id = request.POST.get("alternateVenue1")
+        alt_venue_2_id = request.POST.get("alternateVenue2", None)
+        event_details = request.POST.get("eventDetails")
+        purpose = request.POST.get("purpose", "")
+
+        print(f"Received Form Data: Venue={venue_id}, Event Type={event_type}, Full Name={full_name}, Email={email}, Org={organization_name}")
+        print(f"Date={date}, Start Time={start_time}, End Time={end_time}, Phone={phone_number}, Guest Count={guest_count}")
+        print(f"Alt Venue 1={alt_venue_1_id}, Alt Venue 2={alt_venue_2_id}, Event Details={event_details}, Purpose={purpose}")
+
+        # Convert date and time to appropriate formats
+        try:
+            start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+            end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+            date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+
+            # Calculate duration in minutes
+            duration = (datetime.combine(date_obj, end_time_obj) - datetime.combine(date_obj, start_time_obj)).seconds // 60
+            print(f"Parsed Date: {date_obj}, Start Time: {start_time_obj}, End Time: {end_time_obj}, Duration: {duration} minutes")
+
+            # Fetch venue instances
+            venue = Venue.objects.get(venue_name=venue_id)
+            alternate_venue_1 = Venue.objects.get(id=alt_venue_1_id)
+            alternate_venue_2 = Venue.objects.get(id=alt_venue_2_id) if alt_venue_2_id else None
+
+            print(f"Selected Venue: {venue.venue_name}")
+            print(f"Alternate Venue 1: {alternate_venue_1.venue_name}")
+            if alternate_venue_2:
+                print(f"Alternate Venue 2: {alternate_venue_2.venue_name}")
+
+
+            # Check if a similar request already exists
+            existing_request = Request.objects.filter(
+                user=user,
+                email=email,
+                event_type=event_type,
+                additional_info=purpose,
+                date=date_obj,
+                time=start_time_obj,
+                duration=duration,
+                venue=venue,
+                need=organization_name,  # Using need to store organization name
+                alternate_venue_1=alternate_venue_1,
+                alternate_venue_2=alternate_venue_2,
+                event_details=event_details
+            ).exists()
+
+            if existing_request:
+                return redirect("request_booking:index")  # Redirect to home or bookings list 
+
+
+            # Create request object
+            booking_request = Request.objects.create(
+                user=user,
+                email=email,
+                phone_number=phone_number,
+                event_type=event_type,
+                additional_info=purpose,
+                date=date_obj,
+                time=start_time_obj,
+                duration=duration,
+                venue=venue,
+                need=organization_name,  # Using need to store organization name
+                alternate_venue_1=alternate_venue_1,
+                alternate_venue_2=alternate_venue_2,
+                event_details=event_details
+            )
+
+            print(f"Booking Request Created: {booking_request}")
+            messages.success(request, "Booking request submitted successfully!")
+            return redirect("request_booking:index")  # Redirect to home or bookings list
+
+        except Venue.DoesNotExist:
+            print("Error: Invalid venue ID provided.")
+            messages.error(request, "Invalid venue selection. Please try again.")
+        except ValueError as ve:
+            print(f"Error: Invalid date/time format. Exception: {ve}")
+            messages.error(request, "Invalid date/time format. Please check and try again.")
+
+    return redirect("request_booking:booking_status")
 
 
 

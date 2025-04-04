@@ -10,6 +10,155 @@
     <!-- Linking JavaScript -->
     <script src="{% static 'js/view_requests.js' %}" defer></script>
     <style>
+        :root {
+            --primary-color: #4285F4;
+            --primary-dark: #3367D6;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --border-color: #e0e0e0;
+            --success-color: #4CAF50;
+            --danger-color: #f44336;
+            --warning-color: #FFC107;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f9f9f9;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Navbar styles */
+        .navbar {
+            background-color: var(--primary-color);
+            padding: 1rem 2rem;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 1.5rem;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .nav-links a:hover {
+            opacity: 0.8;
+        }
+
+        /* Main content styles */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .container h1 {
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            max-width: 1200px;
+            margin: 1rem auto;
+        }
+
+        .sidebar h2 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Table styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+
+        thead {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            font-weight: 500;
+        }
+
+        tbody tr:hover {
+            background-color: var(--light-gray);
+        }
+
+        .action-container {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .view-details-btn {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .view-details-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
         /* Dialog styles */
         .dialog-overlay {
             position: fixed;
@@ -54,7 +203,7 @@
         .dialog-title {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #1a73e8; /* Match blue theme */
+            color: var(--primary-color);
         }
 
         .dialog-close {
@@ -79,6 +228,64 @@
             bottom: 0;
             background: white;
             border-radius: 0 0 8px 8px;
+        }
+
+        /* Confirmation dialog */
+        .confirmation-dialog {
+            background-color: var(--primary-color);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .confirmation-dialog .dialog-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+
+        .confirmation-dialog .dialog-title {
+            color: white;
+            font-weight: 500;
+        }
+
+        .confirmation-dialog .dialog-close {
+            color: white;
+        }
+
+        .confirmation-dialog .dialog-body {
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        .confirmation-dialog .dialog-footer {
+            background-color: var(--primary-color);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 20px;
+        }
+
+        .confirmation-icon {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .confirmation-icon svg {
+            width: 50px;
+            height: 50px;
+            border: 2px solid white;
+            border-radius: 50%;
+            padding: 10px;
+        }
+
+        .confirmation-message {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .confirmation-description {
+            opacity: 0.9;
+            margin-bottom: 20px;
         }
 
         /* Booking details styles */
@@ -107,10 +314,10 @@
 
         .detail-value {
             color: #333;
-            padding: 8px;
-            background-color: #f9f9f9;
+            padding: 10px;
+            background-color: var(--light-gray);
             border-radius: 4px;
-            min-height: 36px;
+            min-height: 42px;
             word-break: break-word;
         }
 
@@ -132,17 +339,17 @@
         }
 
         .status-pending {
-            background-color: #FFC107;
+            background-color: var(--warning-color);
             color: #000;
         }
 
         .status-approved {
-            background-color: #4CAF50;
+            background-color: var(--success-color);
             color: white;
         }
 
         .status-rejected {
-            background-color: #f44336;
+            background-color: var(--danger-color);
             color: white;
         }
 
@@ -154,14 +361,34 @@
             cursor: pointer;
             font-weight: 500;
             transition: background-color 0.3s, transform 0.1s;
+            min-width: 100px;
         }
 
         .dialog-btn:active {
             transform: scale(0.98);
         }
 
+        .dialog-btn-cancel {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .dialog-btn-cancel:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .dialog-btn-confirm {
+            background-color: white;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .dialog-btn-confirm:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
         .dialog-btn-approve {
-            background-color: #4CAF50;
+            background-color: var(--success-color);
             color: white;
         }
 
@@ -170,7 +397,7 @@
         }
 
         .dialog-btn-reject {
-            background-color: #f44336;
+            background-color: var(--danger-color);
             color: white;
         }
 
@@ -179,14 +406,53 @@
         }
 
         /* Responsive adjustments */
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .nav-links {
+                margin-top: 1rem;
+                justify-content: center;
+            }
+            
+            .nav-links li {
+                margin: 0 0.5rem;
+            }
+            
+            .container h1 {
+                font-size: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            
             .dialog-footer {
                 flex-direction: column;
             }
-
+            
             .dialog-footer .dialog-btn {
                 width: 100%;
                 margin-bottom: 8px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .nav-links {
+                flex-wrap: wrap;
             }
         }
     </style>
@@ -194,7 +460,7 @@
 <body>
     <!-- Navbar -->
     <nav class="navbar">
-        <div class="logo">Venue Booking</div>
+        <div class="logo">COEP TECH Venue Booking</div>
         <ul class="nav-links">
             <li><a href="{% url 'venue_admin:home' %}">Dashboard</a></li>
             <li><a href="{% url 'venue_admin:get_requests' %}">Pending Requests</a></li>
@@ -202,259 +468,7 @@
             <li><a href="{% url 'venue_admin:logout' %}">Logout</a></li>
         </ul>
     </nav>
-    <!-- Sidebar -->
-    {% comment %} <div class="sidebar">
-        <h2>👋 Welcome, {{ user.name }}</h2>
-    </div>
-    <div class="container">
-        <h1>Pending Forward Requests</h1>
-        <table id="pendingRequestsTable">
-            <thead>
-                <tr>
-                    <th>Requester</th>
-                    <th>Venue</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Duration</th>
-                    <th>Event Description</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for request in pending_requests %}
-                <tr id="row-{{ request.request_id }}">
-                    <td>{{ request.user.name }}</td>
-                    <td>{{ request.venue.venue_name }}</td>
-                    <td>{{ request.date }}</td>
-                    <td>{{ request.time }}</td>
-                    <td>{{ request.duration }} hours</td>
-                    <td>{{ request.event_details }}</td>
-                    <td class="action-buttons">
-                        <div class="action-container">
-                            <button type="button" class="btn view-details-btn" onclick="showBookingDetails('{{ request.request_id }}', '{{ request.user.name }}', '{{ request.user.email }}', '{{ request.user.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', '{{ request.event_type }}', '{{ request.expected_crowd }}', '{{ request.event_requirements }}', '{{ request.additional_info }}')">View Details</button>
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="7">No pending forward requests found.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
     
-    <!-- Dialog Box for Booking Details -->
-    <div id="bookingDialog" class="dialog-overlay">
-        <div class="dialog-content">
-            <div class="dialog-header">
-                <h2 class="dialog-title">Booking Details</h2>
-                <button class="dialog-close" onclick="closeDialog()">&times;</button>
-            </div>
-            <div class="dialog-body">
-                <div class="booking-details" id="bookingDetails">
-                    <!-- Content will be populated dynamically -->
-                </div>
-            </div>
-            <div class="dialog-footer">
-                 <form id="rejectForm" method="POST" style="margin-right: 10px;" action="{% url 'venue_admin:reject_request' request.request_id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
-                </form> 
-                <form id="approveForm" method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
-                </form>
-            </div> 
-            <!-- Check if request_id exists -->
-            {% if request.request_id %}
-            <form id="rejectForm" method="POST" style="margin-right: 10px;" action="{% url 'venue_admin:reject_request' request.request_id %}">
-                {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
-            </form>
-            <form id="approveForm" method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}">
-                {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
-            </form>
-            {% else %}
-            <p>Invalid Request ID</p>
-            <p>Invalid Request ID: {{ request.request_id }}</p> 
-            {% endif %}
-            
-        </div>
-    </div> 
-<!-- 
-  
-<div class="sidebar">
-    <h2>👋 Welcome, {{ user.name }}</h2>
-</div>
-<div class="container">
-    <h1>Pending Forward Requests</h1>
-    <table id="pendingRequestsTable">
-        <thead>
-            <tr>
-                <th>Requester</th>
-                <th>Venue</th>
-                <th>Date</th>
-                <th>Time</th>
-                <th>Duration</th>
-                <th>Event Description</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for request in pending_requests %}
-            <tr id="row-{{ request.request_id }}">
-                <td>{{ request.user.name }}</td>
-                <td>{{ request.venue.venue_name }}</td>
-                <td>{{ request.date }}</td>
-                <td>{{ request.time }}</td>
-                <td>{{ request.duration }} hours</td>
-                <td>{{ request.event_details }}</td>
-                <td class="action-buttons">
-                    <div class="action-container">
-                        <button type="button" class="btn view-details-btn" onclick="showBookingDetails('{{ request.request_id }}', '{{ request.user.name }}', '{{ request.user.email }}', '{{ request.user.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', '{{ request.event_type }}', '{{ request.expected_crowd }}', '{{ request.event_requirements }}', '{{ request.additional_info }}')">View Details</button>
-                    </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="7">No pending forward requests found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<div id="bookingDialog" class="dialog-overlay">
-    <div class="dialog-content">
-        <div class="dialog-header">
-            <h2 class="dialog-title">Booking Details</h2>
-            <button class="dialog-close" onclick="closeDialog()">&times;</button>
-        </div>
-        <div class="dialog-body">
-            <div class="booking-details" id="bookingDetails">
-
-            </div>
-        </div>
-        <div class="dialog-footer">
-            <form id="rejectForm" method="POST" style="margin-right: 10px;" action="{% url 'venue_admin:reject_request' request.request_id %}">
-                {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
-            </form>
-            <form id="approveForm" method="POST" action="{% url 'venue_admin:approve_request' request.request_id %}">
-                {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
-            </form>
-            </form>
-        </div>
-    </div>
-</div>
-
-    <script>
-        // Current booking being viewed
-        let currentRequestId = null;
-
-        // Function to show booking details dialog
-        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, requirements, additionalInfo) {
-            currentRequestId = requestId;
-            
-            // Build the details HTML
-            const detailsHtml = `
-                <div class="detail-group">
-                    <div class="detail-label">Requester Name</div>
-                    <div class="detail-value">${name}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Email</div>
-                    <div class="detail-value">${email}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Phone Number</div>
-                    <div class="detail-value">${phone}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Venue</div>
-                    <div class="detail-value">${venue}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Date</div>
-                    <div class="detail-value">${date}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Time</div>
-                    <div class="detail-value">${time}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Duration</div>
-                    <div class="detail-value">${duration} hours</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Event Type</div>
-                    <div class="detail-value">${eventType}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Expected Crowd</div>
-                    <div class="detail-value">${expectedCrowd} people</div>
-                </div>
-                <div class="detail-group detail-notes">
-                    <div class="detail-label">Event Requirements</div>
-                    <div class="detail-value">${requirements}</div>
-                </div>
-                <div class="detail-group detail-notes">
-                    <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${eventDetails}</div>
-                </div>
-                <div class="detail-group detail-notes">
-                    <div class="detail-label">Additional Information</div>
-                    <div class="detail-value">${additionalInfo}</div>
-                </div>
-            `;
-            
-            // Update the dialog content
-            document.getElementById('bookingDetails').innerHTML = detailsHtml;
-            
-            // Update form actions with the current request ID
-          
-           
-
-
-
-            // Show the dialog
-            document.getElementById('bookingDialog').style.display = 'flex';
-            
-            // Prevent background scrolling
-            document.body.style.overflow = 'hidden';
-        }
-
-        // Function to close the dialog
-        function closeDialog() {
-            document.getElementById('bookingDialog').style.display = 'none';
-            currentRequestId = null;
-            
-            // Restore background scrolling
-            document.body.style.overflow = '';
-        }
-
-        // Close dialog when clicking outside of it
-        document.getElementById('bookingDialog').addEventListener('click', function(event) {
-            if (event.target === this) {
-                closeDialog();
-            }
-        });
-
-        // Close dialog when pressing Escape key
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape' && document.getElementById('bookingDialog').style.display === 'flex') {
-                closeDialog();
-            }
-        });
-    </script>
-</body>
-</html> --> {% endcomment %}
-
-<!-- Sidebar -->
-<!-- Sidebar -->
 <div class="sidebar">
     <h2>👋 Welcome, {{ user.name }}</h2>
 </div>
@@ -507,7 +521,7 @@
     <div class="dialog-content">
         <div class="dialog-header">
             <h2 class="dialog-title">Booking Details</h2>
-            <button class="dialog-close" onclick="closeDialog()">&times;</button>
+            <button class="dialog-close" onclick="closeDialog('bookingDialog')">&times;</button>
         </div>
         <div class="dialog-body">
             <div class="booking-details" id="bookingDetails">
@@ -515,20 +529,71 @@
             </div>
         </div>
         <div class="dialog-footer">
-            <form id="rejectForm" method="POST">
-                {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-reject">Reject</button>
-            </form>
+            <button type="button" class="dialog-btn dialog-btn-reject" onclick="showConfirmDialog('reject')">Reject</button>
+            <button type="button" class="dialog-btn dialog-btn-approve" onclick="showConfirmDialog('approve')">Approve</button>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Dialog for Approve -->
+<div id="approveConfirmDialog" class="dialog-overlay">
+    <div class="dialog-content confirmation-dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Confirm Approval</h2>
+            <button class="dialog-close" onclick="closeDialog('approveConfirmDialog')">&times;</button>
+        </div>
+        <div class="dialog-body">
+            <div class="confirmation-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <div class="confirmation-message">Approve Booking Request?</div>
+            <div class="confirmation-description">This action will approve the booking request and notify the requester.</div>
+        </div>
+        <div class="dialog-footer">
+            <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('approveConfirmDialog')">Cancel</button>
             <form id="approveForm" method="POST">
                 {% csrf_token %}
-                <button type="submit" class="dialog-btn dialog-btn-approve">Approve</button>
+                <button type="submit" class="dialog-btn dialog-btn-confirm">Confirm</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Confirmation Dialog for Reject -->
+<div id="rejectConfirmDialog" class="dialog-overlay">
+    <div class="dialog-content confirmation-dialog">
+        <div class="dialog-header">
+            <h2 class="dialog-title">Confirm Rejection</h2>
+            <button class="dialog-close" onclick="closeDialog('rejectConfirmDialog')">&times;</button>
+        </div>
+        <div class="dialog-body">
+            <div class="confirmation-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </div>
+            <div class="confirmation-message">Reject Booking Request?</div>
+            <div class="confirmation-description">This action will reject the booking request and notify the requester.</div>
+        </div>
+        <div class="dialog-footer">
+            <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('rejectConfirmDialog')">Cancel</button>
+            <form id="rejectForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="dialog-btn dialog-btn-confirm">Confirm</button>
             </form>
         </div>
     </div>
 </div>
 
 <script>
+    let currentRequestId = null;
+
     function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, requirements, additionalInfo) {
+        // Store the current request ID
+        currentRequestId = requestId;
+        
         // Build the details HTML
         const detailsHtml = `
             <div class="detail-group"><div class="detail-label">Requester Name</div><div class="detail-value">${name}</div></div>
@@ -553,24 +618,48 @@
         document.getElementById('approveForm').action = `/venue_admin/approve_request/${requestId}`;
         
         // Show the dialog
-        document.getElementById('bookingDialog').style.display = 'flex';
+        openDialog('bookingDialog');
+    }
+
+    function showConfirmDialog(action) {
+        // Close the booking details dialog
+        closeDialog('bookingDialog');
+        
+        // Open the appropriate confirmation dialog
+        if (action === 'approve') {
+            openDialog('approveConfirmDialog');
+        } else if (action === 'reject') {
+            openDialog('rejectConfirmDialog');
+        }
+    }
+
+    function openDialog(dialogId) {
+        document.getElementById(dialogId).style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
 
-    function closeDialog() {
-        document.getElementById('bookingDialog').style.display = 'none';
+    function closeDialog(dialogId) {
+        document.getElementById(dialogId).style.display = 'none';
         document.body.style.overflow = '';
     }
 
-    document.getElementById('bookingDialog').addEventListener('click', function(event) {
-        if (event.target === this) {
-            closeDialog();
-        }
+    // Close dialog when clicking outside
+    document.querySelectorAll('.dialog-overlay').forEach(dialog => {
+        dialog.addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeDialog(this.id);
+            }
+        });
     });
 
+    // Close dialog with Escape key
     document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape' && document.getElementById('bookingDialog').style.display === 'flex') {
-            closeDialog();
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.dialog-overlay').forEach(dialog => {
+                if (dialog.style.display === 'flex') {
+                    closeDialog(dialog.id);
+                }
+            });
         }
     });
 </script>
