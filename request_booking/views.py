@@ -821,6 +821,7 @@ def process_booking(request):
                 time=start_time_obj,
                 duration=duration,
                 venue=venue,
+                status='pending',
                 need=organization_name,  # Using need to store organization name
                 alternate_venue_1=alternate_venue_1,
                 alternate_venue_2=alternate_venue_2,

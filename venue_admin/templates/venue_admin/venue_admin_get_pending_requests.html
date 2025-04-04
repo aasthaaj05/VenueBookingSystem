@@ -459,7 +459,7 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar">
+    <!-- <nav class="navbar">
         <div class="logo">COEP TECH Venue Booking</div>
         <ul class="nav-links">
             <li><a href="{% url 'venue_admin:home' %}">Dashboard</a></li>
@@ -467,7 +467,10 @@
             <li><a href="{% url 'venue_admin:home' %}">Home</a></li>
             <li><a href="{% url 'venue_admin:logout' %}">Logout</a></li>
         </ul>
-    </nav>
+    </nav> -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'venue_admin/nav.html' %}
+      </header>
     
 <div class="sidebar">
     <h2>👋 Welcome, {{ user.name }}</h2>
