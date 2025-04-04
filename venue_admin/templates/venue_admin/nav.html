@@ -1,3 +1,5 @@
+
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -25,6 +27,203 @@
 
     <!-- Main CSS File -->
     <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+    <!-- Favicons -->
+  <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+
+  <style>
+    /* Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(26, 115, 232, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Background blobs for the overlay */
+    .modal-overlay::before, .modal-overlay::after {
+      content: "";
+      position: absolute;
+      width: 50vw;
+      height: 50vw;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    
+    .modal-overlay::before {
+      top: -15vw;
+      right: -15vw;
+    }
+    
+    .modal-overlay::after {
+      bottom: -15vw;
+      left: -15vw;
+    }
+    
+    .modal-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 30px;
+      text-align: center;
+      z-index: 1;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-container {
+      transform: translateY(0);
+    }
+    
+    .icon-container {
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .window-icon {
+      width: 60px;
+      height: 60px;
+      border: 2.5px solid #1a73e8;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1a73e8;
+    }
+    
+    .window-face {
+      font-size: 24px;
+      line-height: 1;
+    }
+    
+    .circle-icon {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background-color: #1a73e8;
+      border: 2px solid white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 16px;
+    }
+    
+    .modal-container h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .modal-container p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .modal-container button {
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    
+    .cancel-btn {
+      background-color: #f1f3f4;
+      border: none;
+      color: #5f6368;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #e8eaed;
+    }
+    
+    .logout-btn {
+      background-color: #1a73e8;
+      border: none;
+      color: white;
+    }
+    
+    .logout-btn:hover {
+      background-color: #1765cc;
+      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .modal-container {
+        padding: 30px 20px;
+      }
+      
+      .modal-container h2 {
+        font-size: 20px;
+      }
+      
+      .modal-container p {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      
+      .buttons {
+        flex-direction: column;
+      }
+      
+      .modal-container button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
 </head>
 <body>
     <header id="header" class="header d-flex align-items-center fixed-top">
@@ -54,9 +253,91 @@
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
               </nav>
 
-            <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}#about">Log Out</a>
-            <!-- <a class="btn-getstarted" id="logoutButton" href="#">Log Out</a> -->
+            {% comment %} <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}">Log Out</a> {% endcomment %}
+            <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout'%}#about">Log Out</a>
         </div>
     </header>
+
+
+    {% load static %}
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+      <div class="modal-container">
+        <div class="icon-container">
+          <div class="window-icon">
+            <div class="window-face">•-•</div>
+          </div>
+          <div class="circle-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 4v6h-6"/>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+            </svg>
+          </div>
+        </div>
+        
+        <h2>Logout Confirmation</h2>
+        <p>Are you sure you want to log out? Your current session will be terminated.</p>
+        
+        <div class="buttons">
+          <button class="cancel-btn" id="cancelBtn">Cancel</button>
+          <button class="logout-btn" id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Function to show the modal
+      function showLogoutModal() {
+        const modal = document.getElementById('logoutModal');
+        modal.classList.add('active');
+        // Prevent scrolling on the body when modal is open
+        document.body.style.overflow = 'hidden';
+      }
+      
+      // Function to hide the modal
+      function hideLogoutModal() {
+        const modal = document.getElementById('logoutModal');
+        modal.classList.remove('active');
+        // Restore scrolling
+        document.body.style.overflow = '';
+      }
+      
+      // Set up event listeners
+      document.getElementById('cancelBtn').addEventListener('click', function() {
+        hideLogoutModal();
+      });
+      
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        // Redirect to the logout URL
+        window.location.href = "{% url 'venue_admin:logout' %}";
+      });
+      
+      // Connect the logout button to show the modal
+      document.getElementById('logoutButton').addEventListener('click', function(e) {
+        e.preventDefault(); // Prevent the default link action
+        showLogoutModal();
+      });
+      
+      // Close the modal when clicking outside
+      document.getElementById('logoutModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+          hideLogoutModal();
+        }
+      });
+    </script>
+    
+    <!-- Vendor JS Files -->
+    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+    <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+    <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/waypoints/noframework.waypoints.js' %}"></script>
+    <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+    
+    <!-- Main JS File -->
+    <script src="{% static 'assets/js/main.js' %}"></script>
 </body>
 </html>

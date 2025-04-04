@@ -771,12 +771,24 @@ def process_booking(request):
 
         # Convert date and time to appropriate formats
         try:
+            # start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+            # end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+            # Convert string time to datetime.time object
             start_time_obj = datetime.strptime(start_time, "%H:%M").time()
             end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+
+            # Extract only the hour as an integer
+            start_time = start_time_obj.hour
+            end_time = end_time_obj.hour
+
+            print('start , end time : ',start_time, end_time)  # Example Output: 11, 22
             date_obj = datetime.strptime(date, "%Y-%m-%d").date()
 
+            # Compute the difference
+            duration = end_time - start_time
+
             # Calculate duration in minutes
-            duration = (datetime.combine(date_obj, end_time_obj) - datetime.combine(date_obj, start_time_obj)).seconds // 60
+            # duration = (datetime.combine(date_obj, end_time_obj) - datetime.combine(date_obj, start_time_obj)).seconds // 60
             print(f"Parsed Date: {date_obj}, Start Time: {start_time_obj}, End Time: {end_time_obj}, Duration: {duration} minutes")
 
             # Fetch venue instances
@@ -797,7 +809,7 @@ def process_booking(request):
                 event_type=event_type,
                 additional_info=purpose,
                 date=date_obj,
-                time=start_time_obj,
+                time=start_time,
                 duration=duration,
                 venue=venue,
                 need=organization_name,  # Using need to store organization name
@@ -818,7 +830,7 @@ def process_booking(request):
                 event_type=event_type,
                 additional_info=purpose,
                 date=date_obj,
-                time=start_time_obj,
+                time=start_time,
                 duration=duration,
                 venue=venue,
                 status='pending',

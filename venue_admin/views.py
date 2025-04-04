@@ -479,6 +479,11 @@ def forward_request_to_alternate(request):
         
     print('.........Ended in forward_request_to_alternate().......')
 
+
+
+from datetime import datetime, date
+
+
 def approve_request(request, request_id):
     print()
     print()
@@ -486,9 +491,21 @@ def approve_request(request, request_id):
 
     if request.method == "POST":
         print('in approve_request() ----')
+        # req = get_object_or_404(Request, request_id=request_id)
+        # start_time = req.time
+        # end_time = req.time + req.duration
+
         req = get_object_or_404(Request, request_id=request_id)
-        start_time = req.time
-        end_time = req.time + req.duration
+
+        # start_time = int(req.time.timestamp())  # Converts datetime to UNIX timestamp (integer)
+        # end_time = start_time + int(req.duration)
+
+
+        # start_time = datetime.combine(date.today(), req.time)  # Create a datetime object
+        # start_time_seconds = int(start_time.timestamp())  # Convert to UNIX timestamp
+
+        # end_time_seconds = start_time_seconds + int(req.duration)  # Assuming req.duration is in seconds
+
         user=CustomUser.objects.get(email=request.user)
         pending_requests = Request.objects.filter(
             venue=req.venue,

@@ -63,7 +63,7 @@ class Request(models.Model):
     additional_info = models.TextField(blank=True, null=True)  # Additional details
 
     date = models.DateField()
-    time = models.TimeField()  # Changed from IntegerField to TimeField
+    time = models.IntegerField()  # Changed from IntegerField to TimeField
     duration = models.IntegerField()  # Duration in minutes/hours
 
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="venue_requests")  # Requested Venue
