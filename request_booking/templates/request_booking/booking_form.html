@@ -3,84 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College Venue Booking</title>
+    <title>College Venue Booking System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: black;
-            --secondary-color: black;
-            --accent-color: #4fc3dc;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --error-color: #dc3545;
-            --success-color: #28a745;
+            /* Primary Blue Theme */
+            --primary-50: #e3f2fd;
+            --primary-100: #bbdefb;
+            --primary-200: #90caf9;
+            --primary-300: #64b5f6;
+            --primary-400: #42a5f5;
+            --primary-500: #2196f3;
+            --primary-600: #1e88e5;
+            --primary-700: #1976d2;
+            --primary-800: #1565c0;
+            --primary-900: #0d47a1;
+            
+            /* Secondary Colors */
+            --secondary-50: #f5f5f5;
+            --secondary-100: #e0e0e0;
+            --secondary-200: #bdbdbd;
+            --secondary-300: #9e9e9e;
+            --secondary-400: #757575;
+            --secondary-500: #616161;
+            --secondary-600: #424242;
+            --secondary-700: #303030;
+            --secondary-800: #212121;
+            --secondary-900: #121212;
+            
+            /* System Colors */
+            --success-color: #4caf50;
+            --error-color: #f44336;
+            --warning-color: #ff9800;
+            --info-color: #2196f3;
+            
+            /* Backgrounds */
+            --bg-light: #f8fafc;
+            --bg-white: #ffffff;
+            --bg-dark: #0f172a;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-blue: 0 4px 14px 0 rgba(33, 150, 243, 0.3);
+            
+            /* Borders */
+            --border-light: 1px solid rgba(224, 224, 224, 0.8);
+            --border-medium: 1px solid rgba(158, 158, 158, 0.5);
+            --border-dark: 1px solid rgba(66, 66, 66, 0.3);
+            
+            /* Transitions */
+            --transition-fast: all 0.15s ease-in-out;
+            --transition-medium: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Typography */
+            --font-sans: 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', sans-serif;
+            --font-mono: 'SF Mono', 'Roboto Mono', Menlo, monospace;
+            --text-xs: 0.75rem;
+            --text-sm: 0.875rem;
+            --text-base: 1rem;
+            --text-lg: 1.125rem;
+            --text-xl: 1.25rem;
+            --text-2xl: 1.5rem;
+            --text-3xl: 1.875rem;
+            --text-4xl: 2.25rem;
         }
         
-        * {
+        *,
+        *::before,
+        *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         body {
-            background-color: #f5f5f5;
-            color: var(--dark-color);
+            font-family: var(--font-sans);
             line-height: 1.6;
+            color: var(--secondary-800);
+            background-color: var(--bg-light);
+            background-image: radial-gradient(circle at 10% 20%, rgba(187, 222, 251, 0.1) 0%, rgba(187, 222, 251, 0.05) 90%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            overflow-x: hidden;
         }
         
+        /* Container Styles */
         .container {
-            max-width: 800px;
-            margin: 2rem auto;
-            padding: 2rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 960px;
+            margin: 0 auto;
+            background-color: var(--bg-white);
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            transform: translateY(0);
+            transition: var(--transition-medium);
         }
         
+        .container:hover {
+            box-shadow: var(--shadow-lg), var(--shadow-blue);
+            transform: translateY(-2px);
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-500), var(--primary-300));
+            z-index: 2;
+        }
+        
+        /* Header Styles */
         header {
             text-align: center;
-            margin-bottom: 2rem;
+            padding: 3rem 2rem 2rem;
+            position: relative;
+            background-color: var(--bg-white);
+            border-bottom: var(--border-light);
+        }
+        
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 4px;
+            background: var(--primary-500);
+            border-radius: 2px;
+        }
+        
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-500), var(--primary-300));
+            color: white;
+            border-radius: 50%;
+            font-size: 2rem;
+            box-shadow: var(--shadow-md);
         }
         
         h1 {
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
+            color: var(--primary-800);
+            font-size: var(--text-3xl);
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
         }
         
         .subtitle {
-            color: var(--secondary-color);
-            font-weight: normal;
+            color: var(--secondary-600);
+            font-size: var(--text-lg);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
         }
         
-        .form-group {
+        /* Form Layout */
+        .form-content {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .form-section {
             margin-bottom: 1.5rem;
         }
         
-        label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: var(--secondary-color);
+        .form-section-title {
+            font-size: var(--text-lg);
+            color: var(--primary-700);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: var(--border-light);
+            display: flex;
+            align-items: center;
         }
         
-        input, select, textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
+        .form-section-title i {
+            margin-right: 0.75rem;
+            color: var(--primary-500);
         }
         
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 3px rgba(79, 195, 220, 0.2);
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
         }
         
         .form-row {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             margin-bottom: 1.5rem;
         }
         
@@ -89,148 +217,938 @@
             margin-bottom: 0;
         }
         
-        button {
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s;
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: var(--text-sm);
+            font-weight: 500;
+            color: var(--secondary-700);
+            transition: var(--transition-fast);
         }
         
-        button:hover {
-            background-color: var(--secondary-color);
-        }
-        
-        .error {
+        .required {
             color: var(--error-color);
-            font-size: 0.85rem;
-            margin-top: 0.25rem;
-            display: none;
+            font-weight: bold;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            font-size: var(--text-base);
+            border: var(--border-light);
+            border-radius: 8px;
+            background-color: var(--bg-white);
+            transition: var(--transition-medium);
+            color: var(--secondary-800);
+        }
+        
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-300);
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.15);
+        }
+        
+        input[readonly],
+        select[readonly] {
+            background-color: var(--secondary-50);
+            color: var(--secondary-600);
+            cursor: not-allowed;
+        }
+        
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23616161'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.25rem;
+            padding-right: 2.5rem;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-400);
+            pointer-events: none;
+        }
+        
+        /* Buttons */
+        .form-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.5rem;
+            padding-top: 2rem;
+            border-top: var(--border-light);
+        }
+        
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.875rem 1.75rem;
+            font-size: var(--text-base);
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-medium);
+            border: none;
+            text-decoration: none;
+        }
+        
+        .button-primary {
+            background-color: var(--primary-600);
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .button-primary:hover {
+            background-color: var(--primary-700);
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+        
+        .button-primary:active {
+            background-color: var(--primary-800);
+            transform: translateY(0);
+        }
+        
+        .button-secondary {
+            background-color: var(--secondary-100);
+            color: var(--secondary-800);
+        }
+        
+        .button-secondary:hover {
+            background-color: var(--secondary-200);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        /* Status Messages */
+        .status-message {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out;
+            grid-column: 1 / -1;
+        }
+        
+        .status-message i {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
         }
         
         .success-message {
-            background-color: var(--success-color);
-            color: white;
-            padding: 1rem;
+            background-color: rgba(76, 175, 80, 0.1);
+            color: var(--success-color);
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .error-message {
+            background-color: rgba(244, 67, 54, 0.1);
+            color: var(--error-color);
+            border-left: 4px solid var(--error-color);
+        }
+        
+        /* Form Validation */
+        .error {
+            color: var(--error-color);
+            font-size: var(--text-xs);
+            margin-top: 0.25rem;
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .input-error {
+            border-color: var(--error-color);
+        }
+        
+        .input-error:focus {
+            box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.15);
+        }
+        
+        /* Confirmation Dialog Styles */
+        .confirmation-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition-medium);
+        }
+        
+        .confirmation-dialog.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .dialog-content {
+            background-color: var(--bg-white);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-xl);
+            transform: translateY(20px);
+            transition: var(--transition-medium);
+            position: relative;
+        }
+        
+        .confirmation-dialog.active .dialog-content {
+            transform: translateY(0);
+        }
+        
+        .dialog-header {
+            padding: 1.5rem;
+            border-bottom: var(--border-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background-color: var(--bg-white);
+            z-index: 1;
+        }
+        
+        .dialog-title {
+            font-size: var(--text-xl);
+            color: var(--primary-800);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .dialog-title i {
+            color: var(--primary-500);
+        }
+        
+        .close-dialog {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--secondary-500);
+            cursor: pointer;
+            transition: var(--transition-fast);
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-dialog:hover {
+            background-color: var(--secondary-100);
+            color: var(--secondary-800);
+        }
+        
+        .dialog-body {
+            padding: 1.5rem;
+        }
+        
+        .confirmation-section {
+            margin-bottom: 2rem;
+            background-color: var(--bg-light);
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .confirmation-section h3 {
+            font-size: var(--text-lg);
+            color: var(--primary-700);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .confirmation-section h3 i {
+            color: var(--primary-500);
+        }
+        
+        .confirmation-row {
+            display: flex;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(224, 224, 224, 0.5);
+        }
+        
+        .confirmation-row:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .confirmation-row.full-width {
+            flex-direction: column;
+        }
+        
+        .confirmation-label {
+            font-weight: 500;
+            color: var(--secondary-700);
+            min-width: 160px;
+            font-size: var(--text-sm);
+        }
+        
+        .confirmation-value {
+            color: var(--secondary-800);
+            flex: 1;
+        }
+        
+        .confirmation-row.full-width .confirmation-value {
+            margin-top: 0.5rem;
+            background-color: var(--bg-white);
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: var(--border-light);
+        }
+        
+        .dialog-footer {
+            padding: 1.5rem;
+            border-top: var(--border-light);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            position: sticky;
+            bottom: 0;
+            background-color: var(--bg-white);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(33, 150, 243, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(33, 150, 243, 0); }
+        }
+        
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        /* Custom Checkbox */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .checkbox-input {
+            position: absolute;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+        
+        .checkbox-custom {
+            position: relative;
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-color: var(--bg-white);
+            border: var(--border-medium);
             border-radius: 4px;
-            margin-top: 1rem;
-            display: none;
+            margin-right: 0.75rem;
+            transition: var(--transition-fast);
+        }
+        
+        .checkbox-input:checked ~ .checkbox-custom {
+            background-color: var(--primary-500);
+            border-color: var(--primary-500);
+        }
+        
+        .checkbox-input:checked ~ .checkbox-custom::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        .checkbox-label {
+            font-size: var(--text-sm);
+            color: var(--secondary-700);
+            cursor: pointer;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 0.5rem;
+            color: var(--secondary-400);
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.5rem 0.75rem;
+            background-color: var(--secondary-800);
+            color: white;
+            border-radius: 4px;
+            font-size: var(--text-xs);
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Loading State */
+        .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .form-content {
+                grid-template-columns: 1fr;
+                padding: 1.5rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            header {
+                padding: 2rem 1.5rem 1.5rem;
+            }
+            
+            h1 {
+                font-size: var(--text-2xl);
+            }
+            
+            .subtitle {
+                font-size: var(--text-base);
+            }
+            
+            .form-footer {
+                flex-direction: column-reverse;
+                gap: 1rem;
+            }
+            
+            .button-group {
+                width: 100%;
+            }
+            
+            .button {
+                width: 100%;
+            }
+            
+            .confirmation-row {
+                flex-direction: column;
+                gap: 0.25rem;
+            }
+            
+            .confirmation-label {
+                min-width: auto;
+            }
+            
+            .dialog-footer {
+                flex-direction: column-reverse;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
+            <div class="logo">
+                <i class="fas fa-calendar-alt"></i>
+            </div>
             <h1>College Venue Booking Request</h1>
-            <p class="subtitle">Complete the form below to request a booking for your college event</p>
+            <p class="subtitle">Fill out the form below to reserve your preferred venue for academic or extracurricular activities</p>
         </header>
         
         {% if success %}
-            <div class="success-message">Thank you for your booking request! We will contact you shortly to confirm availability and details.</div>
+            <div class="status-message success-message">
+                <i class="fas fa-check-circle"></i>
+                <div>
+                    <strong>Booking Request Submitted!</strong>
+                    <p>Thank you for your request. We will contact you shortly to confirm availability and details.</p>
+                </div>
+            </div>
         {% endif %}
 
         <form id="bookingForm" method="POST" action="{% url 'request_booking:process_booking' %}">
             {% csrf_token %}
-        
-            <div class="form-group">
-                <label for="venue">Venue Name <span class="required">*</span></label>
-                {% comment %} <input type="hidden" name="venue" value="{{ venue.id }}"> {% endcomment %}
-                <input type="text" id="venue" value="{{ venue }}" readonly class="form-control">
-            </div>
-        
-            <div class="form-group">
-                <label for="eventType">Event Type <span class="required">*</span></label>
-                <select id="eventType" name="eventType" required>
-                    <option value="" disabled selected>Select event type</option>
-                    <option value="seminar">Seminar</option>
-                    <option value="workshop">Workshop</option>
-                    <option value="guest_lecture">Guest Lecture</option>
-                    <option value="cultural_event">Cultural Event</option>
-                    <option value="sports_event">Sports Event</option>
-                    <option value="other">Other</option>
-                </select>
-            </div>
-        
-            <div class="form-group">
-                <label for="fullName">Full Name <span class="required">*</span></label>
-                <input type="text" id="fullName" name="fullName" value="{{ user_data.name }}" required>
-            </div>
-        
-            <div class="form-group">
-                <label for="email">Email <span class="required">*</span></label>
-                <input type="email" id="email" name="email" value="{{ user_data.email }}" required>
-            </div>            
-        
-            <div class="form-group">
-                <label for="organization_name">Organization Name <span class="required">*</span></label>
-                <input type="text" id="organization_name" name="organization_name" required>
-            </div>
-        
-            <div class="form-group">
-                <label for="start_date">Date <span class="required">*</span></label>
-                <input type="date" id="start_date" name="start_date" value = "{{  user_data.date }}" readonly required>
-            </div>
-        
-            <div class="form-group">
-                <label for="start_time">Start Time <span class="required">*</span></label>
-                <input type="time" id="start_time" name="start_time" value = "{{  user_data.start_time }}" readonly required>
-            </div>
-        
-            <div class="form-group">
-                <label for="end_time">End Time <span class="required">*</span></label>
-                <input type="time" id="end_time" name="end_time" value = "{{  user_data.end_time }}" readonly required>
-            </div>
-        
-            <div class="form-group">
-                <label for="phone">Phone Number <span class="required">*</span></label>
-                <input type="tel" id="phone" name="phone" value="{{ user_data.phone_number }}" required>
-            </div>
-        
-            <div class="form-group">
-                <label for="guestCount">Estimated Number of Attendees <span class="required">*</span></label>
-                <input type="number" id="guestCount" name="guestCount" min="1" required>
-            </div>
-        
-            <div class="form-group">
-                <label for="alternateVenue1">Alternate Venue 1 <span class="required">*</span></label>
-                <select id="alternateVenue1" name="alternateVenue1" required>
-                    <option value="" disabled selected>Select an alternate venue</option>
-                    {% for venue in venues %}
-                        <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        
-            <div class="form-group">
-                <label for="alternateVenue2">Alternate Venue 2</label>
-                <select id="alternateVenue2" name="alternateVenue2">
-                    <option value="" disabled selected>Select an alternate venue</option>
-                    {% for venue in venues %}
-                        <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        
-            <div class="form-group">
-                <label for="eventDetails">Event Details <span class="required">*</span></label>
-                <textarea id="eventDetails" name="eventDetails" required></textarea>
-            </div>
-        
-            <div class="form-group">
-                <label for="purpose">Explain the purpose of the booking</label>
-                <textarea id="purpose" name="purpose"></textarea>
-            </div>
-        
-            <div class="form-footer">
-                <p class="required-note"><span class="required">*</span> Required fields</p>
-                <button type="submit">Submit Booking Request</button>
-                <button type="button" onclick="window.location.href='/users/home'">Home</button>
+            
+            <div class="form-content">
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-map-marker-alt"></i> Venue Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="venue">Venue Name <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="venue" value="{{ venue }}" readonly>
+                            <i class="fas fa-building input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="eventType">Event Type <span class="required">*</span></label>
+                        <select id="eventType" name="eventType" required>
+                            <option value="" disabled selected>Select event type</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="guest_lecture">Guest Lecture</option>
+                            <option value="cultural_event">Cultural Event</option>
+                            <option value="sports_event">Sports Event</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="organization_name">Organization Name <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="organization_name" name="organization_name" required>
+                            <i class="fas fa-users input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="guestCount">Estimated Number of Attendees <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="number" id="guestCount" name="guestCount" min="1" required>
+                            <i class="fas fa-user-friends input-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-user-tie"></i> Contact Information</h3>
+                    
+                    <div class="form-group">
+                        <label for="fullName">Full Name <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="fullName" name="fullName" value="{{ user_data.name }}" readonly required>
+                            <i class="fas fa-user input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" name="email" value="{{ user_data.email }}" readonly required>
+                            <i class="fas fa-envelope input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="tel" id="phone" name="phone" value="{{ user_data.phone_number }}" required>
+                            <i class="fas fa-phone input-icon"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-clock"></i> Booking Schedule</h3>
+                    
+                    <div class="form-group">
+                        <label for="start_date">Date <span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="date" id="start_date" name="start_date" value="{{ user_data.date }}" readonly required>
+                            <i class="fas fa-calendar-day input-icon"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start_time">Start Time <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <input type="time" id="start_time" name="start_time" value="{{ user_data.start_time }}" readonly required>
+                                <i class="fas fa-clock input-icon"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="end_time">End Time <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <input type="time" id="end_time" name="end_time" value="{{ user_data.end_time }}" readonly required>
+                                <i class="fas fa-clock input-icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3 class="form-section-title"><i class="fas fa-exchange-alt"></i> Alternate Venues</h3>
+                    
+                    <div class="form-group">
+                        <label for="alternateVenue1">Primary Alternate Venue <span class="required">*</span></label>
+                        <select id="alternateVenue1" name="alternateVenue1" required>
+                            <option value="" disabled selected>Select an alternate venue</option>
+                            {% for venue in venues %}
+                                <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="alternateVenue2">Secondary Alternate Venue</label>
+                        <select id="alternateVenue2" name="alternateVenue2">
+                            <option value="" disabled selected>Select an alternate venue</option>
+                            {% for venue in venues %}
+                                <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="flexibleDates" name="flexibleDates" class="checkbox-input">
+                        <span class="checkbox-custom"></span>
+                        <label for="flexibleDates" class="checkbox-label">I'm flexible with alternate Venues if Venue isnt available</label>
+                    </div>
+                </div>
+                
+                <div class="form-section" style="grid-column: 1 / -1;">
+                    <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Event Details</h3>
+                    
+                    <div class="form-group">
+                        <label for="eventDetails">Event Description <span class="required">*</span> <span class="tooltip" data-tooltip="Provide a brief overview of your event">?</span></label>
+                        <textarea id="eventDetails" name="eventDetails" required placeholder="Please describe the nature of your event, activities planned, and any special requirements..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="purpose">Purpose of Booking</label>
+                        <textarea id="purpose" name="purpose" placeholder="Explain how this event aligns with college objectives or academic goals..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="specialRequirements">Special Requirements</label>
+                        <textarea id="specialRequirements" name="specialRequirements" placeholder="List any additional equipment, setup needs, or special arrangements required..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-footer">
+                    <p class="required-note"><span class="required">*</span> indicates required fields</p>
+                    
+                    <div class="button-group">
+                        <button type="button" class="button button-secondary" onclick="window.location.href='/request_booking/home'">
+                            <i class="fas fa-home"></i> Back to Home
+                        </button>
+                        <button type="button" id="previewButton" class="button button-primary">
+                            <i class="fas fa-eye"></i> Preview & Submit
+                        </button>
+                    </div>
+                </div>
             </div>
         </form>
-        
     </div>
+    
+    <!-- Confirmation Dialog -->
+    <div id="confirmationDialog" class="confirmation-dialog">
+        <div class="dialog-content">
+            <div class="dialog-header">
+                <h3 class="dialog-title"><i class="fas fa-clipboard-check"></i> Confirm Booking Details</h3>
+                <button id="closeDialog" class="close-dialog" aria-label="Close dialog">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="dialog-body">
+                <p style="margin-bottom: 1.5rem; color: var(--secondary-600);">
+                    Please review all details carefully before submitting your booking request.
+                </p>
+                
+                <div id="confirmDetails"></div>
+            </div>
+            
+            <div class="dialog-footer">
+                <button id="btnEdit" class="button button-secondary">
+                    <i class="fas fa-edit"></i> Edit Details
+                </button>
+                <button id="btnConfirm" class="button button-primary">
+                    <i class="fas fa-check-circle"></i> Confirm & Submit
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add animation to form elements when they come into view
+            const formGroups = document.querySelectorAll('.form-group');
+            
+            formGroups.forEach((group, index) => {
+                group.style.opacity = '0';
+                group.style.transform = 'translateY(20px)';
+                group.style.transition = `all 0.5s ease ${index * 0.1}s`;
+                
+                setTimeout(() => {
+                    group.style.opacity = '1';
+                    group.style.transform = 'translateY(0)';
+                }, 100);
+            });
+            
+            // Add pulse animation to submit button
+            const submitButton = document.querySelector('.button-primary');
+            if (submitButton) {
+                setInterval(() => {
+                    submitButton.style.animation = 'pulse 2s infinite';
+                }, 5000);
+            }
+            
+            // Confirmation dialog functionality
+            const bookingForm = document.getElementById('bookingForm');
+            const confirmationDialog = document.getElementById('confirmationDialog');
+            const confirmDetails = document.getElementById('confirmDetails');
+            const btnConfirm = document.getElementById('btnConfirm');
+            const btnEdit = document.getElementById('btnEdit');
+            const closeDialog = document.getElementById('closeDialog');
+            const previewButton = document.getElementById('previewButton');
+            
+            // Format date for display
+            function formatDate(dateString) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+                return new Date(dateString).toLocaleDateString('en-US', options);
+            }
+            
+            // Format time for display
+            function formatTime(timeString) {
+                return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', 
+                    { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+            
+            // Map event types to display names
+            const eventTypeMap = {
+                'seminar': 'Seminar',
+                'workshop': 'Workshop',
+                'guest_lecture': 'Guest Lecture',
+                'cultural_event': 'Cultural Event',
+                'sports_event': 'Sports Event',
+                'other': 'Other'
+            };
+            
+            // Handle preview button click
+            previewButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Validate required fields first
+                let isValid = true;
+                const requiredFields = bookingForm.querySelectorAll('[required]');
+                
+                requiredFields.forEach(field => {
+                    if (!field.value.trim()) {
+                        field.classList.add('input-error');
+                        isValid = false;
+                    } else {
+                        field.classList.remove('input-error');
+                    }
+                });
+                
+                if (!isValid) {
+                    alert('Please fill in all required fields before submitting.');
+                    return;
+                }
+                
+                // Gather all form data
+                const formData = {
+                    venue: document.getElementById('venue').value,
+                    eventType: eventTypeMap[document.getElementById('eventType').value],
+                    fullName: document.getElementById('fullName').value,
+                    email: document.getElementById('email').value,
+                    organization_name: document.getElementById('organization_name').value,
+                    start_date: formatDate(document.getElementById('start_date').value),
+                    start_time: formatTime(document.getElementById('start_time').value),
+                    end_time: formatTime(document.getElementById('end_time').value),
+                    phone: document.getElementById('phone').value,
+                    guestCount: document.getElementById('guestCount').value,
+                    alternateVenue1: document.getElementById('alternateVenue1').options[document.getElementById('alternateVenue1').selectedIndex].text,
+                    alternateVenue2: document.getElementById('alternateVenue2').options[document.getElementById('alternateVenue2').selectedIndex].text,
+                    eventDetails: document.getElementById('eventDetails').value,
+                    purpose: document.getElementById('purpose').value,
+                    specialRequirements: document.getElementById('specialRequirements').value,
+                    flexibleDates: document.getElementById('flexibleDates').checked ? 'Yes' : 'No'
+                };
+                
+                // Populate confirmation dialog
+                confirmDetails.innerHTML = `
+                    <div class="confirmation-section">
+                        <h3><i class="fas fa-map-marker-alt"></i> Venue Details</h3>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Primary Venue:</span>
+                            <span class="confirmation-value">${formData.venue}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Event Type:</span>
+                            <span class="confirmation-value">${formData.eventType}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Organization:</span>
+                            <span class="confirmation-value">${formData.organization_name}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Attendees:</span>
+                            <span class="confirmation-value">${formData.guestCount}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-section">
+                        <h3><i class="fas fa-user-tie"></i> Contact Information</h3>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Name:</span>
+                            <span class="confirmation-value">${formData.fullName}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Email:</span>
+                            <span class="confirmation-value">${formData.email}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Phone:</span>
+                            <span class="confirmation-value">${formData.phone}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-section">
+                        <h3><i class="fas fa-clock"></i> Booking Schedule</h3>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Date:</span>
+                            <span class="confirmation-value">${formData.start_date}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Time:</span>
+                            <span class="confirmation-value">${formData.start_time} - ${formData.end_time}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">Flexible Dates:</span>
+                            <span class="confirmation-value">${formData.flexibleDates}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-section">
+                        <h3><i class="fas fa-exchange-alt"></i> Alternate Venues</h3>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">1st Alternate:</span>
+                            <span class="confirmation-value">${formData.alternateVenue1}</span>
+                        </div>
+                        <div class="confirmation-row">
+                            <span class="confirmation-label">2nd Alternate:</span>
+                            <span class="confirmation-value">${formData.alternateVenue2}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-section">
+                        <h3><i class="fas fa-info-circle"></i> Event Information</h3>
+                        <div class="confirmation-row full-width">
+                            <span class="confirmation-label">Event Description:</span>
+                            <span class="confirmation-value">${formData.eventDetails}</span>
+                        </div>
+                        <div class="confirmation-row full-width">
+                            <span class="confirmation-label">Purpose:</span>
+                            <span class="confirmation-value">${formData.purpose || 'Not specified'}</span>
+                        </div>
+                        <div class="confirmation-row full-width">
+                            <span class="confirmation-label">Special Requirements:</span>
+                            <span class="confirmation-value">${formData.specialRequirements || 'None specified'}</span>
+                        </div>
+                    </div>
+                `;
+                
+                // Show the dialog
+                confirmationDialog.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Confirm submission
+            btnConfirm.addEventListener('click', function() {
+                confirmationDialog.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                bookingForm.submit();
+            });
+            
+            // Edit details
+            btnEdit.addEventListener('click', function() {
+                confirmationDialog.classList.remove('active');
+                document.body.style.overflow = 'auto';
+                
+                // Scroll to top of form
+                bookingForm.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            // Close dialog
+            closeDialog.addEventListener('click', function() {
+                confirmationDialog.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close when clicking outside content
+            confirmationDialog.addEventListener('click', function(e) {
+                if (e.target === confirmationDialog) {
+                    confirmationDialog.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+            
+            // Close with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && confirmationDialog.classList.contains('active')) {
+                    confirmationDialog.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

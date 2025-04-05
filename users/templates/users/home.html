@@ -1,65 +1,1375 @@
 {% load static %}
+
+<!-- Corrected Static Paths -->
+<link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+
 <!DOCTYPE html>
 <html lang="en">
+
+{% load static %}
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Venue Booking System</title>
-    <link rel="stylesheet" href="{% static 'users/css/home.css' %}">
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>COEPVenueBookingSystem</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
 
-    <!-- Linking JavaScript -->
-    <script src="{% static 'users/js/home.js' %}" defer></script>
+  <!-- Favicons -->
+  <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
 
 
-
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="brand">VenueBook</div>
-        <ul class="nav-links">
-            <li><a href="{% url 'request_booking:user_dashboard' %}" class="btn signup-btn">BOOK!!!</a></li>
-            
-            <li><a href="{% url 'home' %}#features">Features</a></li>
-            <li><a href="{% url 'home' %}#about">About</a></li>
-            <li><a href="{% url 'login' %}" class="btn login-btn">Login</a></li>
-            <li><a href="{% url 'register' %}" class="btn signup-btn">Sign Up</a></li>
-        </ul>
-    </nav>
+  <style>
+    /* Modal Overlay Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(26, 115, 232, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
     
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    /* Background blobs for the overlay */
+    .modal-overlay::before, .modal-overlay::after {
+      content: "";
+      position: absolute;
+      width: 50vw;
+      height: 50vw;
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    
+    .modal-overlay::before {
+      top: -15vw;
+      right: -15vw;
+    }
+    
+    .modal-overlay::after {
+      bottom: -15vw;
+      left: -15vw;
+    }
+    
+    .modal-container {
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 30px;
+      text-align: center;
+      z-index: 1;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+    }
+    
+    .modal-overlay.active .modal-container {
+      transform: translateY(0);
+    }
+    
+    .icon-container {
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .window-icon {
+      width: 60px;
+      height: 60px;
+      border: 2.5px solid #1a73e8;
+      border-radius: 8px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: #1a73e8;
+    }
+    
+    .window-face {
+      font-size: 24px;
+      line-height: 1;
+    }
+    
+    .circle-icon {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      background-color: #1a73e8;
+      border: 2px solid white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 16px;
+    }
+    
+    .modal-container h2 {
+      color: #333;
+      font-size: 24px;
+      margin-bottom: 12px;
+    }
+    
+    .modal-container p {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+    
+    .buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    
+    .modal-container button {
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    
+    .cancel-btn {
+      background-color: #f1f3f4;
+      border: none;
+      color: #5f6368;
+    }
+    
+    .cancel-btn:hover {
+      background-color: #e8eaed;
+    }
+    
+    .logout-btn {
+      background-color: #1a73e8;
+      border: none;
+      color: white;
+    }
+    
+    .logout-btn:hover {
+      background-color: #1765cc;
+      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      .modal-container {
+        padding: 30px 20px;
+      }
+      
+      .modal-container h2 {
+        font-size: 20px;
+      }
+      
+      .modal-container p {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      
+      .buttons {
+        flex-direction: column;
+      }
+      
+      .modal-container button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+
+
+  
+
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    {% include 'users/nav.html' %}
+  </header>
+
+  <main class="main">
 
     <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <h1>Manage Venue Bookings Seamlessly</h1>
-            <p>Efficient venue management for educational institutions and organizations</p>
-            <div class="cta-buttons">
-                <a href="#" class="btn primary-btn">Get Started</a>
-                <a href="#features" class="btn secondary-btn">Learn More</a>
-            </div>
-        </div>
-    </section>
+    <section id="hero" class="hero section dark-background">
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <h2>Key Features</h2>
-        <div class="feature-grid">
-            <div class="feature-card">
-                <h3>Venue Dashboard</h3>
-                <p>View all available venues with real-time availability status</p>
+      <div class="container">
+        <div class="row gy-4">
+          <div class="col-lg-6 order-2 order-lg-1 d-flex flex-column justify-content-center" data-aos="zoom-out">
+            <h1>Effortless Venue Booking for our College Events</h1>
+            <p>Say goodbye to last-minute venue confusion! Our smart booking system helps you reserve college spaces hassle-free, avoid scheduling conflicts, and manage events smoothly.</p>
+            <div class="d-flex">
+              <a href="#about" class="btn-get-started">Get Started</a>
+              {% comment %} <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox btn-watch-video d-flex align-items-center"><i class="bi bi-play-circle"></i><span>Watch Video</span></a> {% endcomment %}
             </div>
-            <div class="feature-card">
-                <h3>Instant Booking</h3>
-                <p>Request and manage bookings with automated approvals</p>
-            </div>
-            <div class="feature-card">
-                <h3>Admin Control</h3>
-                <p>Comprehensive management interface for authorities</p>
-            </div>
-        </div>
-    </section>
+          </div>
+          <div class="col-lg-6 order-1 order-lg-2 hero-img" data-aos="zoom-out" data-aos-delay="200">
+            {% load static %}
 
-    <script src="{% static 'home/js/home.js' %}"></script>
+            <img src="{% static 'assets/img/mainBuilding.jpg' %}" class="img-fluid animated" style="max-height: 400px;" alt="">
+            
+          </div>
+        </div>
+      </div>
+
+    </section><!-- /Hero Section -->
+
+    {% comment %} <!-- Clients Section -->
+    <section id="clients" class="clients section light-background">
+
+      <div class="container" data-aos="zoom-in">
+
+        <div class="swiper init-swiper">
+          <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": "auto",
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              },
+              "breakpoints": {
+                "320": {
+                  "slidesPerView": 2,
+                  "spaceBetween": 40
+                },
+                "480": {
+                  "slidesPerView": 3,
+                  "spaceBetween": 60
+                },
+                "640": {
+                  "slidesPerView": 4,
+                  "spaceBetween": 80
+                },
+                "992": {
+                  "slidesPerView": 5,
+                  "spaceBetween": 120
+                },
+                "1200": {
+                  "slidesPerView": 6,
+                  "spaceBetween": 120
+                }
+              }
+            }
+          </script>
+          {% load static %}
+
+          <div class="swiper-wrapper align-items-center">
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-1.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-2.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-3.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-4.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-5.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-6.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-7.webp' %}" class="img-fluid" alt=""></div>
+              <div class="swiper-slide"><img src="{% static 'assets/img/clients/clients-8.webp' %}" class="img-fluid" alt=""></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Clients Section --> {% endcomment %}
+
+    <!-- About Section -->
+    <!-- About Section -->
+{% comment %} <section id="about" class="about section">
+
+  <!-- Section Title -->
+  <div class="container section-title" data-aos="fade-up">
+    <h2>About Us</h2>
+  </div><!-- End Section Title -->
+
+  <div class="container">
+
+    <div class="row gy-4">
+
+      <div class="col-lg-6 content" data-aos="fade-up" data-aos-delay="100">
+        <p>
+          The COEP Gymkhana is a central hub for student activities at the College of Engineering Pune (COEP), facilitating a wide range of sports, cultural, and technical pursuits. It serves as a platform for students to engage in extracurricular activities, promoting holistic development alongside academic excellence.
+        </p>
+        <ul>
+          <li><i class="bi bi-check2-circle"></i> <span>Sports Infrastructure: The Gymkhana encompasses a 6.5-acre ground utilized for sports such as cricket, hockey, volleyball, football, tennis, and jogging. Additionally, there are floodlit basketball and tennis courts that enable extended play into the evening hours.</span></li>
+          <li><i class="bi bi-check2-circle"></i> <span>Hostel Proximity: The Gymkhana ground is conveniently located near the hostel blocks, providing students with easy access to sports and recreational facilities.</span></li>
+          <li><i class="bi bi-check2-circle"></i> <span>Student Clubs: Under the Gymkhana's aegis, various student clubs operate, including the Software Development Section (SDS), which focuses on software development projects and technical skill enhancement.</span></li>
+        </ul>
+      </div>
+
+      <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
+        <p>Events and Initiatives:</p>
+        <ul>
+          <li><i class="bi bi-check2-circle"></i> <span>Zest Festival: The Gymkhana organizes 'Zest,' COEP's annual sports festival, attracting participation from numerous colleges and featuring a variety of sports competitions.</span></li>
+          <li><i class="bi bi-check2-circle"></i> <span>Gymkhana Day: An annual event celebrating student achievements in sports and cultural activities, fostering community spirit and showcasing talent.</span></li>
+          <li><i class="bi bi-check2-circle"></i> <span>Administration: The Gymkhana is managed by university functionaries, including a Vice-President responsible for overseeing its operations.</span></li>
+        </ul>
+        <p>In summary, the COEP Gymkhana plays a pivotal role in enriching the student experience by providing diverse opportunities for engagement beyond the classroom, thereby contributing to the overall development of its students.</p>
+        <a href="#" class="read-more"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+      </div>
+
+    </div>
+
+  </div>
+
+</section> {% endcomment %}
+<!-- /About Section -->
+
+    {% comment %} <!-- Why Us Section -->
+    <section id="why-us" class="section why-us light-background" data-builder="section">
+
+      <div class="container-fluid">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-7 d-flex flex-column justify-content-center order-2 order-lg-1">
+
+            <div class="content px-xl-5" data-aos="fade-up" data-aos-delay="100">
+              <h3><span>Eum ipsam laborum deleniti </span><strong>velit pariatur architecto aut nihil</strong></h3>
+              <p>
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Duis aute irure dolor in reprehenderit
+              </p>
+            </div>
+
+            <div class="faq-container px-xl-5" data-aos="fade-up" data-aos-delay="200">
+
+              <div class="faq-item faq-active">
+
+                <h3><span>01</span> Non consectetur a erat nam at lectus urna duis?</h3>
+                <div class="faq-content">
+                  <p>Feugiat pretium nibh ipsum consequat. Tempus iaculis urna id volutpat lacus laoreet non curabitur gravida. Venenatis lectus magna fringilla urna porttitor rhoncus dolor purus non.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item">
+                <h3><span>02</span> Feugiat scelerisque varius morbi enim nunc faucibus a pellentesque?</h3>
+                <div class="faq-content">
+                  <p>Dolor sit amet consectetur adipiscing elit pellentesque habitant morbi. Id interdum velit laoreet id donec ultrices. Fringilla phasellus faucibus scelerisque eleifend donec pretium. Est pellentesque elit ullamcorper dignissim. Mauris ultrices eros in cursus turpis massa tincidunt dui.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item">
+                <h3><span>03</span> Dolor sit amet consectetur adipiscing elit pellentesque?</h3>
+                <div class="faq-content">
+                  <p>Eleifend mi in nulla posuere sollicitudin aliquam ultrices sagittis orci. Faucibus pulvinar elementum integer enim. Sem nulla pharetra diam sit amet nisl suscipit. Rutrum tellus pellentesque eu tincidunt. Lectus urna duis convallis convallis tellus. Urna molestie at elementum eu facilisis sed odio morbi quis</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+            </div>
+
+          </div>
+
+          <div class="col-lg-5 order-1 order-lg-2 why-us-img">
+            {% load static %}
+
+            <img src="{% static 'assets/img/why-us.png' %}" class="img-fluid" alt="" data-aos="zoom-in" data-aos-delay="100">
+            
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Why Us Section -->
+
+    <!-- Skills Section -->
+    <section id="skills" class="skills section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row">
+
+          <div class="col-lg-6 d-flex align-items-center">
+            {% load static %}
+
+            <img src="{% static 'assets/img/illustration/illustration-10.webp' %}" class="img-fluid" alt="">
+                      </div>
+
+          <div class="col-lg-6 pt-4 pt-lg-0 content">
+
+            <h3>Voluptatem dignissimos provident quasi corporis voluptas</h3>
+            <p class="fst-italic">
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+            </p>
+
+            <div class="skills-content skills-animation">
+
+              <div class="progress">
+                <span class="skill"><span>HTML</span> <i class="val">100%</i></span>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div><!-- End Skills Item -->
+
+              <div class="progress">
+                <span class="skill"><span>CSS</span> <i class="val">90%</i></span>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div><!-- End Skills Item -->
+
+              <div class="progress">
+                <span class="skill"><span>JavaScript</span> <i class="val">75%</i></span>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div><!-- End Skills Item -->
+
+              <div class="progress">
+                <span class="skill"><span>Photoshop</span> <i class="val">55%</i></span>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" role="progressbar" aria-valuenow="55" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div><!-- End Skills Item -->
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Skills Section --> {% endcomment %}
+
+    <!-- Services Section -->
+    <section id="services" class="services section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Our Services</h2>
+        <p>Seamlessly manage and book college venues for various events with ease.</p>
+      </div><!-- End Section Title -->
+    
+      <div class="container">
+    
+        <div class="row gy-4">
+    
+          <!-- Centralized Venue Management -->
+          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="100">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-building"></i></div>
+              <h4><a href="#" class="stretched-link">Centralized Venue Management</a></h4>
+              <p>Easily manage all college venues from a single platform, ensuring smooth scheduling and preventing double bookings.</p>
+            </div>
+          </div><!-- End Service Item -->
+    
+          <!-- External Booking & Payments -->
+          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="200">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-credit-card"></i></div>
+              <h4><a href="#" class="stretched-link">External Booking & Payments</a></h4>
+              <p>Facilitate hassle-free bookings for authorized external users with integrated payment options for seamless transactions.</p>
+            </div>
+          </div><!-- End Service Item -->
+    
+          <!-- Cultural & Music Events -->
+          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="300">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-music-note"></i></div>
+              <h4><a href="#" class="stretched-link">Cultural & Music Events</a></h4>
+              <p>Streamline the booking process for concerts, fests, and cultural programs, ensuring venues are available when needed.</p>
+            </div>
+          </div><!-- End Service Item -->
+    
+          <!-- Academic & Guest Lectures/Workshops -->
+          <div class="col-xl-3 col-md-6 d-flex" data-aos="fade-up" data-aos-delay="400">
+            <div class="service-item position-relative">
+              <div class="icon"><i class="bi bi-mic"></i></div>
+              <h4><a href="#" class="stretched-link">Academic & Guest Lectures/Workshops</a></h4>
+              <p>Reserve venues for seminars, workshops, and guest lectures, ensuring a well-organized academic experience.</p>
+            </div>
+          </div><!-- End Service Item -->
+    
+        </div>
+    
+      </div>
+    
+    </section>
+    <!-- /Services Section -->
+{% comment %} 
+    <!-- Work Process Section -->
+    <section id="work-process" class="work-process section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Work Process</h2>
+        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row gy-5">
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="steps-item">
+              <div class="steps-image">
+                {% load static %}
+
+                <img src="{% static 'assets/img/steps/steps-1.webp' %}" alt="Step 1" class="img-fluid" loading="lazy">
+                
+              </div>
+              <div class="steps-content">
+                <div class="steps-number">01</div>
+                <h3>Research &amp; Analysis</h3>
+                <p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione.</p>
+                <div class="steps-features">
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Market Research</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Data Analysis</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>User Feedback</span>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Steps Item -->
+          </div>
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="steps-item">
+              <div class="steps-image">
+                {% load static %}
+
+                <img src="{% static 'assets/img/steps/steps-2.webp' %}" alt="Step 2" class="img-fluid" loading="lazy">
+                
+              </div>
+              <div class="steps-content">
+                <div class="steps-number">02</div>
+                <h3>Design &amp; Planning</h3>
+                <p>Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur.</p>
+                <div class="steps-features">
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Wireframing</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>UI/UX Design</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Prototyping</span>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Steps Item -->
+          </div>
+
+          <div class="col-lg-4" data-aos="fade-up" data-aos-delay="400">
+            <div class="steps-item">
+              <div class="steps-image">
+                {% load static %}
+
+                <img src="{% static 'assets/img/steps/steps-3.webp' %}" alt="Step 3" class="img-fluid" loading="lazy">
+                
+              </div>
+              <div class="steps-content">
+                <div class="steps-number">03</div>
+                <h3>Development &amp; Launch</h3>
+                <p>Et harum quidem rerum facilis est et expedita distinctio. Nam libero tempore, cum soluta nobis est eligendi optio cumque nihil.</p>
+                <div class="steps-features">
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Development</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Testing</span>
+                  </div>
+                  <div class="feature-item">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Deployment</span>
+                  </div>
+                </div>
+              </div>
+            </div><!-- End Steps Item -->
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Work Process Section -->
+
+    <!-- Call To Action Section -->
+    <section id="call-to-action" class="call-to-action section dark-background">
+
+      {% load static %}
+
+      <img src="{% static 'assets/img/bg/bg-8.webp' %}" alt="">
+      
+      <div class="container">
+
+        <div class="row" data-aos="zoom-in" data-aos-delay="100">
+          <div class="col-xl-9 text-center text-xl-start">
+            <h3>Call To Action</h3>
+            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+          </div>
+          <div class="col-xl-3 cta-btn-container text-center">
+            <a class="cta-btn align-middle" href="#">Call To Action</a>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Call To Action Section --> {% endcomment %}
+
+    {% comment %} <!-- Portfolio Section -->
+    <section id="portfolio" class="portfolio section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Portfolio</h2>
+        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="isotope-layout" data-default-filter="*" data-layout="masonry" data-sort="original-order">
+
+          <ul class="portfolio-filters isotope-filters" data-aos="fade-up" data-aos-delay="100">
+            <li data-filter="*" class="filter-active">All</li>
+            <li data-filter=".filter-app">App</li>
+            <li data-filter=".filter-product">Card</li>
+            <li data-filter=".filter-branding">Web</li>
+          </ul><!-- End Portfolio Filters -->
+
+          <div class="row gy-4 isotope-container" data-aos="fade-up" data-aos-delay="200">
+            {% load static %}
+
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
+                <img src="{% static 'assets/img/portfolio/portfolio-portrait-1.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>App 1</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-portrait-1.webp' %}" title="App 1" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
+                <img src="{% static 'assets/img/portfolio/portfolio-1.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Product 1</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-1.webp' %}" title="Product 1" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
+                <img src="{% static 'assets/img/portfolio/portfolio-3.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Branding 1</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-3.webp' %}" title="Branding 1" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="portfolio-details.html" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
+                <img src="{% static 'assets/img/portfolio/portfolio-4.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>App 2</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-4.webp' %}" title="App 2" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
+                <img src="{% static 'assets/img/portfolio/portfolio-portrait-2.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Product 2</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-portrait-2.webp' %}" title="Product 2" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
+                <img src="{% static 'assets/img/portfolio/portfolio-portrait-3.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Branding 2</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-portrait-3.webp' %}" title="Branding 2" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
+                <img src="{% static 'assets/img/portfolio/portfolio-7.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>App 3</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-7.webp' %}" title="App 3" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
+                <img src="{% static 'assets/img/portfolio/portfolio-8.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Product 3</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-8.webp' %}" title="Product 3" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+            <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
+                <img src="{% static 'assets/img/portfolio/portfolio-9.webp' %}" class="img-fluid" alt="">
+                <div class="portfolio-info">
+                    <h4>Branding 3</h4>
+                    <p>Lorem ipsum, dolor sit</p>
+                    <a href="{% static 'assets/img/portfolio/portfolio-9.webp' %}" title="Branding 3" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
+                    <a href="{% static 'portfolio-details.html' %}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
+                </div>
+            </div><!-- End Portfolio Item -->
+            
+
+          </div><!-- End Portfolio Container -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Portfolio Section --> {% endcomment %}
+
+    <!-- Team Section -->
+    <!-- /Team Section -->
+
+    {% comment %} <!-- Pricing Section -->
+    <section id="pricing" class="pricing section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Pricing</h2>
+        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-4">
+
+          <div class="col-lg-4" data-aos="zoom-in" data-aos-delay="100">
+            <div class="pricing-item">
+              <h3>Free Plan</h3>
+              <h4><sup>$</sup>0<span> / month</span></h4>
+              <ul>
+                <li><i class="bi bi-check"></i> <span>Quam adipiscing vitae proin</span></li>
+                <li><i class="bi bi-check"></i> <span>Nec feugiat nisl pretium</span></li>
+                <li><i class="bi bi-check"></i> <span>Nulla at volutpat diam uteera</span></li>
+                <li class="na"><i class="bi bi-x"></i> <span>Pharetra massa massa ultricies</span></li>
+                <li class="na"><i class="bi bi-x"></i> <span>Massa ultricies mi quis hendrerit</span></li>
+              </ul>
+              <a href="#" class="buy-btn">Buy Now</a>
+            </div>
+          </div><!-- End Pricing Item -->
+
+          <div class="col-lg-4" data-aos="zoom-in" data-aos-delay="200">
+            <div class="pricing-item featured">
+              <h3>Business Plan</h3>
+              <h4><sup>$</sup>29<span> / month</span></h4>
+              <ul>
+                <li><i class="bi bi-check"></i> <span>Quam adipiscing vitae proin</span></li>
+                <li><i class="bi bi-check"></i> <span>Nec feugiat nisl pretium</span></li>
+                <li><i class="bi bi-check"></i> <span>Nulla at volutpat diam uteera</span></li>
+                <li><i class="bi bi-check"></i> <span>Pharetra massa massa ultricies</span></li>
+                <li><i class="bi bi-check"></i> <span>Massa ultricies mi quis hendrerit</span></li>
+              </ul>
+              <a href="#" class="buy-btn">Buy Now</a>
+            </div>
+          </div><!-- End Pricing Item -->
+
+          <div class="col-lg-4" data-aos="zoom-in" data-aos-delay="300">
+            <div class="pricing-item">
+              <h3>Developer Plan</h3>
+              <h4><sup>$</sup>49<span> / month</span></h4>
+              <ul>
+                <li><i class="bi bi-check"></i> <span>Quam adipiscing vitae proin</span></li>
+                <li><i class="bi bi-check"></i> <span>Nec feugiat nisl pretium</span></li>
+                <li><i class="bi bi-check"></i> <span>Nulla at volutpat diam uteera</span></li>
+                <li><i class="bi bi-check"></i> <span>Pharetra massa massa ultricies</span></li>
+                <li><i class="bi bi-check"></i> <span>Massa ultricies mi quis hendrerit</span></li>
+              </ul>
+              <a href="#" class="buy-btn">Buy Now</a>
+            </div>
+          </div><!-- End Pricing Item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Pricing Section -->
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Testimonials</h2>
+        <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="swiper init-swiper">
+          <script type="application/json" class="swiper-config">
+            {
+              "loop": true,
+              "speed": 600,
+              "autoplay": {
+                "delay": 5000
+              },
+              "slidesPerView": "auto",
+              "pagination": {
+                "el": ".swiper-pagination",
+                "type": "bullets",
+                "clickable": true
+              }
+            }
+          </script>
+          <div class="swiper-wrapper">
+
+            {% load static %}
+
+            <div class="swiper-slide">
+                <div class="testimonial-item">
+                    <img src="{% static 'assets/img/person/person-m-9.webp' %}" class="testimonial-img" alt="">
+                    <h3>Saul Goodman</h3>
+                    <h4>Ceo &amp; Founder</h4>
+                    <div class="stars">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    </div>
+                    <p>
+                        <i class="bi bi-quote quote-icon-left"></i>
+                        <span>Proin iaculis purus consequat sem cure digni ssim donec porttitora entum suscipit rhoncus. Accusantium quam, ultricies eget id, aliquam eget nibh et. Maecen aliquam, risus at semper.</span>
+                        <i class="bi bi-quote quote-icon-right"></i>
+                    </p>
+                </div>
+            </div><!-- End testimonial item --> 
+
+            <div class="swiper-slide">
+                <div class="testimonial-item">
+                    <img src="{% static 'assets/img/person/person-f-5.webp' %}" class="testimonial-img" alt="">
+                    <h3>Sara Wilsson</h3>
+                    <h4>Designer</h4>
+                    <div class="stars">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    </div>
+                    <p>
+                        <i class="bi bi-quote quote-icon-left"></i>
+                        <span>Export tempor illum tamen malis malis eram quae irure esse labore quem cillum quid cillum eram malis quorum velit fore eram velit sunt aliqua noster fugiat irure amet legam anim culpa.</span>
+                        <i class="bi bi-quote quote-icon-right"></i>
+                    </p>
+                </div>
+            </div><!-- End testimonial item -->
+
+            <div class="swiper-slide">
+                <div class="testimonial-item">
+                    <img src="{% static 'assets/img/person/person-f-12.webp' %}" class="testimonial-img" alt="">
+                    <h3>Jena Karlis</h3>
+                    <h4>Store Owner</h4>
+                    <div class="stars">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    </div>
+                    <p>
+                        <i class="bi bi-quote quote-icon-left"></i>
+                        <span>Enim nisi quem export duis labore cillum quae magna enim sint quorum nulla quem veniam duis minim tempor labore quem eram duis noster aute amet eram fore quis sint minim.</span>
+                        <i class="bi bi-quote quote-icon-right"></i>
+                    </p>
+                </div>
+            </div><!-- End testimonial item -->
+
+            <div class="swiper-slide">
+                <div class="testimonial-item">
+                    <img src="{% static 'assets/img/person/person-m-12.webp' %}" class="testimonial-img" alt="">
+                    <h3>Matt Brandon</h3>
+                    <h4>Freelancer</h4>
+                    <div class="stars">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    </div>
+                    <p>
+                        <i class="bi bi-quote quote-icon-left"></i>
+                        <span>Fugiat enim eram quae cillum dolore dolor amet nulla culpa multos export minim fugiat minim velit minim dolor enim duis veniam ipsum anim magna sunt elit fore quem dolore labore illum veniam.</span>
+                        <i class="bi bi-quote quote-icon-right"></i>
+                    </p>
+                </div>
+            </div><!-- End testimonial item -->
+
+            <div class="swiper-slide">
+                <div class="testimonial-item">
+                    <img src="{% static 'assets/img/person/person-m-13.webp' %}" class="testimonial-img" alt="">
+                    <h3>John Larson</h3>
+                    <h4>Entrepreneur</h4>
+                    <div class="stars">
+                        <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
+                    </div>
+                    <p>
+                        <i class="bi bi-quote quote-icon-left"></i>
+                        <span>Quis quorum aliqua sint quem legam fore sunt eram irure aliqua veniam tempor noster veniam enim culpa labore duis sunt culpa nulla illum cillum fugiat legam esse veniam culpa fore nisi cillum quid.</span>
+                        <i class="bi bi-quote quote-icon-right"></i>
+                    </p>
+                </div>
+            </div><!-- End testimonial item -->
+
+
+          </div>
+          <div class="swiper-pagination"></div>
+        </div>
+
+      </div>
+
+    </section><!-- /Testimonials Section --> {% endcomment %}
+
+    <!-- Faq 2 Section -->
+    <section id="faq-2" class="faq-2 section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Frequently Asked Questions</h2>
+        {% comment %} <p>Magnam dolores commodi suscipit. Necessitatibus eius consequatur ex aliquid fuga eum quidem. Sit sint consectetur velit. Quisquam quos quisquam cupiditate. Et nemo qui impedit suscipit alias ea. Quia fugiat sit in iste officiis commodi quidem hic quas.</p> {% endcomment %}
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row justify-content-center">
+
+          <div class="col-lg-10">
+
+            <div class="faq-container">
+
+              <div class="faq-item faq-active" data-aos="fade-up" data-aos-delay="200">
+                <i class="faq-icon bi bi-question-circle"></i>
+                <h3> How far in advance can I book a venue?</h3>
+                <div class="faq-content">
+                  <p>You can book a venue up to 2 months in advance.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item" data-aos="fade-up" data-aos-delay="300">
+                <i class="faq-icon bi bi-question-circle"></i>
+                <h3>Is there a limit to the number of bookings one can make?</h3>
+                <div class="faq-content">
+                  <p>Yes, you can make a maximum of 3 bookings per week.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item" data-aos="fade-up" data-aos-delay="400">
+                <i class="faq-icon bi bi-question-circle"></i>
+                <h3>Can I modify or cancel a booking?</h3>
+                <div class="faq-content">
+                  <p>Yes, you can modify or cancel a booking as per the guidelines set by the administration.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item" data-aos="fade-up" data-aos-delay="500">
+                <i class="faq-icon bi bi-question-circle"></i>
+                <h3>If multiple people try to book the same venue for the same timings, who gets the booking?</h3>
+                <div class="faq-content">
+                  <p>The college authorities will review requests and grant permissions accordingly.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+              <div class="faq-item" data-aos="fade-up" data-aos-delay="600">
+                <i class="faq-icon bi bi-question-circle"></i>
+                <h3>Why do I need to select two alternate venues while booking?</h3>
+                <div class="faq-content">
+                  <p>This ensures that if your first choice is unavailable, your request is automatically considered for the second or third venue, reducing delays.</p>
+                </div>
+                <i class="faq-toggle bi bi-chevron-right"></i>
+              </div><!-- End Faq item-->
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Faq 2 Section -->
+
+    {% comment %} <!-- Subscribe Section -->
+    <section id="subscribe" class="subscribe section">
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+        <div class="row gy-4 justify-content-between align-items-center">
+          <div class="col-lg-6">
+            <div class="cta-content" data-aos="fade-up" data-aos-delay="200">
+              <h2>Subscribe to our newsletter</h2>
+              <p>Proin eget tortor risus. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a. Curabitur aliquet quam id dui posuere blandit.</p>
+              <form action="forms/newsletter.php" method="post" class="php-email-form cta-form" data-aos="fade-up" data-aos-delay="300">
+                <div class="input-group mb-3">
+                  <input type="email" class="form-control" placeholder="Email address..." aria-label="Email address" aria-describedby="button-subscribe">
+                  <button class="btn btn-primary" type="submit" id="button-subscribe">Subscribe</button>
+                </div>
+                <div class="loading">Loading</div>
+                <div class="error-message"></div>
+                <div class="sent-message">Your subscription request has been sent. Thank you!</div>
+              </form>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="cta-image" data-aos="zoom-out" data-aos-delay="200">
+              {% load static %}
+
+              <img src="{% static 'assets/img/cta/cta-1.webp' %}" alt="" class="img-fluid">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /Subscribe Section --> {% endcomment %}
+
+    <!-- Recent Blog Postst Section -->
+    <section id="recent-blog-postst" class="recent-blog-postst section light-background">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>About the Venues</h2>
+        {% comment %} <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p> {% endcomment %}
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="row gy-5">
+
+          <div class="col-xl-4 col-md-6">
+            <div class="post-item position-relative h-100" data-aos="fade-up" data-aos-delay="100">
+
+              <div class="post-img position-relative overflow-hidden">
+                {% load static %}
+
+                <img src="{% static 'assets/img/blog/blog-post-1.webp' %}" class="img-fluid" alt="">
+                
+                {% comment %} <span class="post-date">December 12</span> {% endcomment %}
+              </div>
+
+              <div class="post-content d-flex flex-column">
+
+                <h3 class="post-title">Main Auditorium</h3>
+
+                <div class="meta d-flex align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-person"></i> <span class="ps-2">Julia Parker</span>
+                  </div>
+                  <span class="px-3 text-black-50">/</span>
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-folder2"></i> <span class="ps-2">Politics</span>
+                  </div>
+                </div>
+
+                <hr>
+
+                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+
+              </div>
+
+            </div>
+          </div><!-- End post item -->
+
+          <div class="col-xl-4 col-md-6">
+            <div class="post-item position-relative h-100" data-aos="fade-up" data-aos-delay="200">
+
+              <div class="post-img position-relative overflow-hidden">
+                {% load static %}
+
+                <img src="{% static 'assets/img/blog/blog-post-2.webp' %}" class="img-fluid" alt="">
+                
+                {% comment %} <span class="post-date">July 17</span> {% endcomment %}
+              </div>
+
+              <div class="post-content d-flex flex-column">
+
+                <h3 class="post-title">Mini Auditorium</h3>
+
+                <div class="meta d-flex align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-person"></i> <span class="ps-2">Mario Douglas</span>
+                  </div>
+                  <span class="px-3 text-black-50">/</span>
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-folder2"></i> <span class="ps-2">Sports</span>
+                  </div>
+                </div>
+
+                <hr>
+
+                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+
+              </div>
+
+            </div>
+          </div><!-- End post item -->
+
+          <div class="col-xl-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
+            <div class="post-item position-relative h-100">
+
+              <div class="post-img position-relative overflow-hidden">
+                {% load static %}
+
+                <img src="{% static 'assets/img/blog/blog-post-3.webp' %}" class="img-fluid" alt="">
+                
+                {% comment %} <span class="post-date">September 05</span> {% endcomment %}
+              </div>
+
+              <div class="post-content d-flex flex-column">
+
+                <h3 class="post-title">Cognizant Lab</h3>
+
+                <div class="meta d-flex align-items-center">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-person"></i> <span class="ps-2">Lisa Hunter</span>
+                  </div>
+                  <span class="px-3 text-black-50">/</span>
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-folder2"></i> <span class="ps-2">Economics</span>
+                  </div>
+                </div>
+
+                <hr>
+
+                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+
+              </div>
+
+            </div>
+          </div><!-- End post item -->
+
+        </div>
+
+      </div>
+
+    </section><!-- /Recent Blog Postst Section -->
+
+    <!-- Contact Section -->
+    <!-- /Contact Section -->
+
+  </main>
+
+  <footer id="footer" class="footer">
+
+    {% comment %} <div class="footer-newsletter">
+      <div class="container">
+        <div class="row justify-content-center text-center">
+          <div class="col-lg-6">
+            <h4>Join Our Newsletter</h4>
+            <p>Subscribe to our newsletter and receive the latest news about our products and services!</p>
+            <form action="forms/newsletter.php" method="post" class="php-email-form">
+              <div class="newsletter-form"><input type="email" name="email"><input type="submit" value="Subscribe"></div>
+              <div class="loading">Loading</div>
+              <div class="error-message"></div>
+              <div class="sent-message">Your subscription request has been sent. Thank you!</div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div> {% endcomment %}
+
+    <div class="container footer-top">
+      <div class="row gy-4 justify-content-center">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="d-flex align-items-center">
+            <span class="sitename">
+              COEP Technological University</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p>Wellesely Rd, Shivajinagar, Pune – 411 005.</p>
+            <p>Maharashtra, INDIA.</p>
+            <p class="mt-3"><strong>Phone:</strong> <span>+91-20-25507000</span></p>
+            <p><strong>Email:</strong> <span>info@example.com</span></p>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="#hero">Home</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#about">About us</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#services">Services</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#team">Team</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#blog">Venues</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#contact">Contact</a></li>
+          </ul>
+        </div>
+
+        {% comment %} <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Design</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Development</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Product Management</a></li>
+            <li><i class="bi bi-chevron-right"></i> <a href="#">Marketing</a></li>
+          </ul>
+        </div> {% endcomment %}
+
+        <div class="col-lg-4 col-md-12">
+          <h4>Follow Us</h4>
+          {% comment %} <p>Cras fermentum odio eu feugiat lide par naso tierra videa magna derita valies</p> {% endcomment %}
+          <div class="social-links d-flex">
+            <a href="https://x.com/COEPTech%20"><i class="bi bi-twitter-x"></i></a>
+            <a href="https://www.facebook.com/coep1854/"><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href="https://www.linkedin.com/school/coep-technological-university/posts/?feedView=all"><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename"> COEP Technological University.</strong> <span>All Rights Reserved. </span></p>
+      <div class="credits">
+        <!-- All the links in the footer should remain intact. -->
+        <!-- You can delete the links only if you've purchased the pro version. -->
+        <!-- Licensing information: https://bootstrapmade.com/license/ -->
+        <!-- Purchase the pro version with working PHP/AJAX contact form: [buy-url] -->
+        Made with ❤️ in COEP
+      </div>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  {% load static %}
+
+<!-- Logout Confirmation Modal -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-container">
+    <div class="icon-container">
+      <div class="window-icon">
+        <div class="window-face">•-•</div>
+      </div>
+      <div class="circle-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+      </div>
+    </div>
+    
+    <h2>Logout Confirmation</h2>
+    <p>Are you sure you want to log out? Your current session will be terminated.</p>
+    
+    <div class="buttons">
+      <button class="cancel-btn" id="cancelBtn">Cancel</button>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Function to show the modal
+  function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.classList.add('active');
+    // Prevent scrolling on the body when modal is open
+    document.body.style.overflow = 'hidden';
+  }
+  
+  // Function to hide the modal
+  function hideLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    modal.classList.remove('active');
+    // Restore scrolling
+    document.body.style.overflow = '';
+  }
+  
+  // Set up event listeners
+  document.getElementById('cancelBtn').addEventListener('click', function() {
+    hideLogoutModal();
+  });
+  
+  document.getElementById('logoutBtn').addEventListener('click', function() {
+    // Redirect to the logout URL
+    window.location.href = "{% url 'venue_admin:logout' %}";
+  });
+  
+  // Connect the logout button to show the modal
+  document.getElementById('logoutButton').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent the default link action
+    showLogoutModal();
+  });
+  
+  // Close the modal when clicking outside
+  document.getElementById('logoutModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      hideLogoutModal();
+    }
+  });
+</script>
+
+<!-- Vendor JS Files -->
+<script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+<script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+<script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+<script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+<script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+<script src="{% static 'assets/vendor/waypoints/noframework.waypoints.js' %}"></script>
+<script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+<script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+
+<!-- Main JS File -->
+<script src="{% static 'assets/js/main.js' %}"></script>
+
+
+
+
+
 </body>
+
 </html>

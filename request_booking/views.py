@@ -230,10 +230,21 @@ from django.core.exceptions import ObjectDoesNotExist
 
 
 
-sender_email = ""  # Outlook Email
-sender_password = "coep"      # Outlook Email Password
-smtp_server = "smtp.office365.com"
-smtp_port = 587  # Outlook SMTP port
+# sender_email = ""  # Outlook Email
+# sender_password = "coep"      # Outlook Email Password
+# smtp_server = "smtp.office365.com"
+# smtp_port = 587  # Outlook SMTP port
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.conf import settings  # Import settings
+
+sender_email = settings.EMAIL_HOST_USER
+sender_password = settings.EMAIL_HOST_PASSWORD
+smtp_server = settings.EMAIL_HOST
+smtp_port = settings.EMAIL_PORT
+
 
 def getUnavailableSlots(request):
     if request.method == "GET":
@@ -742,6 +753,8 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .models import Request, Venue
 
+
+
 @login_required
 def process_booking(request):
     print()
@@ -812,21 +825,27 @@ def process_booking(request):
             existing_request = Request.objects.filter(
                 user=user,
                 email=email,
-                event_type=event_type,
-                additional_info=purpose,
                 date=date_obj,
                 time=start_time,
-                duration=duration,
                 venue=venue,
-                need=organization_name,  # Using need to store organization name
-                alternate_venue_1=alternate_venue_1,
-                alternate_venue_2=alternate_venue_2,
-                event_details=event_details,
-                guest_count = guest_count,
             ).exists()
 
             if existing_request:
+                send_duplicate_request_email(user, email, venue, date_obj, start_time)
                 return redirect("request_booking:index")  # Redirect to home or bookings list 
+
+            # Get the current time
+            current_time = datetime.now()
+
+             # Format the current time in a human-readable format
+            formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S")
+
+            print("Current Time:", formatted_time)
+
+
+            send_booking_request_email(request, venue, alternate_venue_1, alternate_venue_2,event_type, purpose , formatted_time)
+            # to_email, requester_name, booking_id, venue, date, time_slot, purpose
+            send_forwarded_notification(email , request, venue, alternate_venue_1, alternate_venue_2,event_type, purpose , formatted_time)
 
 
             # Create request object
@@ -848,6 +867,9 @@ def process_booking(request):
                 guest_count = guest_count,
             )
 
+
+            
+
             print(f"Booking Request Created: {booking_request}")
             messages.success(request, "Booking request submitted successfully!")
             return redirect("request_booking:index")  # Redirect to home or bookings list
@@ -867,12 +889,139 @@ def process_booking(request):
 
 
 
+
+
+
+
+
+
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+
+
+
+
+# utils/email_utils.py
+
+from django.core.mail import send_mail
+
+def send_duplicate_request_email(user, email, venue, date_obj, start_time):
+    subject = "Duplicate Booking Request Detected"
+    message = f"""Dear {user.first_name},
+
+Our records show that you have already made a similar venue booking request with the following details:
+
+📌 Venue        : {venue}
+📅 Date         : {date_obj}
+⏰ Time Slot    : {start_time}
+📨 Email        : {email}
+
+If this was unintentional, you may ignore this message. Otherwise, your earlier request is already in process.
+
+Regards,  
+Venue Booking System  
+CSI COEP Tech
+"""
+
+    send_mail(
+        subject,
+        message,
+        sender_email,   # From email
+        email,                  # Recipient list
+        fail_silently=False,
+    )
+
+
+
+
+
+
+
+def send_forwarded_notification(to_email , request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
+    # Get venue in-charge email
+    
+    print()
+    print('---------in send_forwarded_notification()------')
+    print()
+    print('to_email : ' , to_email)
+    print()
+    
+    if not to_email:
+        print("Venue in-charge email not found.")
+        return
+
+    # Retrieve booking details from session
+    start_date = request.session.get('start_date')
+    start_time = request.session.get('start_time')
+    booking_duration = request.session.get('booking_duration')
+
+   
+
+ 
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = to_email
+    msg['Subject'] = "Venue Booking Request has been initiated"
+
+    body = f"""
+    Dear {venue_obj.department_incharge.name},
+
+    A new venue booking request has been initiated.
+
+    Request Details:
+    - Requested by: {request.user.name} ({request.user.email})
+    - Venue: {venue_obj.venue_name}
+    - Date: {start_date}
+    - Time: {start_time}
+    - Duration: {booking_duration} hours
+    - Purpose: {purpose}
+    - Event Type: {event_type}
+    - Alternate Venue 1: {alt_venue_1.venue_name if alt_venue_1 else 'None'}
+    - Alternate Venue 2: {alt_venue_2.venue_name if alt_venue_2 else 'None'}
+    - Status: Pending
+    - Requested At: {formatted_time}
+
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+
+    print(f"Venue booking request email sent to {to_email}")
+
+    print('---------Ended ---- send_booking_request_email()------')
+
+
+
+
+
+
+
+# Example usage:
+# send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, "Pending")
+
+    
+
+
+
+
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.utils.timezone import now
 
-def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time):
+def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
     venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
     print()
@@ -911,11 +1060,11 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, dat
     - Date: {start_date}
     - Time: {start_time}
     - Duration: {booking_duration} hours
-    - Purpose: {data["purpose"]}
-    - Event Type: {data["event_type"]}
+    - Purpose: {purpose}
+    - Event Type: {event_type}
     - Alternate Venue 1: {alt_venue_1.venue_name if alt_venue_1 else 'None'}
     - Alternate Venue 2: {alt_venue_2.venue_name if alt_venue_2 else 'None'}
-    - Status: {status}
+    - Status: Pending
     - Requested At: {formatted_time}
 
     Please review the request and take the necessary action.
