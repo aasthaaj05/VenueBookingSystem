@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Forward Requests | COEP TECH Venue Booking</title>
+    <title>COEPVenueBookingSystem</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
@@ -704,13 +704,15 @@
     </header>
     
     <!-- Welcome Card -->
+    <!-- Welcome Card -->
     <div class="welcome-card">
-        <h2>Welcome, {{ user.name }}</h2>
-        <p>You have {{ pending_requests|length }} pending forward requests to review</p>
+        <h2 style="color: white;">Welcome!</h2>
+        <p style="color: white;">You have {{ pending_requests|length }} pending forward requests to review</p>
         <div class="welcome-icon">
-            <i class="fas fa-calendar-check"></i>
+            <i class="fas fa-calendar-check" style="color: white;"></i>
         </div>
     </div>
+
     
     <!-- Main Content -->
     <div class="container">

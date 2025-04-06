@@ -1106,11 +1106,10 @@
                   <div class="d-flex align-items-center">
                     <i class="bi bi-folder2"></i> <span class="ps-2">Politics</span>
                   </div>
-                </div>
+                </div> 
 
                 <hr>
 
-                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
 
               </div>
 
@@ -1123,7 +1122,7 @@
               <div class="post-img position-relative overflow-hidden">
                 {% load static %}
 
-                <img src="{% static 'assets/img/blog/blog-post-2.webp' %}" class="img-fluid" alt="">
+                <img src="{% static 'assets/img/blog/blog-post-2.webp' %}" class="img-fluid" alt="" onclick="return false;>
                 
                 {% comment %} <span class="post-date">July 17</span> {% endcomment %}
               </div>
@@ -1144,7 +1143,6 @@
 
                 <hr>
 
-                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
 
               </div>
 
@@ -1178,7 +1176,7 @@
 
                 <hr>
 
-                <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a>
+                {% comment %} <a href="blog-details.html" class="readmore stretched-link"><span>Read More</span><i class="bi bi-arrow-right"></i></a> {% endcomment %}
 
               </div>
 

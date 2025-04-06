@@ -8,38 +8,44 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            /* Premium Blue Theme */
-            --primary-50: #e8f4fd;
-            --primary-100: #c6e2fa;
-            --primary-200: #a1cdf6;
-            --primary-300: #7bb8f2;
-            --primary-400: #5fa8ef;
-            --primary-500: #4398ec;
-            --primary-600: #3d8ae4;
-            --primary-700: #3479da;
-            --primary-800: #2c68d0;
-            --primary-900: #1d49bd;
+            /* Primary Color Theme - Based on #37517e */
+            --primary-50: #ebf1fa;
+            --primary-100: #d2ddf2;
+            --primary-200: #b5c7e9;
+            --primary-300: #97b1e0;
+            --primary-400: #80a1d9;
+            --primary-500: #6891d2;
+            --primary-600: #5c83c6;
+            --primary-700: #4c71b5;
+            --primary-800: #3d5fa4;
+            --primary-900: #37517e; /* Base color */
             
-            /* Sophisticated Secondary Colors */
-            --secondary-50: #f9fafb;
-            --secondary-100: #f3f4f6;
-            --secondary-200: #e5e7eb;
-            --secondary-300: #d1d5db;
-            --secondary-400: #9ca3af;
-            --secondary-500: #6b7280;
-            --secondary-600: #4b5563;
-            --secondary-700: #374151;
-            --secondary-800: #1f2937;
-            --secondary-900: #111827;
+            /* Darker/Lighter variations */
+            --primary-dark: #2c4371;
+            --primary-darker: #213564;
+            --primary-light: #4d6a9a;
+            --primary-lighter: #6a84b1;
+            
+            /* Secondary Colors */
+            --secondary-50: #f8f9fa;
+            --secondary-100: #f1f3f5;
+            --secondary-200: #e9ecef;
+            --secondary-300: #dee2e6;
+            --secondary-400: #ced4da;
+            --secondary-500: #adb5bd;
+            --secondary-600: #868e96;
+            --secondary-700: #495057;
+            --secondary-800: #343a40;
+            --secondary-900: #212529;
             
             /* System Colors */
-            --success-color: #10b981;
-            --error-color: #ef4444;
-            --warning-color: #f59e0b;
-            --info-color: #3b82f6;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
             
             /* Glass Morphism Effects */
-            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-bg: rgba(255, 255, 255, 0.9);
             --glass-border: rgba(255, 255, 255, 0.2);
             --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
             
@@ -49,7 +55,7 @@
             --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
             --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            --shadow-blue: 0 4px 14px 0 rgba(67, 152, 236, 0.3);
+            --shadow-primary: 0 4px 14px 0 rgba(55, 81, 126, 0.3);
             
             /* Transitions */
             --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -60,7 +66,7 @@
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
-            --radius-xl: 24px;
+            --radius-xl: 20px;
             --radius-full: 9999px;
         }
 
@@ -79,7 +85,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #f6f9fc 0%, #eef2f6 100%);
+            background-color: #f5f7fb;
             color: var(--secondary-800);
             line-height: 1.6;
             min-height: 100vh;
@@ -90,11 +96,8 @@
 
         /* Premium Header */
         header {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--glass-border);
-            box-shadow: var(--shadow-sm);
+            background-color: var(--primary-900);
+            box-shadow: var(--shadow-md);
             position: fixed;
             top: 0;
             left: 0;
@@ -104,6 +107,7 @@
             display: flex;
             align-items: center;
             padding: 0 2rem;
+            transition: var(--transition-medium);
         }
 
         .header-content {
@@ -120,25 +124,25 @@
             align-items: center;
             gap: 0.75rem;
             font-size: 1.375rem;
-            font-weight: 700;
-            color: var(--primary-700);
+            font-weight: 600;
+            color: white;
             letter-spacing: -0.5px;
         }
 
         .logo i {
             font-size: 1.75rem;
-            color: var(--primary-500);
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .nav-links {
             display: flex;
-            gap: 1.75rem;
+            gap: 2rem;
             list-style: none;
         }
 
         .nav-links a {
             text-decoration: none;
-            color: var(--secondary-700);
+            color: rgba(255, 255, 255, 0.8);
             font-weight: 500;
             transition: var(--transition-fast);
             display: flex;
@@ -150,7 +154,7 @@
         }
 
         .nav-links a:hover {
-            color: var(--primary-600);
+            color: white;
         }
 
         .nav-links a::after {
@@ -160,7 +164,7 @@
             left: 0;
             width: 0;
             height: 2px;
-            background: var(--primary-500);
+            background: white;
             transition: var(--transition-medium);
         }
 
@@ -169,7 +173,7 @@
         }
 
         .nav-links a.active {
-            color: var(--primary-600);
+            color: white;
             font-weight: 600;
         }
 
@@ -186,12 +190,12 @@
 
         /* Premium Welcome Card */
         .welcome-card {
-            background: linear-gradient(135deg, var(--primary-600) 0%, var(--primary-400) 100%);
+            background: linear-gradient(135deg, var(--primary-900) 0%, var(--primary-dark) 100%);
             color: white;
-            padding: 2rem;
+            padding: 2.5rem;
             border-radius: var(--radius-lg);
             margin-bottom: 2.5rem;
-            box-shadow: var(--shadow-blue);
+            box-shadow: var(--shadow-primary);
             display: flex;
             align-items: center;
             gap: 1.5rem;
@@ -218,27 +222,24 @@
 
         .welcome-text h2 {
             font-weight: 600;
-            margin-bottom: 0.375rem;
+            margin-bottom: 0.5rem;
             font-size: 1.5rem;
             letter-spacing: -0.25px;
         }
 
         .welcome-text p {
-            opacity: 0.9;
-            font-size: 0.9375rem;
+            opacity: 0.85;
+            font-size: 1rem;
             max-width: 600px;
         }
 
         /* Premium Bookings Container */
         .bookings-container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background-color: white;
             border-radius: var(--radius-lg);
             box-shadow: var(--shadow-md);
             overflow: hidden;
             position: relative;
-            border: 1px solid var(--glass-border);
         }
 
         .bookings-container::before {
@@ -248,19 +249,19 @@
             left: 0;
             right: 0;
             height: 6px;
-            background: linear-gradient(90deg, var(--primary-500), var(--primary-300));
+            background: linear-gradient(90deg, var(--primary-900), var(--primary-700));
         }
 
         .bookings-header {
             padding: 1.75rem 2rem;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--secondary-200);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .bookings-header h1 {
-            color: var(--primary-800);
+            color: var(--primary-900);
             font-size: 1.5rem;
             display: flex;
             align-items: center;
@@ -279,7 +280,7 @@
 
         .bookings-table th {
             background-color: var(--primary-50);
-            color: var(--primary-800);
+            color: var(--primary-900);
             font-weight: 600;
             text-transform: uppercase;
             font-size: 0.75rem;
@@ -288,12 +289,12 @@
             padding: 1rem 1.5rem;
             position: sticky;
             top: 80px;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--secondary-200);
         }
 
         .bookings-table td {
             padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--secondary-200);
             vertical-align: middle;
             font-size: 0.9375rem;
         }
@@ -303,7 +304,7 @@
         }
 
         .bookings-table tr:hover {
-            background-color: rgba(67, 152, 236, 0.05);
+            background-color: rgba(55, 81, 126, 0.03);
         }
 
         /* Premium Status Badges */
@@ -319,23 +320,23 @@
         }
 
         .status-pending {
-            background-color: rgba(245, 158, 11, 0.1);
+            background-color: rgba(255, 193, 7, 0.1);
             color: var(--warning-color);
         }
 
         .status-approved {
-            background-color: rgba(16, 185, 129, 0.1);
+            background-color: rgba(40, 167, 69, 0.1);
             color: var(--success-color);
         }
 
         .status-rejected {
-            background-color: rgba(239, 68, 68, 0.1);
+            background-color: rgba(220, 53, 69, 0.1);
             color: var(--error-color);
         }
 
         .status-cancelled {
-            background-color: rgba(156, 163, 175, 0.1);
-            color: var(--secondary-500);
+            background-color: rgba(108, 117, 125, 0.1);
+            color: var(--secondary-600);
         }
 
         /* Premium Action Buttons */
@@ -365,7 +366,7 @@
 
         .btn-view {
             background-color: var(--primary-100);
-            color: var(--primary-800);
+            color: var(--primary-900);
             box-shadow: var(--shadow-xs);
         }
 
@@ -386,7 +387,7 @@
         }
 
         .btn-cancel:hover {
-            background-color: #dc2626;
+            background-color: #c82333;
             transform: translateY(-2px);
             box-shadow: var(--shadow-sm);
         }
@@ -425,23 +426,22 @@
             background-color: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            display: none;
+            display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             opacity: 0;
+            visibility: hidden;
             transition: var(--transition-medium);
         }
 
         .modal-overlay.active {
             opacity: 1;
-            display: flex;
+            visibility: visible;
         }
 
         .modal {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background-color: white;
             border-radius: var(--radius-lg);
             width: 90%;
             max-width: 600px;
@@ -450,7 +450,6 @@
             transition: var(--transition-medium);
             max-height: 90vh;
             overflow-y: auto;
-            border: 1px solid var(--glass-border);
         }
 
         .modal-overlay.active .modal {
@@ -459,19 +458,19 @@
 
         .modal-header {
             padding: 1.75rem;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid var(--secondary-200);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
-            background: var(--glass-bg);
+            background-color: white;
             z-index: 1;
         }
 
         .modal-title {
             font-size: 1.375rem;
-            color: var(--primary-800);
+            color: var(--primary-900);
             display: flex;
             align-items: center;
             gap: 0.875rem;
@@ -558,13 +557,13 @@
             transition: var(--transition-fast);
             font-family: inherit;
             font-size: 0.9375rem;
-            background-color: var(--glass-bg);
+            background-color: white;
         }
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary-300);
-            box-shadow: 0 0 0 3px rgba(67, 152, 236, 0.15);
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(55, 81, 126, 0.15);
         }
 
         textarea.form-control {
@@ -575,20 +574,20 @@
 
         .modal-footer {
             padding: 1.5rem 1.75rem;
-            border-top: 1px solid var(--glass-border);
+            border-top: 1px solid var(--secondary-200);
             display: flex;
             justify-content: flex-end;
             gap: 1rem;
         }
 
         .btn-submit {
-            background-color: var(--primary-600);
+            background-color: var(--primary-900);
             color: white;
             box-shadow: var(--shadow-xs);
         }
 
         .btn-submit:hover {
-            background-color: var(--primary-700);
+            background-color: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: var(--shadow-sm);
         }
@@ -616,7 +615,7 @@
             }
             
             .welcome-card {
-                padding: 1.75rem;
+                padding: 2rem;
             }
             
             .bookings-header {
@@ -653,7 +652,7 @@
             .welcome-card {
                 flex-direction: column;
                 text-align: center;
-                padding: 1.5rem;
+                padding: 1.75rem;
             }
             
             .welcome-card i {
@@ -717,11 +716,12 @@
                 <span>Venue Booking</span>
             </div>
             <ul class="nav-links">
-                <li><a href="{% url 'faculty_advisor:home' %}" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                <li><a href="{% url 'home' %}"><i class="fas fa-calendar"></i> Bookings</a></li>
-                <li><a href="{% url 'home' %}"><i class="fas fa-chart-bar"></i> Reports</a></li>
-                <li><a href="{% url 'login' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                <li><a href="{% url 'request_booking:index' %}" class="active"><i class="fas fa-tachometer-alt"></i> Home</a></li>
+                <li><a href="{% url 'request_booking:index' %}"><i class="fas fa-calendar"></i> Bookings</a></li>
+                <li><a href="{% url 'request_booking:index' %}"><i class="fas fa-chart-bar"></i> Reports</a></li>
+                <li><a href="{% url 'request_booking:index' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
+            
         </div>
     </header>
 
