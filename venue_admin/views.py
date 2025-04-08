@@ -69,8 +69,12 @@ def logout_view(request):
     return redirect('/users/login')  # Change 'login' to the actual login page name
 
 
-
+from django.shortcuts import get_object_or_404, redirect
 from django.http import JsonResponse
+import logging
+from django.http import JsonResponse
+
+logger = logging.getLogger(__name__)
 
 def reject_request(request, request_id):
     print("""Reject a request and store the reason in the rejection table.""")
@@ -94,7 +98,12 @@ def reject_request(request, request_id):
     )
 
     # ✅ Send rejection email to requester
-    send_booking_rejected_email(req)
+    # send_booking_rejected_email(req)
+    try:
+        send_booking_rejected_email(req)
+    except Exception as e:
+        logger.error(f"Failed to send rejection email for request {request_id}: {e}")
+        # Optionally alert admin or show a warning in UI
 
     data = {
         "message": "Request rejected successfully.",
@@ -570,7 +579,11 @@ def approve_request(request, request_id):
                 print("✅ Booking saved successfully, request updated!")  # Debugging
                 messages.success(request, "Booking approved and request status updated!")
 
-                send_booking_accepted_email(req)
+                # send_booking_accepted_email(req)
+                try:
+                    send_booking_accepted_email(req)
+                except Exception as e:
+                    logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
                 print()
                 print()
 
