@@ -42,6 +42,7 @@
         .container {
             max-width: 1000px;
             margin: 0 auto;
+            margin-top: 100px;
             animation: fadeIn 0.5s ease-out;
         }
 
@@ -555,6 +556,9 @@
 </head>
 
 <body>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
+      </header>
     <div class="container">
         <header>
             <h1>COEP Venue Booking System</h1>
