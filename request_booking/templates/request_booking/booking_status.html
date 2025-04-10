@@ -771,7 +771,7 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="action-buttons">
+                                <!-- <div class="action-buttons">
                                     <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)" 
                                         data-venue="{{ request.venue.venue_name }}"
                                         data-date="{{ request.date }}"
@@ -782,6 +782,22 @@
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}">
                                         <i class="fas fa-eye"></i> View
+                                    </button> -->
+
+                                    <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)"
+                                    data-venue="{{ request.venue.venue_name }}"
+                                    data-date="{{ request.date }}"
+                                    data-duration="{{ request.duration }}"
+                                    data-status="{{ request.status }}"
+                                    data-need="{{ request.need }}"
+                                    data-requirements="{{ request.additional_requirements|default:'None' }}"
+                                    data-purpose="{{ request.purpose|default:'Not specified' }}"
+                                    data-request-id="{{ request.request_id }}"
+                                    {% if request.status == "rejected" %}
+                                    data-reason="{{ request.reasons|default:'No reason provided' }}"
+                                    {% endif %}
+                                    >
+                                    <i class="fas fa-eye"></i> View
                                     </button>
                                     
                                     {% if request.status == 'pending' %}
@@ -819,7 +835,6 @@
             </div>
             <div class="modal-body">
                 <div class="booking-details" id="bookingDetailsContent">
-                    <!-- Filled by JavaScript -->
                 </div>
             </div>
             <div class="modal-footer">
@@ -829,6 +844,8 @@
             </div>
         </div>
     </div>
+
+
 
     <!-- Premium Cancel Confirmation Modal -->
     <div class="modal-overlay" id="cancelModal">
@@ -861,10 +878,76 @@
         let currentRequestId = null;
         
         // Show booking details modal
+        // function showBookingDetails(button) {
+        //     const detailsContent = document.getElementById('bookingDetailsContent');
+            
+        //     // Get data from button attributes
+        //     const venue = button.getAttribute('data-venue');
+        //     const date = button.getAttribute('data-date');
+        //     const duration = button.getAttribute('data-duration');
+        //     const status = button.getAttribute('data-status');
+        //     const need = button.getAttribute('data-need');
+        //     const requirements = button.getAttribute('data-requirements');
+        //     const purpose = button.getAttribute('data-purpose');
+        //     const requestId = button.getAttribute('data-request-id');
+            
+        //     // Get status icon
+        //     let statusIcon;
+        //     switch(status) {
+        //         case 'pending': statusIcon = 'fa-clock'; break;
+        //         case 'approved': statusIcon = 'fa-check-circle'; break;
+        //         case 'rejected': statusIcon = 'fa-times-circle'; break;
+        //         case 'cancelled': statusIcon = 'fa-ban'; break;
+        //         default: statusIcon = 'fa-question-circle';
+        //     }
+            
+        //     // Populate modal content with premium styling
+        //     detailsContent.innerHTML = `
+        //         <div class="detail-item">
+        //             <div class="detail-label">Request ID</div>
+        //             <div class="detail-value">#${requestId}</div>
+        //         </div>
+        //         <div class="detail-item">
+        //             <div class="detail-label">Venue Name</div>
+        //             <div class="detail-value">${venue}</div>
+        //         </div>
+        //         <div class="detail-item">
+        //             <div class="detail-label">Booking Date</div>
+        //             <div class="detail-value">${date}</div>
+        //         </div>
+        //         <div class="detail-item">
+        //             <div class="detail-label">Duration</div>
+        //             <div class="detail-value">${duration}</div>
+        //         </div>
+        //         <div class="detail-item">
+        //             <div class="detail-label">Status</div>
+        //             <div class="detail-value status-${status}">
+        //                 <i class="fas ${statusIcon}"></i> ${status.toUpperCase()}
+        //             </div>
+        //         </div>
+        //         <div class="detail-item full-width">
+        //             <div class="detail-label">Event Description</div>
+        //             <div class="detail-value">${need}</div>
+        //         </div>
+        //         <div class="detail-item full-width">
+        //             <div class="detail-label">Additional Requirements</div>
+        //             <div class="detail-value">${requirements}</div>
+        //         </div>
+        //         <div class="detail-item full-width">
+        //             <div class="detail-label">Purpose of Booking</div>
+        //             <div class="detail-value">${purpose}</div>
+        //         </div>
+        //     `;
+            
+        //     // Show modal with animation
+        //     document.getElementById('detailsModal').classList.add('active');
+        // }
+
+        // // Show cancel confirmation modal
+
         function showBookingDetails(button) {
             const detailsContent = document.getElementById('bookingDetailsContent');
             
-            // Get data from button attributes
             const venue = button.getAttribute('data-venue');
             const date = button.getAttribute('data-date');
             const duration = button.getAttribute('data-duration');
@@ -873,8 +956,8 @@
             const requirements = button.getAttribute('data-requirements');
             const purpose = button.getAttribute('data-purpose');
             const requestId = button.getAttribute('data-request-id');
-            
-            // Get status icon
+            const reason = button.getAttribute('data-reason');  // <-- new
+
             let statusIcon;
             switch(status) {
                 case 'pending': statusIcon = 'fa-clock'; break;
@@ -883,9 +966,8 @@
                 case 'cancelled': statusIcon = 'fa-ban'; break;
                 default: statusIcon = 'fa-question-circle';
             }
-            
-            // Populate modal content with premium styling
-            detailsContent.innerHTML = `
+
+            let html = `
                 <div class="detail-item">
                     <div class="detail-label">Request ID</div>
                     <div class="detail-value">#${requestId}</div>
@@ -921,12 +1003,20 @@
                     <div class="detail-value">${purpose}</div>
                 </div>
             `;
-            
-            // Show modal with animation
+
+            if (status === 'rejected' && reason) {
+                html += `
+                    <div class="detail-item full-width" style="color: red;">
+                        <div class="detail-label">Rejection Reason</div>
+                        <div class="detail-value">${reason}</div>
+                    </div>
+                `;
+            }
+
+            detailsContent.innerHTML = html;
             document.getElementById('detailsModal').classList.add('active');
         }
 
-        // Show cancel confirmation modal
         function showCancelModal(requestId) {
             currentRequestId = requestId;
             document.getElementById('cancelModal').classList.add('active');

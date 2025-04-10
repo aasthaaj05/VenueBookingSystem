@@ -82,25 +82,41 @@ def reject_request(request, request_id):
 
     print("""23r23fr23frq23r Reject a request and store the reason in the rejection table.""")
 
+    print("Form data (POST):", request.POST)
+    print("GET data (URL params):", request.GET)
+    print("User:", request.user)
+    print("Headers:", request.headers)
+
+
+
     if req.status != 'pending':
         return JsonResponse({"error": "Request is not in a pending state."}, status=400)
 
     print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
+    reason = request.POST.get("feedback_reason", "")
+    comments = request.POST.get("feedback_comments", "")
+    alternatives = request.POST.get("alternative_options", "")
+
+    # ✅ Construct message (optional formatting, you can change this)
+    full_msg = f"{comments}\n\nSuggested Alternatives:\n{alternatives}".strip()
+
+    # ✅ Update request and create rejection
     req.status = 'rejected'
-    req.reasons = ''
+    req.reasons = reason
     req.save()
 
     rejection = Rejection.objects.create(
         request=req,
         user=req.user,
-        msg='Slot already booked'
+        reason=reason,
+        msg=full_msg
     )
 
     # ✅ Send rejection email to requester
     # send_booking_rejected_email(req)
     try:
-        send_booking_rejected_email(req)
+        send_booking_rejected_email(req, full_msg)
     except Exception as e:
         logger.error(f"Failed to send rejection email for request {request_id}: {e}")
         # Optionally alert admin or show a warning in UI
@@ -326,7 +342,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-def send_booking_rejected_email(req):
+def send_booking_rejected_email(req, full_msg):
     print()
     print()
     print('--------start : send_booking_rejected_email-----------')
@@ -356,7 +372,9 @@ def send_booking_rejected_email(req):
     - Duration: {req.duration} hours
     - Event Details: {req.event_details}
 
-    Reason for Rejection: The requested venue is unavailable at the specified time.  
+    Reason for Rejection: {req.reasons}
+
+    Message from the admin: {full_msg}  
 
     What you can do next?
     - Try booking a different venue.  

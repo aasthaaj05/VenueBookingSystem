@@ -909,7 +909,7 @@ from django.core.mail import send_mail
 
 def send_duplicate_request_email(user, email, venue, date_obj, start_time):
     subject = "Duplicate Booking Request Detected"
-    message = f"""Dear {user.first_name},
+    message = f"""Dear {user.name},
 
 Our records show that you have already made a similar venue booking request with the following details:
 
@@ -929,7 +929,7 @@ CSI COEP Tech
         subject,
         message,
         sender_email,   # From email
-        email,                  # Recipient list
+        (email, ),                  # Recipient list
         fail_silently=False,
     )
 
