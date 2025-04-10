@@ -1126,6 +1126,19 @@ def booking_status(request):
     """
     View to fetch and display booking requests for the logged-in user only.
     """
+    print()
+    print()
+    print('in booking_status() ')
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
+    print()
     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
 
     if not user_id:
@@ -1145,6 +1158,7 @@ def booking_status(request):
     print('preseon name : ' , person_name)
     print()
     print()
+    
 
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
 

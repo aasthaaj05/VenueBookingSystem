@@ -140,6 +140,8 @@ class RejectedBooking(models.Model):
     
     event_details = models.TextField()
     rejection_reason = models.TextField()
+    feedback_from_admin = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
+    alternate_venues_suggestion = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -163,6 +165,8 @@ class Rejection(models.Model):
     reason = models.TextField()
     msg = models.TextField(blank=True, null=True)  # Additional rejection message
     created_at = models.DateTimeField(auto_now_add=True)
+    feedback_from_admin = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
+    alternate_venues_suggestion = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
 
     def __str__(self):
         return f"Rejection {self.rejection_id} for Request {self.request.request_id}"

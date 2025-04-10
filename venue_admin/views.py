@@ -95,11 +95,16 @@ def reject_request(request, request_id):
     print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
     reason = request.POST.get("feedback_reason", "")
-    comments = request.POST.get("feedback_comments", "")
-    alternatives = request.POST.get("alternative_options", "")
+    feedback_from_admin = request.POST.get("feedback_comments", "")
+    alternate_venues_suggestion = request.POST.get("alternative_options", "")
+    print('reason : ', reason)
+    print('comments : ' , feedback_from_admin)
+    print('alternatives : ' , alternate_venues_suggestion)
+    print()
+    print()
 
     # ✅ Construct message (optional formatting, you can change this)
-    full_msg = f"{comments}\n\nSuggested Alternatives:\n{alternatives}".strip()
+    full_msg = f"{feedback_from_admin}\n\nSuggested Alternatives:\n{alternate_venues_suggestion}".strip()
 
     # ✅ Update request and create rejection
     req.status = 'rejected'
@@ -110,7 +115,9 @@ def reject_request(request, request_id):
         request=req,
         user=req.user,
         reason=reason,
-        msg=full_msg
+        msg=full_msg,
+        feedback_from_admin = feedback_from_admin,
+        alternate_venues_suggestion = alternate_venues_suggestion,
     )
 
     # ✅ Send rejection email to requester
