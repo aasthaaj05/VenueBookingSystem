@@ -764,6 +764,12 @@
                             </div>
                         </td>
                     </tr>
+                    <button 
+                        class="open-feedback-btn" 
+                        data-request-id="{{ req.request_id }}" 
+                        onclick="openFeedbackDialog(this)">
+                        Give Feedback
+                    </button>
                     {% endfor %}
                 </tbody>
             </table>
@@ -801,12 +807,12 @@
                 <button class="dialog-close" onclick="closeDialog('feedbackDialog')">&times;</button>
             </div>
             <div class="dialog-body">
-                <form id="feedbackForm" class="feedback-form">
+                <form id="feedbackForm" class="feedback-form" method="POST" action="" >
                     <div class="form-group">
                         <label for="feedbackReason" class="form-label">
                             <i class="fas fa-info-circle"></i> Reason for <span id="actionType">approval</span>
                         </label>
-                        <select class="form-control" id="feedbackReason" required>
+                        <select class="form-control" id="feedbackReason" name = "feedbackReason_Admin" required>
                             <option value="" selected disabled>Select a reason</option>
                             <option value="available">Venue available as requested</option>
                             <option value="requirements-met">All requirements met</option>
@@ -821,7 +827,7 @@
                         <label for="feedbackComments" class="form-label">
                             <i class="fas fa-edit"></i> Additional Comments/Suggestions
                         </label>
-                        <textarea class="form-control" id="feedbackComments" name="feedbackComments" placeholder="Provide any additional feedback or suggestions for improvement"></textarea>
+                        <textarea class="form-control" id="feedbackComments" name="feedbackComments_Admin" placeholder="Provide any additional feedback or suggestions for improvement"></textarea>
                         <small class="form-helper">This feedback will be shared with the requester</small>
                     </div>
                     <div class="form-group" id="alternativeOptionsGroup" name="alternativeOptionsGroup" style="display: none;">
@@ -858,11 +864,17 @@
                 <div class="confirmation-description" id="confirmDescription">
                     This action will be recorded and the requester will be notified.
                 </div>
-                <div class="feedback-summary" id="feedbackSummary" style="text-align: left; margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: var(--border-radius-sm); display: none;">
+                {% comment %} <div class="feedback-summary" id="feedbackSummary" style="text-align: left; margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: var(--border-radius-sm); display: none;">
                     <h4 style="margin-bottom: 0.5rem; font-weight: 500;">Feedback Summary:</h4>
                     <p id="reasonSummary" style="margin-bottom: 0.5rem;"></p>
                     <p id="commentsSummary"></p>
-                </div>
+                </div> {% endcomment %}
+                <div class="feedback-summary" id="feedbackSummary" style="text-align: left; margin-top: 1.5rem; padding: 1rem; background: rgba(255,255,255,0.1); border-radius: var(--border-radius-sm); display: none; color: white;">
+                    <h4 style="margin-bottom: 0.5rem; font-weight: 500; color: white;">Feedback Summary:</h4>
+                    <p id="reasonSummary" style="margin-bottom: 0.5rem; color: white;"></p>
+                    <p id="commentsSummary" style="color: white;"></p>
+                  </div>
+                  
             </div>
             <div class="dialog-footer">
                 <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('confirmDialog')">
@@ -878,10 +890,29 @@
                     </button>
                 </form>
             </div>
+            
         </div>
     </div>
 
     <script>
+        function openFeedbackDialog(button) {
+            const requestId = button.getAttribute('data-request-id');
+            const form = document.getElementById('feedbackForm');
+            
+            // Set the correct form action
+            form.action = `/venue_admin/approve_request/${requestId}/`;
+    
+            // Now show the modal
+            document.getElementById('feedbackDialog').style.display = 'block';
+        }
+    
+        function closeDialog(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+        {% comment %} function submitFeedback() {
+            const form = document.getElementById("feedbackForm");
+            form.submit();  // 🔥 This manually submits the form
+        } {% endcomment %}
         let currentRequestId = null;
         let currentActionType = null;
 
@@ -1017,6 +1048,10 @@
             
             closeDialog('feedbackDialog');
             openDialog('confirmDialog');
+            // Automatically submit the form after confirming the action (approve/reject)
+            document.getElementById('confirmActionBtn').onclick = function() {
+                document.getElementById('actionForm').submit();  // Submit the form
+            };
         }
 
         function openDialog(dialogId) {

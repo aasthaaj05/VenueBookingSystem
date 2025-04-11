@@ -1193,3 +1193,234 @@ def venue_list(request):
 
 def index(request):
     return render(request , 'request_booking/index.html')
+
+
+
+
+# def cancel_booking(request):
+#     if request.method == 'POST':
+#         request_id = request.POST.get('request_id')
+#         cancel_reason = request.POST.get('cancel_reason')
+        
+#         try:
+#             # Get the booking request
+#             booking = BookingRequest.objects.get(request_id=request_id, user=request.user)
+            
+#             # Update the status and save reason
+#             booking.status = 'cancelled'
+#             booking.cancellation_reason = cancel_reason
+#             booking.save()
+            
+#             messages.success(request, 'Booking has been cancelled successfully.')
+#             return redirect('bookings')  # Redirect to your bookings page
+            
+#         except BookingRequest.DoesNotExist:
+#             messages.error(request, 'Booking not found or you are not authorized to cancel it.')
+#             return redirect('bookings')
+    
+#     # If not POST, redirect back
+#     return redirect('request_booking/booking_status')
+
+
+
+
+
+
+
+def send_cancellation_email_to_user(user_email, user_name, venue_name, event_date, event_time, cancel_reason):
+    if not user_email:
+        print("User email not found. Skipping email.")
+        return
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = user_email
+    msg['Subject'] = "Booking Cancellation Confirmation"
+
+    body = f"""
+    Dear {user_name},
+
+    You have cancelled your booking for the following event.
+
+    Cancellation Details:
+    - Venue: {venue_name}
+    - Date: {event_date}
+    - Time: {event_time}:00 hrs
+    - Reason: {cancel_reason}
+
+    If this cancellation was not intended or if you have any questions, please contact the admin team.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Cancellation email sent to {user_email}")
+    except Exception as e:
+        print(f"Failed to send cancellation email: {e}")
+
+
+
+
+
+
+
+
+
+
+
+
+# def cancel_booking(request):
+#     print()
+#     print()
+#     print('---cancel_booking()---')
+#     print()
+#     print()
+#     if request.method == 'POST':
+#         request_id = request.POST.get('request_id')
+#         cancel_reason = request.POST.get('cancel_reason')
+
+#         print("cancel_reason : " , cancel_reason)
+#         print()
+#         print()
+#         print('---cancel_booking()---')
+#         print('---cancel_booking()---')
+#         print('---cancel_booking()---')
+#         print('---cancel_booking()---')
+        
+#         try:
+#             # Get the booking
+#             booking = Booking.objects.get(request__request_id=request_id, user=request.user)
+
+#             # Check if status is either 'approved' or 'pending'
+#             if booking.request.status not in ['approved', 'pending']:
+#                 print("booking.status not in [approved, pending]")
+#                 messages.error(request, f'Only bookings with status "approved" or "pending" can be cancelled. Current status: {booking.status}')
+#                 return redirect('/request_booking/booking_status')
+            
+#             # Cancel the booking
+#             booking.status = 'user-cancelled'
+#             booking.msg = cancel_reason  # If you want to store user comment
+#             booking.save()
+
+#             # Also update the corresponding request status to 'user-cancelled'
+#             booking.request.status = 'user-cancelled'
+#             booking.request.reasons = cancel_reason  # Store the reason if needed
+#             booking.request.save()
+
+#             send_cancellation_email_to_user(
+#                 user_email=booking.user.email,
+#                 user_name=booking.user.name,
+#                 venue_name=booking.venue.venue_name,
+#                 event_date=booking.date,
+#                 event_time=booking.time,
+#                 cancel_reason=cancel_reason
+#             )
+#             print('mail donemail donemail donemail donemail donemail done')
+
+#             messages.success(request, 'Booking has been cancelled successfully.')
+#             return redirect('/request_booking/booking_status')  # Replace with your actual redirect target
+
+#         except Booking.DoesNotExist:
+#             messages.error(request, 'Booking not found or you are not authorized to cancel it.')
+#             return redirect('/request_booking/booking_status')  # Replace with your actual redirect target
+    
+#     # If not POST, redirect back
+#     return redirect('/request_booking/booking_status')
+
+
+def cancel_booking(request):
+    print('\n\n---cancel_booking()---\n\n')
+    print('\n\n---cancel_booking()---\n\n')
+    print('\n\n---cancel_booking()---\n\n')
+    print('\n\n---cancel_booking()---\n\n')
+    
+    if request.method == 'POST':
+        request_id = request.POST.get('request_id')
+        cancel_reason = request.POST.get('cancel_reason')
+
+        print("cancel_reason:", cancel_reason)
+
+        try:
+            req_obj = Request.objects.get(request_id=request_id, user=request.user)
+
+            # Handle cancellation based on status
+            if req_obj.status == 'approved':
+                print('approved')
+                print('approved')
+                print('approved')
+                print('approved')
+                print('approved')
+                print('approved')
+                # Booking exists → cancel both
+                try:
+                    booking = Booking.objects.get(request=req_obj, user=request.user)
+                    
+                    # Update booking status
+                    booking.status = 'user-cancelled'
+                    booking.msg = cancel_reason
+                    booking.save()
+
+                    # Update request status
+                    req_obj.status = 'user-cancelled'
+                    req_obj.reasons = cancel_reason
+                    req_obj.save()
+
+                    send_cancellation_email_to_user(
+                        user_email=booking.user.email,
+                        user_name=booking.user.name,
+                        venue_name=booking.venue.venue_name,
+                        event_date=booking.date,
+                        event_time=booking.time,
+                        cancel_reason=cancel_reason
+                    )
+
+                    messages.success(request, 'Approved booking has been cancelled successfully.')
+                    return redirect('/request_booking/booking_status')
+
+                except Booking.DoesNotExist:
+                    messages.error(request, 'Approved booking not found.')
+                    return redirect('/request_booking/booking_status')
+
+            elif req_obj.status == 'pending':
+                print('pending')
+                print('pending')
+                print('pending')
+                print('pending')
+                print('pending')
+                print('pending')
+                # Only Request exists → cancel request
+                req_obj.status = 'user-cancelled'
+                req_obj.reasons = cancel_reason
+                req_obj.save()
+
+                send_cancellation_email_to_user(
+                    user_email=request.user.email,
+                    user_name=request.user.name,
+                    venue_name=req_obj.venue.venue_name,
+                    event_date=req_obj.date,
+                    event_time=req_obj.time,
+                    cancel_reason=cancel_reason
+                )
+
+                messages.success(request, 'Pending request has been cancelled successfully.')
+                return redirect('/request_booking/booking_status')
+
+            else:
+                messages.error(request, f'Cannot cancel a request with status: {req_obj.status}')
+                return redirect('/request_booking/booking_status')
+
+        except Request.DoesNotExist:
+            messages.error(request, 'Request not found or you are not authorized to cancel it.')
+            return redirect('/request_booking/booking_status')
+
+    # If not POST, redirect back
+    return redirect('/request_booking/booking_status')
+

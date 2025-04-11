@@ -87,7 +87,8 @@ import uuid
 class Booking(models.Model):
     STATUS_CHOICES = [
         ('active', 'Active'),
-        ('cancelled', 'Cancelled')
+        ('cancelled', 'Cancelled'),
+        ('user-cancelled','User-cancelled')
     ]
 
     booking_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -99,9 +100,13 @@ class Booking(models.Model):
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="booked_venue")  # Final booked venue
     event_details = models.TextField()  # Description of the event
     msg = models.TextField(blank=True, null=True)  # Additional messages
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default="active")  # Booking status
+    status = models.CharField(max_length=100, choices=STATUS_CHOICES, default="active")  # Booking status
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    additional_comments_Venueadmin = models.CharField(max_length=1000, default="active")  # Booking status
+    reason_for_approval = models.CharField(max_length=1000, default="active")  # Booking status
+
 
     def __str__(self):
         return f"Booking {self.booking_id} by {self.user} for {self.venue} on {self.date} ({self.status})"

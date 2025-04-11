@@ -282,7 +282,9 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-def send_booking_accepted_email(req):
+
+# send_booking_accepted_email(req , feedback_reason , feedback_comments)
+def send_booking_accepted_email(req , feedback_reason , feedback_comments):
     print()
     print()
     print('--------start : send_booking_accepted_email-----------')
@@ -313,6 +315,10 @@ def send_booking_accepted_email(req):
     - Time: {req.time}
     - Duration: {req.duration} hours
     - Event Details: {req.event_details}
+
+    Feedback from Admin:
+    - Feedback : {feedback_reason}
+    - Comments : {feedback_comments}
 
     Please ensure you arrive on time and follow the venue guidelines.
 
@@ -537,12 +543,46 @@ def approve_request(request, request_id):
     print()
     print()
     print('-------in approve_request()-------')
+    print('-------in approve_request()-------')
+    print('-------in approve_request()-------')
+    print('-------in approve_request()-------')
+    print('-------in approve_request()-------')
+    print()
+    print()
+    print()
+    print()
 
     if request.method == "POST":
-        print('in approve_request() ----')
+        print('in approve_request() ---ipsdcgjmfo-')
         # req = get_object_or_404(Request, request_id=request_id)
         # start_time = req.time
         # end_time = req.time + req.duration
+        # Print all keys and values from the POST data
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        print('ooooooooo')
+        print(request.POST.items())
+        print('pppppp')
+        feedback_reason = request.POST.get('feedback_reason')
+        feedback_comments = request.POST.get('feedback_comments')
+        alternative_options = request.POST.get('alternative_options')
+
+        print(feedback_reason)  # "Event appropriate for venue"
+        print(feedback_comments)  # "dlsf"
+        print(alternative_options)  # ""`
+        print()
+        print()
+        print('pppppppjjj')
+
+
+        admin_reason = request.POST.get('feedbackReason_Admin')
+        admin_comments = request.POST.get('feedbackComments_Admin')
+
+        print("additional_comments_Venueadmin",admin_comments)
+        print("reason_for_approval",admin_reason)
+
+        print('ijnsidhogwg')
 
         req = get_object_or_404(Request, request_id=request_id)
 
@@ -588,8 +628,18 @@ def approve_request(request, request_id):
             "time": req.time,
             "duration": req.duration,
             "venue": str(req.venue.id),
-            "event_details": req.event_details
+            "event_details": req.event_details,
+            "additional_comments_Venueadmin":feedback_comments,
+            "reason_for_approval":feedback_reason,       #dropdown
         }
+        print()
+        print('kkkkkkkkkkkk')
+        print("additional_comments_Venueadmin",feedback_comments)
+        print("reason_for_approval",feedback_reason)
+        print()
+        print()
+        print()
+        print()
 
         serializer = BookingSerializer(data=booking_data)
 
@@ -606,7 +656,7 @@ def approve_request(request, request_id):
 
                 # send_booking_accepted_email(req)
                 try:
-                    send_booking_accepted_email(req)
+                    send_booking_accepted_email(req , feedback_reason , feedback_comments)
                 except Exception as e:
                     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
                 print()

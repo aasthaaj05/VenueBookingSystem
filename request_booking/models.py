@@ -45,6 +45,7 @@ class Request(models.Model):
         ('rejected', 'Rejected'),
         ('cancelled', 'Cancelled'),
         ('forwarded', 'Forwarded'),
+        ('user-cancelled', 'User-Cancelled')
     ]   
 
     request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

@@ -25,6 +25,7 @@ urlpatterns = [
     path("getUnavailableSlots/", views.getUnavailableSlots, name="get_unavailable_slots"),
     path('buildings/', views.get_buildings, name='get_buildings'),
     path('home/', views.index, name='index'),
+    path('cancel-booking/', views.cancel_booking, name='cancel_booking'),
 ]
   
 
