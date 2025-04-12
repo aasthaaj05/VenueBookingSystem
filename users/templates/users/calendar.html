@@ -68,18 +68,15 @@
         }
 
         h1 {
-            color: var(--primary-color);
+            color: white;
             margin-bottom: 0.5rem;
             font-size: 2.5rem;
             font-weight: 700;
             letter-spacing: -0.5px;
-            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
-            color: var(--secondary-color);
+            color: white;
             font-weight: 400;
             font-size: 1.1rem;
             max-width: 600px;
@@ -126,6 +123,7 @@
             font-weight: 600;
             position: relative;
             z-index: 1;
+            color: white;
         }
 
         .calendar-nav {
@@ -562,7 +560,8 @@
     <div class="container">
         <header>
             <h1>COEP Venue Booking System</h1>
-            <p class="subtitle">Reserve your perfect event space with just a few clicks</p>
+            {% comment %} <p class="subtitle">Reserve your perfect event space with just a few clicks</p> {% endcomment %}
+            <p> Reserve your perfect event space with just a few clicks</p>
         </header>
 
         <div class="calendar-container">

@@ -587,6 +587,7 @@
             border-radius: 4px;
             margin-right: 0.75rem;
             transition: var(--transition-fast);
+            cursor: pointer;
         }
         
         .checkbox-input:checked ~ .checkbox-custom {
@@ -597,14 +598,14 @@
         .checkbox-input:checked ~ .checkbox-custom::after {
             content: '';
             position: absolute;
-            left: 7px;
-            top: 3px;
-            width: 5px;
-            height: 10px;
+            left: 6px;  /* Adjusted from 7px */
+            top: 2px;   /* Adjusted from 3px */
+            width: 6px; /* Adjusted from 5px */
+            height: 12px; /* Adjusted from 10px */
             border: solid white;
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
-        }
+           }
         
         .checkbox-label {
             font-size: var(--text-sm);
@@ -708,6 +709,47 @@
                 flex-direction: column-reverse;
             }
         }
+        .checkbox-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+          }
+          
+          .checkbox-input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+          }
+          
+          .checkbox-custom {
+            position: relative;
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+          }
+          
+          .checkbox-input:checked + .checkbox-custom::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 10px;
+            height: 10px;
+            background-color: #2196F3;
+            border-radius: 1px;
+          }
+          
+          .checkbox-label {
+            margin-left: 8px;
+            cursor: pointer;
+          }
+          
     </style>
 </head>
 <body>
@@ -860,12 +902,20 @@
                         </select>
                     </div>
                     
-                    <div class="checkbox-group">
+                    {% comment %} <div class="checkbox-group">
                         <input type="checkbox" id="flexibleDates" name="flexibleDates" class="checkbox-input">
                         <span class="checkbox-custom"></span>
                         <label for="flexibleDates" class="checkbox-label">I'm flexible with alternate Venues if Venue isnt available</label>
-                    </div>
-                </div>
+                    </div>  {% endcomment %}
+                    <div class="checkbox-group">
+                        <label for="flexibleDates" class="checkbox-label">
+                          <input type="checkbox" id="flexibleDates" name="flexibleDates" class="checkbox-input">
+                          <span class="checkbox-custom"></span>
+                          I'm flexible with alternate Venues if Venue isn't available
+                        </label>
+                      </div>
+                    
+                </div>  
                 
                 <div class="form-section" style="grid-column: 1 / -1;">
                     <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Event Details</h3>

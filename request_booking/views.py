@@ -783,10 +783,15 @@ def process_booking(request):
         alt_venue_2_id = request.POST.get("alternateVenue2", None)
         event_details = request.POST.get("eventDetails")
         purpose = request.POST.get("purpose", "")
+        special_requirements = request.POST.get("specialRequirements", "")
 
         print(f"Received Form Data: Venue={venue_id}, Event Type={event_type}, Full Name={full_name}, Email={email}, Org={organization_name}")
         print(f"Date={date}, Start Time={start_time}, End Time={end_time}, Phone={phone_number}, Guest Count={guest_count}")
         print(f"Alt Venue 1={alt_venue_1_id}, Alt Venue 2={alt_venue_2_id}, Event Details={event_details}, Purpose={purpose}")
+
+        print('special_requirements : ', special_requirements)
+        print('special_requirements : ', special_requirements)
+        print('special_requirements : ', special_requirements)
 
         # Convert date and time to appropriate formats
         try:
@@ -865,6 +870,7 @@ def process_booking(request):
                 alternate_venue_2=alternate_venue_2,
                 event_details=event_details,
                 guest_count = guest_count,
+                special_requirements=special_requirements,
             )
 
 
@@ -872,7 +878,7 @@ def process_booking(request):
 
             print(f"Booking Request Created: {booking_request}")
             messages.success(request, "Booking request submitted successfully!")
-            return redirect("request_booking:index")  # Redirect to home or bookings list
+            return redirect("faculty_advisor:home")  # Redirect to home or bookings list
 
         except Venue.DoesNotExist:
             print("Error: Invalid venue ID provided.")
@@ -881,7 +887,7 @@ def process_booking(request):
             print(f"Error: Invalid date/time format. Exception: {ve}")
             messages.error(request, "Invalid date/time format. Please check and try again.")
 
-    return redirect("request_booking:booking_status")
+    return redirect("faculty_advisor:booking_status")
 
 
 

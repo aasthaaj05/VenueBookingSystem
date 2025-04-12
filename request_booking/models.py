@@ -84,9 +84,13 @@ class Request(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting_for_approval')  # Default status
     reasons = models.CharField(max_length=255, blank=True, null=True)  # Reason for approval/rejection
 
+    special_requirements = models.CharField(max_length=255, blank=True, null=True) 
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Request {self.request_id} by {self.user.name} for {self.venue.venue_name} ({self.status})"
+
+
 

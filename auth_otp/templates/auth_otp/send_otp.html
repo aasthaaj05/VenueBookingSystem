@@ -1,29 +1,378 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        {% load static %}
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>OTP Form</title>
-        <link rel="stylesheet" href="../static/otp_style.css">
-    </head>
-<body>
-    <div class="container">
-        <h1>Enter Your Email</h1>
-        <form method="POST">
-            {% csrf_token %}
-            <input type="email" name="email" placeholder="Enter your email" required>
-            <button type="submit">Send OTP</button>
-        </form>
+{% include 'users/nav.html' %}
 
-        <!-- Display messages -->
-        {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                    <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+{% block content %}
+<style>
+    /* Main Container Styles */
+    .forgot-password-container {
+        max-width: 500px;
+        margin: 100px auto;
+        padding: 40px;
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    /* Header Styles */
+    .forgot-password-header {
+        margin-bottom: 30px;
+    }
+
+    .forgot-password-header h2 {
+        color: #1a73e8;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .forgot-password-header p {
+        color: #666;
+        font-size: 16px;
+    }
+
+    /* Form Styles */
+    .forgot-password-form .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .forgot-password-form label {
+        display: block;
+        margin-bottom: 8px;
+        color: #444;
+        font-weight: 500;
+    }
+
+    .forgot-password-form input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+
+    .forgot-password-form input:focus {
+        border-color: #1a73e8;
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+    }
+
+    /* Button Styles */
+    .btn-submit {
+        background-color: #1a73e8;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .btn-submit:hover {
+        background-color: #1765cc;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.2);
+    }
+
+    /* OTP Container */
+    .otp-container {
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+
+    .new-password-container {
+        display: none;
+        animation: fadeIn 0.5s;
+    }
+
+    /* Success Message */
+    .success-message {
+        display: none;
+        color: #28a745;
+        font-weight: 500;
+        margin-top: 20px;
+    }
+
+    /* Error Message */
+    .error-message {
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    /* Resend OTP Link */
+    .resend-otp {
+        color: #1a73e8;
+        cursor: pointer;
+        font-size: 14px;
+        margin-top: 10px;
+        display: inline-block;
+    }
+
+    .resend-otp:hover {
+        text-decoration: underline;
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Progress Steps */
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #e0e0e0;
+        z-index: 1;
+    }
+
+    .step {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+    }
+
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 8px;
+        font-weight: 500;
+    }
+
+    .step.active .step-circle {
+        background-color: #1a73e8;
+        color: white;
+    }
+
+    .step.completed .step-circle {
+        background-color: #1a73e8;
+        color: white;
+    }
+
+    .step.completed .step-circle::after {
+        content: '✓';
+    }
+
+    .step-label {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .step.active .step-label {
+        color: #1a73e8;
+        font-weight: 500;
+    }
+
+    .step.completed .step-label {
+        color: #1a73e8;
+    }
+</style>
+
+<div class="forgot-password-container">
+    <div class="forgot-password-header">
+        <h2>Reset Your Password</h2>
+        <p>Enter your email to receive a verification code</p>
     </div>
-</body>
-</html>
+
+    <!-- Progress Steps -->
+    <div class="progress-steps">
+        <div class="step active" id="step1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Email</div>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Verify</div>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-circle">3</div>
+            <div class="step-label">New Password</div>
+        </div>
+    </div>
+
+    <!-- Email Form -->
+    <div class="email-form" id="emailForm">
+        <form class="forgot-password-form">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your registered email" required>
+                <div class="error-message" id="emailError">Please enter a valid email address</div>
+            </div>
+            <button type="button" class="btn-submit" id="sendOtpBtn">Send Verification Code</button>
+        </form>
+    </div>
+
+    <!-- OTP Verification Form -->
+    <div class="otp-container" id="otpContainer">
+        <form class="forgot-password-form">
+            <div class="form-group">
+                <label for="otp">Verification Code</label>
+                <input type="text" id="otp" name="otp" placeholder="Enter 6-digit code" maxlength="6" required>
+                <div class="error-message" id="otpError">Invalid verification code</div>
+                <span class="resend-otp" id="resendOtp">Resend Code</span>
+            </div>
+            <button type="button" class="btn-submit" id="verifyOtpBtn">Verify Code</button>
+        </form>
+    </div>
+
+    <!-- New Password Form -->
+    <div class="new-password-container" id="newPasswordContainer">
+        <form class="forgot-password-form">
+            <div class="form-group">
+                <label for="newPassword">New Password</label>
+                <input type="password" id="newPassword" name="newPassword" placeholder="Enter new password" required>
+                <div class="error-message" id="passwordError">Password must be at least 8 characters</div>
+            </div>
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm new password" required>
+                <div class="error-message" id="confirmPasswordError">Passwords don't match</div>
+            </div>
+            <button type="button" class="btn-submit" id="resetPasswordBtn">Reset Password</button>
+        </form>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message" id="successMessage">
+        <i class="bi bi-check-circle-fill" style="font-size: 24px;"></i>
+        <p>Your password has been reset successfully!</p>
+        <p>You can now login with your new password.</p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailForm = document.getElementById('emailForm');
+        const otpContainer = document.getElementById('otpContainer');
+        const newPasswordContainer = document.getElementById('newPasswordContainer');
+        const successMessage = document.getElementById('successMessage');
+        const sendOtpBtn = document.getElementById('sendOtpBtn');
+        const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+        const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+        const resendOtp = document.getElementById('resendOtp');
+        const emailError = document.getElementById('emailError');
+        const otpError = document.getElementById('otpError');
+        const passwordError = document.getElementById('passwordError');
+        const confirmPasswordError = document.getElementById('confirmPasswordError');
+        
+        // Step indicators
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+
+        // Send OTP Button Click
+        sendOtpBtn.addEventListener('click', function() {
+            const email = document.getElementById('email').value;
+            
+            // Simple email validation
+            if (!email || !email.includes('@') || !email.includes('.')) {
+                emailError.style.display = 'block';
+                return;
+            }
+            
+            emailError.style.display = 'none';
+            
+            // Simulate sending OTP (in a real app, this would be an API call)
+            setTimeout(function() {
+                emailForm.style.display = 'none';
+                otpContainer.style.display = 'block';
+                
+                // Update progress steps
+                step1.classList.remove('active');
+                step1.classList.add('completed');
+                step2.classList.add('active');
+            }, 1000);
+        });
+
+        // Verify OTP Button Click
+        verifyOtpBtn.addEventListener('click', function() {
+            const otp = document.getElementById('otp').value;
+            
+            // Simple OTP validation (in real app, verify with server)
+            if (!otp || otp.length !== 6) {
+                otpError.style.display = 'block';
+                return;
+            }
+            
+            otpError.style.display = 'none';
+            
+            // Simulate OTP verification
+            setTimeout(function() {
+                otpContainer.style.display = 'none';
+                newPasswordContainer.style.display = 'block';
+                
+                // Update progress steps
+                step2.classList.remove('active');
+                step2.classList.add('completed');
+                step3.classList.add('active');
+            }, 1000);
+        });
+
+        // Resend OTP Link Click
+        resendOtp.addEventListener('click', function() {
+            // Simulate resending OTP
+            alert('A new verification code has been sent to your email.');
+        });
+
+        // Reset Password Button Click
+        resetPasswordBtn.addEventListener('click', function() {
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate password
+            if (!newPassword || newPassword.length < 8) {
+                passwordError.style.display = 'block';
+                return;
+            } else {
+                passwordError.style.display = 'none';
+            }
+            
+            // Validate password match
+            if (newPassword !== confirmPassword) {
+                confirmPasswordError.style.display = 'block';
+                return;
+            } else {
+                confirmPasswordError.style.display = 'none';
+            }
+            
+            // Simulate password reset
+            setTimeout(function() {
+                newPasswordContainer.style.display = 'none';
+                successMessage.style.display = 'block';
+                
+                // Update progress steps
+                step3.classList.remove('active');
+                step3.classList.add('completed');
+                
+                // In a real app, redirect to login after a delay
+                setTimeout(function() {
+                    window.location.href = "{% url 'users:login' %}";
+                }, 3000);
+            }, 1000);
+        });
+    });
+</script>
+{% endblock %}

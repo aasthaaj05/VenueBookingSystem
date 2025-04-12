@@ -230,7 +230,11 @@
     <header id="header" class="header d-flex align-items-center fixed-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center">
             <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
-                <h1 class="sitename">COEP Tech</h1>
+                {% comment %} <h1 class="sitename">COEP Tech</h1> {% endcomment %}
+                <h1 class="sitename" style="color: white;">COEP Tech</h1>
+                {% comment %} <h1 class="sitename" style="color: white; background-color: black;">COEP Tech</h1> {% endcomment %}
+
+
             </a>
 
             <nav id="navmenu" class="navmenu">

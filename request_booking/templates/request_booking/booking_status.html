@@ -678,9 +678,12 @@
                                         data-venue="{{ request.venue.venue_name }}"
                                         data-date="{{ request.date }}"
                                         data-duration="{{ request.duration }}"
+                                        data-start-date = "{{request.time}}"
                                         data-status="{{ request.status }}"
-                                        data-need="{{ request.need }}"
-                                        data-requirements="{{ request.additional_requirements|default:'None' }}"
+                                        data-need="{{ request.event_details }}"
+                                        data-requirements="{{ request.additional_info|default:'None' }}"
+                                        data-special-requirements="{{ request.special_requirements|default:'None' }}"
+                                        {% comment %} data-special-requirements="{{ request.special_requirements }}" {% endcomment %}
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}"
                                         {% if request.status == "rejected" %}
@@ -786,14 +789,18 @@
                 duration: button.getAttribute('data-duration'),
                 status: button.getAttribute('data-status'),
                 need: button.getAttribute('data-need'),
+                start_date:button.getAttribute('data-start-date'),
                 requirements: button.getAttribute('data-requirements'),
                 purpose: button.getAttribute('data-purpose'),
+                special_requirements:button.getAttribute('data-special-requirements'),
                 requestId: button.getAttribute('data-request-id'),
                 reason: button.getAttribute('data-reason'),
                 feedback: button.getAttribute('data-feedback') || 'No feedback provided',
                 alternate: button.getAttribute('data-alternate') || 'No alternate venue suggested',
                 acceptReason: button.getAttribute('data-accept-reason') || 'No reason provided',
-                acceptFeedback: button.getAttribute('data-accept-feedback') || 'No comments provided'
+                acceptFeedback: button.getAttribute('data-accept-feedback') || 'No comments provided',
+    
+
             };
             
             // Determine status icon
@@ -820,8 +827,12 @@
                     <div class="detail-value">${data.date}</div>
                 </div>
                 <div class="detail-item">
+                    <div class="detail-label">Start Time</div>
+                    <div class="detail-value">${data.start_date}:00</div>
+                </div>
+                <div class="detail-item">
                     <div class="detail-label">Duration</div>
-                    <div class="detail-value">${data.duration}</div>
+                    <div class="detail-value">${data.duration} hours</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
@@ -834,13 +845,16 @@
                     <div class="detail-value">${data.need}</div>
                 </div>
                 <div class="detail-item full-width">
-                    <div class="detail-label">Additional Requirements</div>
+                    <div class="detail-label">Purpose of Booking</div>
                     <div class="detail-value">${data.requirements}</div>
                 </div>
                 <div class="detail-item full-width">
-                    <div class="detail-label">Purpose of Booking</div>
-                    <div class="detail-value">${data.purpose}</div>
+                    <div class="detail-label">Special Requirements</div>
+                    <div class="detail-value">${data.special_requirements}</div>
                 </div>
+                
+                
+                
             `;
             
             // Add approval details if status is approved

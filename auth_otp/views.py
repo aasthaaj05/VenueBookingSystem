@@ -1,103 +1,182 @@
+import random
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from .utils import send_otp  # Import the send_otp function
+from django.conf import settings
+from users.models import CustomUser
+from .models import PasswordResetOTP
 
 
+# Email configuration (use your existing settings)
+sender_email = settings.EMAIL_HOST_USER
+sender_password = settings.EMAIL_HOST_PASSWORD
+smtp_server = settings.EMAIL_HOST
+smtp_port = settings.EMAIL_PORT
 
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from users.models import CustomUser  # Import the CustomUser model
-
-def change_password_view(request):
-    if request.method == 'POST':
-        new_password = request.POST.get('new_password')
-        confirm_password = request.POST.get('confirm_password')
-        email = request.session.get('email')  # Get email from session (set during OTP verification)
-
-        if email:
-            try:
-                user = CustomUser.objects.get(email=email)  # Fetch user by email
-                if new_password and confirm_password:
-                    if new_password == confirm_password:
-                        user.set_password(new_password)  # Securely set new password
-                        user.save()
-                        messages.success(request, 'Password changed successfully! Please log in.')
-                        return redirect('login')
-                    else:
-                        messages.error(request, 'Passwords do not match.')
-                else:
-                    messages.error(request, 'Please fill out all fields.')
-            except CustomUser.DoesNotExist:
-                messages.error(request, 'User with this email does not exist.')
-
-    return render(request, 'auth_otp/change_password.html')
-
-
-
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from .utils import send_otp  # Ensure send_otp is correctly imported
-from users.models import CustomUser  # Import CustomUser model
-
-def send_otp_view(request):
-    print('in send_otp_view() ')
+def forgot_password(request):
     if request.method == 'POST':
         email = request.POST.get('email')
-        if email:
-            try:
-                user = CustomUser.objects.get(email=email)  # Query CustomUser directly
-                send_otp(email, request)  # Send OTP if user exists
-                request.session['email'] = email  # Store email in session
-                messages.success(request, 'OTP sent successfully!')
-                return redirect('verify-otp')  # Redirect to OTP verification page
-            except CustomUser.DoesNotExist:
-                messages.error(request, 'User with this email does not exist.')
-            except Exception as e:
-                messages.error(request, f'Failed to send OTP: {e}')
-    return render(request, 'auth_otp/send_otp.html')
+        
+        # Check if user exists
+        if not CustomUser.objects.filter(email=email).exists():
+            messages.error(request, 'No account found with this email address.')
+            return render(request, 'forgot_password.html')
+        
+        # Generate 6-digit OTP
+        otp = str(random.randint(100000, 999999))
+        
+        # Save OTP to database
+        PasswordResetOTP.objects.update_or_create(
+            email=email,
+            defaults={'otp': otp, 'is_verified': False}
+        )
+        
+        # Send OTP email
+        send_otp_email(email, otp)
+        
+        messages.success(request, 'OTP has been sent to your email!')
+        return render(request, 'forgot_password.html', {
+            'show_otp_field': True,
+            'email': email,
+            'step': 2  # For the progress indicator
+        })
+    
+    return render(request, 'forgot_password.html', {'step': 1})
 
-
-# def verify_otp_view(request):
-#     if request.method == 'POST':
-#         entered_otp = request.POST.get('otp')
-#         stored_otp = request.session.get('otp')
-
-#         if entered_otp == stored_otp:
-#             messages.success(request, 'OTP verified successfully!')
-#             # Redirect to change password page
-#             return redirect('change-password')
-#         else:
-#             messages.error(request, 'Invalid OTP. Please try again.')
-
-#     return render(request, 'verify_otp.html')
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.views.decorators.csrf import csrf_protect  # Import CSRF protection
-from .utils import send_otp  # Import the send_otp function
-
-@csrf_protect  # Ensures CSRF protection for POST requests
-def verify_otp_view(request):
+def verify_otp(request):
     if request.method == 'POST':
-        print(' in verify_otp_view()')
-        entered_otp = request.POST.get('otp')
-        stored_otp = request.session.get('otp')  # Ensure OTP is stored in session
+        email = request.POST.get('email')
+        otp = request.POST.get('otp')
+        user_entered_otp = otp
+        
+        try:
+            otp_record = PasswordResetOTP.objects.get(email=email)
+            
+            # Check if OTP matches and is not expired (10 minutes)
+            from django.utils import timezone
+            from datetime import timedelta
+            
+            if (otp_record.otp == user_entered_otp and 
+                timezone.now() < otp_record.created_at + timedelta(minutes=10)):
+                otp_record.is_verified = True
+                otp_record.save()
+                
+                messages.success(request, 'OTP verified successfully!')
+                return render(request, 'forgot_password.html', {
+                    'show_password_fields': True,
+                    'email': email,
+                    'step': 3
+                })
+            else:
+                messages.error(request, 'Invalid or expired OTP!')
+                return render(request, 'forgot_password.html', {
+                    'show_otp_field': True,
+                    'email': email,
+                    'step': 2
+                })
+                
+        except PasswordResetOTP.DoesNotExist:
+            messages.error(request, 'Invalid request!')
+            return redirect('forgot_password')
+    
+    return redirect('forgot_password')
 
-        print('entered_otp : ' , entered_otp)
-        print('stored_otp : ' , stored_otp)
+def reset_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        # Validate passwords match
+        if password != confirm_password:
+            messages.error(request, 'Passwords do not match!')
+            return render(request, 'forgot_password.html', {
+                'show_password_fields': True,
+                'email': email,
+                'step': 3
+            })
+        
+        # Validate password strength (add more checks as needed)
+        if len(password) < 8:
+            messages.error(request, 'Password must be at least 8 characters long!')
+            return render(request, 'forgot_password.html', {
+                'show_password_fields': True,
+                'email': email,
+                'step': 3
+            })
+        
+        try:
+            # Verify OTP was actually verified
+            otp_record = PasswordResetOTP.objects.get(email=email, is_verified=True)
+            user = CustomUser.objects.get(email=email)
+            
+            # Update user's password using set_password (hashes automatically)
+            user.set_password(password)
+            user.save()
+            
+            # Delete the OTP record
+            otp_record.delete()
+            
+            messages.success(request, 'Password reset successfully! You can now login with your new password.')
+            return redirect('login')
+            
+        except (PasswordResetOTP.DoesNotExist, CustomUser.DoesNotExist):
+            messages.error(request, 'Invalid request or session expired!')
+            return redirect('forgot_password')
+    
+    return redirect('forgot_password')
 
-        if entered_otp == stored_otp:
-            messages.success(request, 'OTP verified successfully!')
-            return redirect('change-password')  # Redirect to change password page
-        else:
-            messages.error(request, 'Invalid OTP. Please try again.')
+def send_otp_email(email, otp):
+    """Send OTP email using your existing email infrastructure"""
+    print('\n--------Sending OTP Email-----------')
+    print('Recipient:', email)
 
-    return render(request, 'auth_otp/verify_otp.html')
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = email
+    msg['Subject'] = "COEP Venue Booking - Password Reset OTP"
 
+    # HTML email content
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+            <h2 style="color: #1a73e8;">Password Reset Request</h2>
+            <p>Dear User,</p>
+            
+            <p>We received a request to reset your password for the COEP Venue Booking System.</p>
+            
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center;">
+                <h3 style="margin: 0; color: #1a73e8;">Your One-Time Password (OTP):</h3>
+                <div style="font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 10px 0;">{otp}</div>
+                <p style="font-size: 12px; color: #666;">(Valid for 10 minutes)</p>
+            </div>
+            
+            <p>If you didn't request this password reset, please ignore this email or contact support immediately.</p>
+            
+            <p style="margin-top: 30px;">Regards,<br>
+            <strong>COEP Venue Booking System</strong></p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="font-size: 12px; color: #999;">
+                This is an automated message. Please do not reply directly to this email.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
 
+    msg.attach(MIMEText(body, 'html'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"OTP email sent successfully to {email}")
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
+
+    print('-----Email sending complete--------\n')
