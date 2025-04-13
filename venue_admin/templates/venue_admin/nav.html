@@ -13,6 +13,9 @@
   
   <!-- Placeholder image as favicon -->
   <link rel="icon" href="static 'Logos/coep_tech_black'" type="image/png">
+  
+  <!-- Placeholder image as favicon -->
+  <link rel="icon" href="static 'Logos/coep_tech_black'" type="image/png">
 
     <!-- Favicons -->
     <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
@@ -253,7 +256,7 @@
         
                   <li><a href="{% url 'venue_admin:get_requests' %}" class="btn signup-btn">View Requests</a></li>
                     
-                  <li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>
+                  {%comment%}<li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>{%endcomment%}
                   <li><a href="{% url 'venue_admin:approved_bookings' %}">Bookings</a></li>
         
                 </ul>
