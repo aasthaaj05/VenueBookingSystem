@@ -747,7 +747,7 @@
                                     '{{ request.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
                                     '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', 
                                     '{{ request.event_type }}', '{{ request.guest_count }}', 
-                                    '{{ request.additional_info }}'
+                                    '{{ request.additional_info }}','{{ request.special_requirements }}'
                                 )">
                                     <i class="fas fa-eye"></i> View
                                 </button>
@@ -916,7 +916,7 @@
         let currentRequestId = null;
         let currentActionType = null;
 
-        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo) {
+        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements) {
             currentRequestId = requestId;
             
             const detailsHtml = `
@@ -963,6 +963,10 @@
                 <div class="detail-group detail-notes">
                     <div class="detail-label"><i class="fas fa-sticky-note"></i> Additional Information</div>
                     <div class="detail-value">${additionalInfo || 'None provided'}</div>
+                </div>
+                    <div class="detail-group detail-notes">
+                    <div class="detail-label"><i class="fas fa-sticky-note"></i> Special Requirements</div>
+                    <div class="detail-value">${special_requirements || 'None provided'}</div>
                 </div>
             `;
             

@@ -220,7 +220,7 @@
         <a href="#" class="logo">Venue Booking System</a>
         <ul class="nav-links">
             <i class="uil uil-times navCloseBtn"></i>
-            <li><a href="{% url 'booking_status' %}">Booking Status</a></li>
+            <li><a href="{% url 'request_booking:booking_status' %}">Booking Status</a></li>
             <li><a href="#">Services</a></li>
             <li><a href="#">Products</a></li>
             <li><a href="#">About Us</a></li>
@@ -266,7 +266,7 @@
                         </ul>
                     </div>
                 </div>
-                <form action="{% url 'calendar' %}" method="POST">
+                <form action="{% url 'users:calendar' %}" method="POST">
                     {% csrf_token %}
                     <input type="hidden" name="venue_id" value="{{ venue.id }}">
                     <button type="submit">Book Now</button> <!-- Updated button text -->

@@ -44,7 +44,7 @@
     </nav> {% endcomment %}
     <div class="wrapper">
         <h2>Login</h2>
-        <form action="{% url 'login' %}" method="POST">
+        <form action="{% url 'users:login' %}" method="POST">
             {% csrf_token %}
             <div class="input-box">
                 <input id="username" name="username" type="text" placeholder="Enter your email" required>
@@ -56,10 +56,10 @@
                 <input type="submit" value="Login">
             </div>
             <div class="text">
-                <h3>Don't have an account? <a href="{% url 'register' %}">Register</a></h3>
+                <h3>Don't have an account? <a href="{% url 'users:register' %}">Register</a></h3>
             </div>
             <div class="text">
-                <h3><a href="{% url 'send-otp' %}">Forgot Password?</a></h3>
+                <h3><a href="{% url 'auth_otp:forgot_password' %}">Forgot Password?</a></h3>
             </div>
         </form>
     </div>

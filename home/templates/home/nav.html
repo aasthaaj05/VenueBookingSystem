@@ -11,11 +11,15 @@
 
 {% load static %}
 <head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>COEPVenueBookingSystem</title>
-  <meta name="description" content="">
-  <meta name="keywords" content="">
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>COEP Venue Booking System | Book Your Campus Spaces</title>
+    <meta name="description" content="Reserve venues on COEP campus quickly and efficiently.">
+    <meta name="keywords" content="venue, booking, COEP, events, campus">
+    
+    <!-- Placeholder image as favicon -->
+    <link rel="icon" href="https://via.placeholder.com/32" type="image/png">
+    
 
   {% comment %} <!-- Favicons -->
   <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
@@ -40,7 +44,7 @@
 <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container-fluid container-xl position-relative d-flex align-items-center">
 
-        <a href="{% url 'home' %}" class="logo d-flex align-items-center me-auto">
+        <a href="{% url 'users:home' %}" class="logo d-flex align-items-center me-auto">
             <h1 class="sitename">COEP Tech</h1>
         </a>
 
@@ -59,7 +63,7 @@
         </nav>
 
         {% comment %} <a class="btn-getstarted" href="#about">Get Started</a> {% endcomment %}
-        <a class="btn-getstarted" href="{% url 'login' %}">Login</a>
+        <a class="btn-getstarted" href="{% url 'users:login' %}">Login</a>
 
     </div>
 </header>
