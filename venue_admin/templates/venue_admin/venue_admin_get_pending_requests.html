@@ -923,6 +923,8 @@
 
         function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements) {
             currentRequestId = requestId;
+
+            console.log('special_requirements...',special_requirements)
             
             const detailsHtml = `
                 <div class="detail-group">

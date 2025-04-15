@@ -260,6 +260,7 @@ def request_booking(request):
                 'reasons': req.reasons if req.status == 'rejected' else None,
                 'purpose': req.need if req.need else 'N/A',
                 'additional_info':req.additional_info,
+                'special_requirements':req.special_requirements,
             }
             for req in requests
         ]
@@ -268,6 +269,7 @@ def request_booking(request):
     # print('context : ', context)  # Debugging output
     print("Context:")
     print(json.dumps(context, indent=4))
+
 
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html', context)
     # return render(request, 'venue_admin/venue_admin_get_pending_requests.html', {
