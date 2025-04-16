@@ -871,6 +871,7 @@ def process_booking(request):
                 event_details=event_details,
                 guest_count = guest_count,
                 special_requirements=special_requirements,
+               
             )
 
 

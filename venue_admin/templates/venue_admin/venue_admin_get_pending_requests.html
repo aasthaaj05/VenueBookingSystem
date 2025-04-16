@@ -752,7 +752,7 @@
                                     '{{ request.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
                                     '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', 
                                     '{{ request.event_type }}', '{{ request.guest_count }}', 
-                                    '{{ request.additional_info }}','{{ request.special_requirements }}'
+                                    '{{ request.additional_info }}','{{ request.special_requirements }}','{{ request.need }}'
                                 )">
                                     <i class="fas fa-eye"></i> View
                                 </button>
@@ -921,12 +921,17 @@
         let currentRequestId = null;
         let currentActionType = null;
 
-        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements) {
+        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements, need) {
             currentRequestId = requestId;
 
             console.log('special_requirements...',special_requirements)
+            console.log('need : ...',need)
             
             const detailsHtml = `
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-users"></i> Organization</div>
+                    <div class="detail-value">${need}</div>
+                </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-user-tie"></i> Requester Name</div>
                     <div class="detail-value">${name}</div>
@@ -963,6 +968,7 @@
                     <div class="detail-label"><i class="fas fa-users"></i> Expected Attendance</div>
                     <div class="detail-value">${expectedCrowd} people</div>
                 </div>
+                
                 <div class="detail-group detail-notes">
                     <div class="detail-label"><i class="fas fa-align-left"></i> Event Description</div>
                     <div class="detail-value">${eventDetails}</div>

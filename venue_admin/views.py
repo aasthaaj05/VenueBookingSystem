@@ -261,6 +261,7 @@ def request_booking(request):
                 'purpose': req.need if req.need else 'N/A',
                 'additional_info':req.additional_info,
                 'special_requirements':req.special_requirements,
+                'need':req.need,
             }
             for req in requests
         ]
@@ -605,10 +606,20 @@ def approve_request(request, request_id):
             venue__department_incharge=user,
             ).exclude(request_id=req.request_id)
 
+        start_time = req.time
+        end_time=start_time+req.duration
+
         conflicting_requests = []
         for existing in pending_requests:
             existing_start = existing.time
             existing_end = existing.time + existing.duration
+
+            print('in conflict response for loop')
+            print('-------------')
+            print('-------------')
+            print('-------------')
+            print()
+            print()
             
             # ✅ Overlap conditions for slot-based conflict:
             if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time)  :

@@ -543,7 +543,7 @@
                                 '{{ request.request_id }}', 
                                 '{{ request.user.name }}', 
                                 '{{ request.user.email }}', 
-                                '{{ request.user.phone_number }}', 
+                                '{{ request.request.phone_number }}', 
                                 '{{ request.venue.venue_name }}', 
                                 '{{ request.date }}', 
                                 '{{ request.time }}', 
@@ -598,6 +598,8 @@
 
         function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo) {
             currentRequestId = requestId;
+
+            console.log('phone : ', phone)
             
             const detailsHtml = `
                 <div class="detail-group">

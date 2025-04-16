@@ -605,6 +605,7 @@
             }
         }
     </style>
+    <link href="{% static 'assets/img/coep_tech_black.png' %}" rel="icon">
 </head>
 <body>
     <!-- Header Section -->
@@ -649,6 +650,7 @@
                                 <th>Date</th>
                                 <th>Duration</th>
                                 <th>Status</th>
+                                <th>Event Description</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -672,6 +674,7 @@
                                         {{ request.status|upper }}
                                     </span>
                                 </td>
+                                <td>{{ request.event_details }}</td>
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)"
@@ -683,7 +686,8 @@
                                         data-need="{{ request.event_details }}"
                                         data-requirements="{{ request.additional_info|default:'None' }}"
                                         data-special-requirements="{{ request.special_requirements|default:'None' }}"
-                                        {% comment %} data-special-requirements="{{ request.special_requirements }}" {% endcomment %}
+                                        data-event-description="{{ request.event_details|default:'Not specified' }}"
+                                        {% comment %} data-special-requirements="{{ req uest.special_requirements }}" {% endcomment %}
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}"
                                         {% if request.status == "rejected" %}
@@ -799,6 +803,7 @@
                 alternate: button.getAttribute('data-alternate') || 'No alternate venue suggested',
                 acceptReason: button.getAttribute('data-accept-reason') || 'No reason provided',
                 acceptFeedback: button.getAttribute('data-accept-feedback') || 'No comments provided',
+                event_description: button.getAttribute('data-event-description') || 'None',
     
 
             };
@@ -833,6 +838,10 @@
                 <div class="detail-item">
                     <div class="detail-label">Duration</div>
                     <div class="detail-value">${data.duration} hours</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Event Description</div>
+                    <div class="detail-value">${data.event_description} hours</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
