@@ -890,15 +890,184 @@ def process_booking(request):
 
     return redirect("faculty_advisor:booking_status")
 
+@login_required
+def process_booking_multiple(request):
+    if request.method == "POST":
+        user = request.user
+        print(f"User: {user}")
+
+        try:
+            # Get form data
+            venue_id = request.POST.get("venue")
+            venue = Venue.objects.get(id=venue_id)
+
+            event_type = request.POST.get("eventType")
+            full_name = request.POST.get("fullName")
+            email = request.POST.get("email", user.email)
+            organization_name = request.POST.get("organization_name")
+            start_date_str = request.POST.get("start_date")
+            start_time_str = request.POST.get("start_time")
+            end_time_str = request.POST.get("end_time")
+            phone_number = request.POST.get("phone")
+            guest_count = request.POST.get("guestCount")
+            event_details = request.POST.get("eventDetails")
+            purpose = request.POST.get("purpose", "")
+            special_requirements = request.POST.get("specialRequirements", "")
+            num_weeks = int(request.POST.get("num_weeks", 1))
+            weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
+
+            print(f"weekdays (raw): {weekdays}")
+            weekdays = sorted([int(day) for day in weekdays])
+            print(f"Parsed weekdays: {weekdays}")
+
+            # Time parsing
+            start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
+            end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
+            duration = end_time - start_time
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+
+            created_count = 0
+
+            for week in range(num_weeks):
+                week_start = start_date + timedelta(weeks=week)
+                for weekday in weekdays:
+                    offset = (weekday - week_start.weekday() + 7) % 7
+                    current_date = week_start + timedelta(days=offset)
+
+                    # Check for conflicts
+                    if Booking.objects.filter(venue=venue, date=current_date, time=start_time, status='active').exists():
+                        print(f"Booking already exists on {current_date}")
+                        continue
+
+                    if Request.objects.filter(user=user, email=email, date=current_date, time=start_time, venue=venue).exists():
+                        print(f"Request already exists on {current_date}")
+                        continue
+
+                    # Create the Request
+                    new_req = Request.objects.create(
+                        user=user,
+                        email=email,
+                        phone_number=phone_number,
+                        full_name=full_name,
+                        organization_name=organization_name,
+                        event_type=event_type,
+                        guest_count=guest_count,
+                        additional_info=purpose,
+                        date=current_date,
+                        time=start_time,
+                        duration=duration,
+                        venue=venue,
+                        need=organization_name,
+                        alternate_venue_1=None,
+                        alternate_venue_2=None,
+                        event_details=event_details,
+                        special_requirements=special_requirements,
+                        status='pending'
+                    )
+
+                    print(f"Created request for {current_date}")
+                    created_count += 1
+
+            if created_count:
+                messages.success(request, f"{created_count} booking request(s) submitted successfully!")
+            else:
+                messages.warning(request, "No requests were created (conflicts or duplicates).")
+
+            return redirect("faculty_advisor:home")
+
+        except Venue.DoesNotExist:
+            print("Invalid venue.")
+            messages.error(request, "Invalid venue selected.")
+        except ValueError as ve:
+            print(f"ValueError: {ve}")
+            messages.error(request, "Invalid input. Please check your form.")
+
+        return redirect("faculty_advisor:booking_status")
+    else:
+        venues = Venue.objects.all()
+        print("heherer ewrewrhewjwhrjwh in request multiple")
+        return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
+
+from datetime import datetime, timedelta
+from django.utils.timezone import make_aware
+from django.db.models import Q
+import calendar
+
+def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays):
+    """
+    Checks if the venue is booked on given weekdays for the specified number of weeks.
+
+    Args:
+        venue (Venue): The venue to check.
+        start_date (date): The starting date for checking availability.
+        num_weeks (int): Number of weeks to check.
+        weekdays (list of int): Weekday integers (0=Monday, ..., 6=Sunday).
+
+    Returns:
+        dict: A mapping of each target date to its booking status (True if booked, False otherwise).
+    """
+
+    # Ensure start_date is a date object, not datetime
+    if isinstance(start_date, datetime):
+        start_date = start_date.date()
+
+    for week in range(num_weeks):
+        week_start = start_date + timedelta(weeks=week)
+        for wd in sorted(weekdays):
+            # Get the actual date for the weekday in the current week
+            day_offset = (wd - week_start.weekday() + 7) % 7
+            target_date = week_start + timedelta(days=day_offset)
+
+            # Check for existing active bookings on this date for the venue
+            is_booked = Booking.objects.filter(
+                venue=venue,
+                date=target_date,
+                status='active'
+            ).exists()
+
+            if (is_booked):
+                return False
+
+    return True
 
 
+def check_multiple_week_availability_view(request):
+    if request.method == 'POST':
+        try:
+            venue_id = request.POST.get("venue")
+            start_date_str = request.POST.get("start_date")
+            num_weeks = int(request.POST.get("num_weeks"))
+            weekdays = request.POST.getlist("weekdays")
 
+            # Convert inputs
+            venue = Venue.objects.get(id=venue_id)
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            weekdays = [int(day) for day in weekdays]
 
+            # Call the check function
+            is_available = check_venue_availability_mul_weeks(
+                venue=venue,
+                start_date=start_date,
+                num_weeks=num_weeks,
+                weekdays=weekdays
+            )
 
+            return JsonResponse({
+                "status": "success",
+                "available": is_available,
+                "message": "Venue is available!" if is_available else "Venue is already booked on one or more selected dates."
+            })
 
+        except Exception as e:
+            return JsonResponse({
+                "status": "error",
+                "message": f"Error occurred: {str(e)}"
+            }, status=400)
 
-
-
+    else:
+        venues = Venue.objects.all()
+        print("heherer ewrewrhewjwhrjwh in request multiple")
+        return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
 
 
