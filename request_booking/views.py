@@ -1600,3 +1600,61 @@ def cancel_booking(request):
     # If not POST, redirect back
     return redirect('/request_booking/booking_status')
 
+
+
+
+
+
+
+
+from django.shortcuts import render
+from django.views import View
+from django.http import HttpResponse
+import pprint
+
+class RequestMultipleWeekAvailabilityView(View):
+    def get(self, request, *args, **kwargs):
+        # Handle GET request - render the empty form
+        # venues = [  # Mock data - replace with your actual venue query
+        #     {'id': 1, 'venue_name': 'Main Hall', 'capacity': 200},
+        #     {'id': 2, 'venue_name': 'Conference Room A', 'capacity': 50},
+        # ]
+        # return render(request, 'booking_form.html', {'venues': venues})
+        venues = Venue.objects.all()
+        print("heherer ewrewrhewjwhrjwh in request multiple")
+        return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
+
+    def post(self, request, *args, **kwargs):
+        # Print all form data for debugging
+        print("\n" + "="*50)
+        print("DEBUG: FORM DATA RECEIVED")
+        print("="*50)
+        
+        # Print POST data
+        print("\nPOST Data:")
+        pprint.pprint(request.POST.dict())
+        
+        # Print individual fields
+        print("\nIndividual Fields:")
+        print(f"Venue ID: {request.POST.get('venue')}")
+        print(f"Event Type: {request.POST.get('eventType')}")
+        print(f"Full Name: {request.POST.get('fullName')}")
+        print(f"Email: {request.POST.get('email')}")
+        print(f"Organization: {request.POST.get('organization_name')}")
+        print(f"Start Date: {request.POST.get('start_date')}")
+        print(f"Start Time: {request.POST.get('start_time')}")
+        print(f"End Time: {request.POST.get('end_time')}")
+        print(f"Number of Weeks: {request.POST.get('num_weeks')}")
+        print(f"Selected Weekdays: {request.POST.getlist('weekdays')}")
+        print(f"Phone: {request.POST.get('phone')}")
+        print(f"Guest Count: {request.POST.get('guestCount')}")
+        print(f"Event Details: {request.POST.get('eventDetails')}")
+        print(f"Purpose: {request.POST.get('purpose')}")
+        print(f"Special Requirements: {request.POST.get('specialRequirements')}")
+        print(f"Terms Accepted: {request.POST.get('terms')}")
+        
+        print("\n" + "="*50 + "\n")
+        
+        # Return a simple response (in production, you'd process the data and return appropriate response)
+        return HttpResponse("Form data received and printed in console. Check your server logs for details.", 
+                          content_type="text/plain")

@@ -35,7 +35,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/Users/arnavprasad/Documents/VenueBookingSystem/development/version16/VenueBookingSystem/myenv
+VIRTUAL_ENV=/Users/arnavprasad/Documents/VenueBookingSystem/development/version19/VenueBookingSystem/myenv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
