@@ -1034,28 +1034,31 @@ def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays):
 def check_multiple_week_availability_view(request):
     if request.method == 'POST':
         try:
-            venue_id = request.POST.get("venue")
             start_date_str = request.POST.get("start_date")
             num_weeks = int(request.POST.get("num_weeks"))
             weekdays = request.POST.getlist("weekdays")
 
             # Convert inputs
-            venue = Venue.objects.get(id=venue_id)
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
             weekdays = [int(day) for day in weekdays]
 
+            venues = Venue.objects.all()
+
+            available_venues = []
+            for venue in venues:
             # Call the check function
-            is_available = check_venue_availability_mul_weeks(
-                venue=venue,
-                start_date=start_date,
-                num_weeks=num_weeks,
-                weekdays=weekdays
-            )
+                is_available = check_venue_availability_mul_weeks(
+                    venue=venue,
+                    start_date=start_date,
+                    num_weeks=num_weeks,
+                    weekdays=weekdays
+                )
+                if is_available:
+                    available_venues.append(venue)
 
             return JsonResponse({
                 "status": "success",
-                "available": is_available,
-                "message": "Venue is available!" if is_available else "Venue is already booked on one or more selected dates."
+                "venues": available_venues,
             })
 
         except Exception as e:
@@ -1065,9 +1068,8 @@ def check_multiple_week_availability_view(request):
             }, status=400)
 
     else:
-        venues = Venue.objects.all()
         print("heherer ewrewrhewjwhrjwh in request multiple")
-        return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
+        return render(request, "request_booking/check_multiple_week_avail.html")
 
 
 
