@@ -47,6 +47,11 @@ def get_requests(request):
     # Logic for handling view requests
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html')
 
+def get_cumulative_requests(request):
+    # Logic for handling view requests
+    return render(request, 'venue_admin/get_cumulative_requests.html')
+    
+
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -271,11 +276,87 @@ def request_booking(request):
     print("Context:")
     print(json.dumps(context, indent=4))
 
+    print('[]][][][][]')
+
 
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html', context)
     # return render(request, 'venue_admin/venue_admin_get_pending_requests.html', {
     #     'pending_requests': json.dumps(context['pending_requests'])
     # })
+
+from request_booking.models import CumulativeRequest
+
+
+
+from request_booking.models import CumulativeRequest
+from django.db.models import Q
+
+def cumulative_request_booking(request): 
+    user = request.user
+    try:
+        # Fetch user from CustomUser model
+        user = CustomUser.objects.get(email=user)
+    except CustomUser.DoesNotExist:
+        return render(request, 'faculty_advisor/pending_requests.html', {
+            'requests': []
+        })
+
+    # Fetch cumulative requests with status 'waiting_for_approval' or 'pending'
+    cumulative_requests = CumulativeRequest.objects.select_related('venue', 'user').filter(
+        Q(status="waiting_for_approval") | Q(status="pending"),
+        venue__department_incharge=user
+    ).order_by('-created_at')
+
+    # Prepare the context data
+    pending_cumulative_requests = []
+    for cr in cumulative_requests:
+        # Get all individual requests associated with this cumulative request
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cr.cumulative_request_id
+        ).select_related('venue', 'user')
+        
+        # Format dates for display
+        dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+        
+        pending_cumulative_requests.append({
+            'cumulative_request_id': str(cr.cumulative_request_id),
+            'email': cr.email or cr.user.email,
+            'phone_number': cr.phone_number or cr.user.phone_number,
+            'event_type': cr.event_type,
+            'dates': dates,  # All dates from individual requests
+            'start_date': cr.start_date.strftime('%Y-%m-%d'),
+            'weekdays': cr.weekdays,  # String representation of weekdays
+            'time': f"{cr.time}:00",
+            'duration': f"{cr.duration}",
+            'num_weeks': cr.num_weeks,
+            'venue': {
+                'venue_name': cr.venue.venue_name if cr.venue else 'Unknown Venue',
+                'capacity': cr.venue.capacity if cr.venue else 'N/A',
+            },
+            'user': {
+                'name': cr.user.name if cr.user else 'Unknown',
+                'organization_name': cr.user.organization_name if cr.user else 'Unknown'
+            },
+            'guest_count': cr.guest_count,
+            'event_details': cr.event_details if cr.event_details else 'N/A',
+            'status': cr.status,
+            'reasons': cr.reasons if cr.status == 'rejected' else None,
+            'purpose': cr.purpose if cr.purpose else 'N/A',
+            'additional_info': cr.additional_info,
+            'special_requirements': cr.special_requirements,
+            'individual_request_count': individual_requests.count(),  # How many individual requests
+            'individual_requests': [str(req.request_id) for req in individual_requests]  # List of request IDs
+        })
+
+    context = {
+        'pending_cumulative_requests': pending_cumulative_requests
+    }
+
+    print("Cumulative Context:")
+    print(json.dumps(context, indent=4))
+    print('====END OF CONTEXT====')
+
+    return render(request, 'venue_admin/get_cumulative_requests.html', context)
 
 
 

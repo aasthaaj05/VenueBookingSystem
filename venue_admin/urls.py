@@ -12,6 +12,7 @@ urlpatterns = [
     
     path('home/', views.home, name='home'),
     path('requests/', views.request_booking, name='get_requests'),
+    path('cumulative_requests/', views.cumulative_request_booking, name='get_cumulative_requests'),
     path('logout/', views.logout_view, name='logout'),
     path('reject_request/<uuid:request_id>', views.reject_request, name='reject_request'),
     path("approved-bookings/", views.approved_bookings_view, name="approved_bookings"),

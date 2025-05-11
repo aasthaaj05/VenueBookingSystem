@@ -109,7 +109,7 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'venue_booking',
+        'NAME': 'venue_booking4',
         'USER': 'root',
         'PASSWORD': 'Arnav@123',
         'HOST': 'localhost',  # Change if using a remote server

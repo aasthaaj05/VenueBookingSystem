@@ -256,6 +256,7 @@
                   {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
         
                   <li><a href="{% url 'venue_admin:get_requests' %}" class="btn signup-btn">View Requests</a></li>
+                  <li><a href="{% url 'venue_admin:get_cumulative_requests' %}" class="btn signup-btn">View Cumulative Requests</a></li>
                     
                   {%comment%}<li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>{%endcomment%}
                   <li><a href="{% url 'venue_admin:approved_bookings' %}">Bookings</a></li>

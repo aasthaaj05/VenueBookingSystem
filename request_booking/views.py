@@ -924,9 +924,32 @@ def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays, t
                         return False
     return True
 
+
+import logging
+logger = logging.getLogger(__name__)
+from .models import CumulativeRequest  # Make sure to import this at top
+
+
+
 @login_required
 def process_booking_multiple(request):
+    print('---process_booking_multiple---\n\n\n')
     if request.method == "POST":
+       
+        print('---POST yyy process_booking_multiple---\n\n\n')
+
+        print('---POST yyy process_booking_multiple---\n\n\n')
+        
+        # Print all keys in POST data and request.body
+        print("POST keys:", request.POST.keys())
+        print("POST data type:", type(request.POST))
+        print("Request body type:", type(request.body))
+        
+       
+
+    
+
+
         user = request.user
         print(f"User: {user}")
 
@@ -936,34 +959,90 @@ def process_booking_multiple(request):
             venue = Venue.objects.get(id=venue_id)
 
             event_type = request.POST.get("eventType")
-            full_name = request.POST.get("fullName")
+            full_name = request.POST.get("full_name")
             email = request.POST.get("email", user.email)
             organization_name = request.POST.get("organization_name")
-            start_date_str = request.POST.get("start_date")
-            start_time_str = request.POST.get("start_time")
-            end_time_str = request.POST.get("end_time")
-            phone_number = request.POST.get("phone")
-            guest_count = request.POST.get("guestCount")
-            event_details = request.POST.get("eventDetails")
+            start_date_str = request.POST.get("start_date_str")
+            start_time_str = request.POST.get("start_time_str")
+            end_time_str = request.POST.get("end_time_str")
+            phone_number = request.POST.get("phone_number")
+            guest_count = request.POST.get("guest_count")
+            event_details = request.POST.get("event_details")
             purpose = request.POST.get("purpose", "")
             special_requirements = request.POST.get("specialRequirements", "")
             num_weeks = int(request.POST.get("num_weeks", 1))
             weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
 
+            # Print form data and types
+            print("Form Data and Types:")
+            print(f"venue_id: {venue_id} (type: {type(venue_id).__name__})")
+            print(f"venue: {venue} (type: {type(venue).__name__})")
+            print(f"event_type: {event_type} (type: {type(event_type).__name__})")
+            print(f"full_name: {full_name} (type: {type(full_name).__name__})")
+            print(f"email: {email} (type: {type(email).__name__})")
+            print(f"organization_name: {organization_name} (type: {type(organization_name).__name__})")
+            print(f"start_date_str: {start_date_str} (type: {type(start_date_str).__name__})")
+            print(f"start_time_str: {start_time_str} (type: {type(start_time_str).__name__})")
+            print(f"end_time_str: {end_time_str} (type: {type(end_time_str).__name__})")
+            print(f"phone_number: {phone_number} (type: {type(phone_number).__name__})")
+            print(f"guest_count: {guest_count} (type: {type(guest_count).__name__})")
+            print(f"event_details: {event_details} (type: {type(event_details).__name__})")
+            print(f"purpose: {purpose} (type: {type(purpose).__name__})")
+            print(f"special_requirements: {special_requirements} (type: {type(special_requirements).__name__})")
+            print(f"num_weeks: {num_weeks} (type: {type(num_weeks).__name__})")
+            print(f"weekdays: {weekdays} (type: {type(weekdays).__name__})")
+
+            print()
+            print()
+            print()
+
             print(f"weekdays (raw): {weekdays}")
             weekdays = sorted([int(day) for day in weekdays])
             print(f"Parsed weekdays: {weekdays}")
+
+            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
+            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
+            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
+            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
 
             # Time parsing
             start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
             end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
             duration = end_time - start_time
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            # end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
             created_count = 0
 
             if (check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays, start_time, duration) == False):
                 return redirect('faculty_advisor:home')
+
+            # Generate a unique cumulative request ID
+            cumulative_request_id = uuid.uuid4()
+
+            # ✅ Create CumulativeRequest entry
+            cumulative_req = CumulativeRequest.objects.create(
+                cumulative_request_id=cumulative_request_id,
+                user=user,
+                full_name=full_name,
+                email=email,
+                phone_number=phone_number,
+                organization_name=organization_name,
+                event_type=event_type,
+                guest_count=guest_count,
+                event_details=event_details,
+                purpose=purpose,
+                special_requirements=special_requirements,
+                venue=venue,
+                start_date=start_date,
+                num_weeks=num_weeks,
+                weekdays=",".join([str(day) for day in weekdays]),  # Store as comma-separated string
+                time=start_time,
+                duration=duration,
+                status='waiting_for_approval'
+            )
+
+
 
             for week in range(num_weeks):
                 week_start = start_date + timedelta(weeks=week)
@@ -990,11 +1069,20 @@ def process_booking_multiple(request):
                         alternate_venue_2=None,
                         event_details=event_details,
                         special_requirements=special_requirements,
-                        status='pending'
+                        status='pending',
+                        cumulative_booking=True,  # This is for type2
+                        cumulative_request_id=cumulative_request_id  # Assign the same ID for all requests
                     )
 
                     print(f"Created request for {current_date}")
                     created_count += 1
+
+            print('iuikkkkkkkddjq87701740970')
+            print('iuikkkkkkkddjq87701740970')
+            print('iuikkkkkkkddjq87701740970')
+            print('iuikkkkkkkddjq87701740970')
+            print()
+            print()
 
             if created_count:
                 messages.success(request, f"{created_count} booking request(s) submitted successfully!")
@@ -1027,6 +1115,7 @@ import calendar
 def check_multiple_week_availability_view(request):
     if request.method == 'POST':
         try:
+            print('POST check_multiple_week_availability_view')
             start_date_str = request.POST.get("start_date")
             num_weeks = int(request.POST.get("num_weeks"))
             weekdays = request.POST.getlist("weekdays")
@@ -1634,7 +1723,25 @@ def cancel_booking(request):
     return redirect('/request_booking/booking_status')
 
 
+'''
+import json
 
+# Get the JSON data from the response
+json_data = json.loads(available_venue_response.content.decode('utf-8'))
+
+# If the JSON contains a list, access the first element
+if isinstance(json_data, list) and len(json_data) > 0:
+    first_element = json_data[0]
+    print("First element:", first_element)
+    print("Type of first element:", type(first_element))
+# If the JSON contains a dictionary, you might want to access specific keys
+elif isinstance(json_data, dict):
+    print("JSON data is a dictionary:", json_data)
+    # Access keys as needed
+    # Example: first_key = list(json_data.keys())[0]
+else:
+    print("Unexpected JSON structure:", json_data)
+'''
 
 
 
@@ -1644,6 +1751,8 @@ from django.shortcuts import render
 from django.views import View
 from django.http import HttpResponse
 import pprint
+import uuid
+
 
 class RequestMultipleWeekAvailabilityView(View):
     def get(self, request, *args, **kwargs):
@@ -1658,9 +1767,15 @@ class RequestMultipleWeekAvailabilityView(View):
         return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
     def post(self, request, *args, **kwargs):
+        print('in RequestMultipleWeekAvailabilityView POST')
         # Print all form data for debugging
-        check_multiple_week_availability_view(request)
+        available_venue_response = arnav_check_multiple_week_availability_view(request)
         print("\n" + "="*50)
+        print('available_venue_response : ',available_venue_response)
+        print('type(available_venue_response) : ',type(available_venue_response))
+        print('type(available_venue_response[0]) : ',type(available_venue_response[0]))
+        print()
+        print()
         print("DEBUG: FORM DATA RECEIVED")
         print("="*50)
         
@@ -1686,9 +1801,185 @@ class RequestMultipleWeekAvailabilityView(View):
         print(f"Purpose: {request.POST.get('purpose')}")
         print(f"Special Requirements: {request.POST.get('specialRequirements')}")
         print(f"Terms Accepted: {request.POST.get('terms')}")
+
+        # Store form data in session
+        request.session['venue'] = request.POST.get('venue')
+        request.session['eventType'] = request.POST.get('eventType')
+        request.session['fullName'] = request.POST.get('fullName')
+        request.session['email'] = request.POST.get('email')
+        request.session['organization_name'] = request.POST.get('organization_name')
+        request.session['start_date'] = request.POST.get('start_date')
+        request.session['start_time'] = request.POST.get('start_time')
+        request.session['end_time'] = request.POST.get('end_time')
+        request.session['num_weeks'] = request.POST.get('num_weeks')
+        request.session['weekdays'] = request.POST.getlist('weekdays')  # Store list as is
+        request.session['phone'] = request.POST.get('phone')
+        request.session['guestCount'] = request.POST.get('guestCount')
+        request.session['eventDetails'] = request.POST.get('eventDetails')
+        request.session['purpose'] = request.POST.get('purpose')
+        request.session['specialRequirements'] = request.POST.get('specialRequirements')
+        request.session['terms'] = request.POST.get('terms')
+
+        # Optional: Save session explicitly (Django does this automatically when modified)
+        request.session.modified = True
+
         
         print("\n" + "="*50 + "\n")
+
+        # Map the venue data with availability
+        formatted_venues = []
+
+        for venue in available_venue_response:
+            venue_name = venue.venue_name,
+            formatted_venues.append({
+                "id": venue.id,
+                "name": venue_name,
+                "capacity": venue.capacity,
+                "facilities": venue.facilities,
+                "images": venue.photo_url,
+            })
+
+        print('formatted_venu es : ', formatted_venues)
+        print('---------')
+        print('---------')
+        print('---------')
+        
+
+        return render(request, 'request_booking/book_multiple_venues.html', {
+            "venues": formatted_venues,
+            # "building_name": building_name  # Pass building name to template
+            'eventType': request.session.get('eventType'),
+            'fullName': request.session.get('fullName'),
+            'email': request.session.get('email'),
+            'organization_name': request.session.get('organization_name'),
+            'start_date': request.session.get('start_date'),
+            'start_time': request.session.get('start_time'),
+            'end_time': request.session.get('end_time'),
+            'num_weeks': request.session.get('num_weeks'),
+            'weekdays': request.session.get('weekdays'),
+            'phone': request.session.get('phone'),
+            'guestCount': request.session.get('guestCount'),
+            'eventDetails': request.session.get('eventDetails'),
+            'purpose': request.session.get('purpose'),
+            'specialRequirements': request.session.get('specialRequirements'),
+            'terms': request.session.get('terms'),
+        })
         
         # Return a simple response (in production, you'd process the data and return appropriate response)
         return HttpResponse("Form data received and printed in console. Check your server logs for details.", 
                           content_type="text/plain")
+
+
+"""
+# Check if it's a JsonResponse (which it should be for success cases)
+    if isinstance(response, JsonResponse):
+        import json
+        data = json.loads(response.content)
+        
+        if data["status"] == "success":
+            # Get the venues from the database using the data from the response
+            # Assuming data["venues"] contains venue IDs or relevant data to identify venues
+            from django.apps import apps
+            Venue = apps.get_model('your_app_name', 'Venue')
+            
+            # This step might vary depending on what exactly is in data["venues"]
+            # If it's a list of venue IDs:
+            venues = Venue.objects.filter(id__in=data["venues"])
+            
+            # If you need to extract building_name from one of the venues
+            building_name = venues[0].building.name if venues and venues[0].building else ""
+            
+            return render(request, 'request_booking/user_dashboard.html', {
+                "venues": venues,
+                "building_name": building_name
+            })
+        else:
+            # Handle error case
+            return render(request, 'request_booking/user_dashboard.html', {
+                "error_message": data["message"]
+            })
+
+"""            
+
+
+
+def arnav_check_multiple_week_availability_view(request):
+    if request.method == 'POST':
+        
+        print('POST check_multiple_week_availability_view')
+        start_date_str = request.POST.get("start_date")
+        num_weeks = int(request.POST.get("num_weeks"))
+        weekdays = request.POST.getlist("weekdays")
+
+        # Convert inputs
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        weekdays = [int(day) for day in weekdays]
+
+        venues = Venue.objects.all()
+
+        available_venues = []
+        user=request.user
+            # event_type = request.POST.get("eventType")
+            # full_name = request.POST.get("fullName")
+            # email = request.POST.get("email", user.email)
+            # organization_name = request.POST.get("organization_name")
+        start_time_str = request.POST.get("start_time")
+        print("1")
+        end_time_str = request.POST.get("end_time")
+        print("2")
+        phone_number = request.POST.get("phone")
+        print("3")
+        guest_count = request.POST.get("guestCount")
+        print("4")
+        event_details = request.POST.get("eventDetails")
+        print("5")
+        purpose = request.POST.get("purpose", "")
+        print("6")
+        special_requirements = request.POST.get("specialRequirements", "")
+        print("7")
+        start_hour = datetime.strptime(start_time_str, "%H:%M").time().hour
+        print("8")
+        end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
+        print("9")
+        duration = int((int(end_hour) - int(start_hour)))
+        print("10")
+        # Debugging output
+        print(f"Start Date: {start_date}")
+        print(f"Number of Weeks: {num_weeks}")
+        print(f"Start Time: {start_time_str}")
+        print(f"End Time: {end_time_str}")
+        print(f"Weekdays: {weekdays}")
+        print(f"Guest Count: {guest_count}")
+        print(f"Event Details: {event_details}")
+        print(f"Purpose: {purpose}")
+        print(f"Special Requirements: {special_requirements}")
+        
+        for venue in venues:
+            # Call the check function
+            is_available = check_venue_availability_mul_weeks(
+                venue=venue,
+                start_date=start_date,
+                num_weeks=num_weeks,
+                weekdays=weekdays,
+                time=int(start_hour),
+                duration=duration,
+            )
+            if is_available:
+                available_venues.append(venue)
+
+        print("venues available:", available_venues)
+
+            # return JsonResponse({
+            #     "status": "success",
+            #     "venues": available_venues,
+            # })
+        return available_venues
+
+    #     except Exception as e:
+    #         return JsonResponse({
+    #             "status": "error",
+    #             "message": f"Error occurred: {str(e)}"
+    #         }, status=400)
+
+    # else:
+    #     return render(request, "request_booking/check_multiple_week_avail.html")
