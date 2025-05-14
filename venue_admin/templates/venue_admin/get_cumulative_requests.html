@@ -738,7 +738,8 @@
                 </thead>
                 <tbody>
                     
-                        {% for cumulative_request in pending_cumulative_requests %}
+                    
+                        {% for cumulative_request in pending_requests %}
                         <tr id="row-{{ cumulative_request.cumulative_request_id }}">
                             <td>{{ cumulative_request.user.name }}</td>
                             <td>{{ cumulative_request.venue.venue_name }}</td>
@@ -755,7 +756,7 @@
                             <td>{{ cumulative_request.event_details|truncatechars:30 }}</td>
                             <td class="action-buttons">
                                 <div class="action-container">
-                                    <button type="button" class="btn view-details-btn" onclick="showCumulativeBookingDetails(
+                                    <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
                                         '{{ cumulative_request.cumulative_request_id }}',
                                         '{{ cumulative_request.user.name }}',
                                         '{{ cumulative_request.email }}',
@@ -1058,8 +1059,8 @@
             
             // Update form action
             document.getElementById('actionForm').action = currentActionType === 'approve' 
-                ? `/venue_admin/approve_request/${currentRequestId}`
-                : `/venue_admin/reject_request/${currentRequestId}`;
+                ? `/venue_admin/approve_cumulative_request/${currentRequestId}`
+                : `/venue_admin/reject_cumulative_request/${currentRequestId}`;
             
             // Set hidden inputs
             document.getElementById('feedbackReasonInput').value = document.getElementById('feedbackReason').options[document.getElementById('feedbackReason').selectedIndex].text;

@@ -142,6 +142,71 @@ def reject_request(request, request_id):
     # return JsonResponse(data, status=200)
     return redirect('/venue_admin/requests')
 
+def reject_cumulative_request(request, cumulative_request_id):
+    print()
+    print("-------in reject_cumulative_request()-------")
+    print("Method:", request.method)
+    print()
+
+    if request.method == "POST":
+        print('POST data received in reject_cumulative_request():')
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        reason = request.POST.get("feedback_reason", "")
+        feedback_from_admin = request.POST.get("feedback_comments", "")
+        alternate_venues_suggestion = request.POST.get("alternative_options", "")
+
+        print("Reason:", reason)
+        print("Admin Feedback:", feedback_from_admin)
+        print("Alternatives:", alternate_venues_suggestion)
+
+        cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cumulative_request_id,
+            status='pending'  # Only reject pending requests
+        )
+
+        if not individual_requests.exists():
+            messages.error(request, "No pending requests found for this cumulative booking.")
+            return redirect('/venue_admin/cumulative_requests')
+
+        store_rejection_msg=""
+
+        with transaction.atomic():
+            for req in individual_requests:
+                req.status = 'rejected'
+                req.reasons = reason
+                req.save(update_fields=["status", "reasons"])
+
+                rejection = Rejection.objects.create(
+                    request=req,
+                    user=req.user,
+                    reason=reason,
+                    msg=f"{feedback_from_admin}\n\nSuggested Alternatives:\n{alternate_venues_suggestion}".strip(),
+                    feedback_from_admin=feedback_from_admin,
+                    alternate_venues_suggestion=alternate_venues_suggestion,
+                )
+                store_rejection_msg = rejection.msg
+
+                # # Send rejection email
+                # try:
+                #     # send_booking_rejected_email(req, rejection.msg)
+                # except Exception as e:
+                #     logger.error(f"Failed to send rejection email for request {req.request_id}: {e}")
+
+            cumulative_req.status = 'rejected'
+            cumulative_req.reasons = reason
+            cumulative_req.save(update_fields=["status", "reasons"])
+
+            send_cumulative_booking_rejected_email(req, store_rejection_msg)
+
+            messages.success(request, "Cumulative booking and all its requests have been rejected.")
+            print("✅ Cumulative booking rejected successfully")
+
+        return redirect('/venue_admin/cumulative_requests')
+
+    return redirect('/venue_admin/cumulative_requests')
 
 
 @api_view(['POST'])
@@ -237,7 +302,8 @@ def request_booking(request):
     # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
     requests = Request.objects.select_related('venue', 'user').filter(
         Q(status="pending"),
-        venue__department_incharge=user
+        venue__department_incharge=user,
+        cumulative_booking=0,
     )
 
 
@@ -342,14 +408,15 @@ def cumulative_request_booking(request):
             'status': cr.status,
             'reasons': cr.reasons if cr.status == 'rejected' else None,
             'purpose': cr.purpose if cr.purpose else 'N/A',
-            'additional_info': cr.additional_info,
+            # 'additional_info': cr.additional_info,
+            'additional_info': individual_requests.first().additional_info if individual_requests.exists() else 'N/A',
             'special_requirements': cr.special_requirements,
             'individual_request_count': individual_requests.count(),  # How many individual requests
             'individual_requests': [str(req.request_id) for req in individual_requests]  # List of request IDs
         })
 
     context = {
-        'pending_cumulative_requests': pending_cumulative_requests
+        'pending_requests': pending_cumulative_requests
     }
 
     print("Cumulative Context:")
@@ -435,6 +502,99 @@ def send_booking_accepted_email(req , feedback_reason , feedback_comments):
 
 
 
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+# Replace with your actual SMTP credentials
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587
+sender_email = 'your_email@gmail.com'
+sender_password = 'your_app_password'
+
+def send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments):
+    print('\n--------start : send_booking_accepted_email-----------')
+
+    # Use email from request row directly
+    requester_email = req.email
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Approved ✅"
+
+    # Handle missing data with defaults
+    full_name = req.full_name or "User"
+    organization = req.organization_name or "N/A"
+    event_type = req.event_type or "N/A"
+    guest_count = req.guest_count or "N/A"
+    additional_info = req.additional_info or "N/A"
+    event_details = req.event_details or "N/A"
+    purpose = req.purpose or "N/A"
+    start_date = req.start_date or "N/A"
+    weekdays = req.weekdays or "N/A"
+    time = req.time or "N/A"
+    duration = req.duration or "N/A"
+    num_weeks = req.num_weeks or "N/A"
+    special_requirements = req.special_requirements or "None"
+    venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    booking_id = req.cumulative_request_id
+
+    body = f"""
+Dear {full_name if full_name.strip() else 'Requester'},
+
+Your venue booking request has been approved! 🎉
+
+📌 **Booking Details**
+- Booking ID: {booking_id}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- Start Date: {start_date}
+- Weekdays: {weekdays}
+- Time: {time}:00 hrs
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+💬 **Admin Feedback**
+- Reason: {feedback_reason}
+- Comments: {feedback_comments}
+
+Please ensure to follow all venue rules and be present on time.
+
+For any queries, contact the venue in-charge.
+
+Regards,  
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking approval email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : send_booking_accepted_email-----------\n')
+
+
+
+
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -501,6 +661,79 @@ def send_booking_rejected_email(req, full_msg):
     print()
     print()
 
+def send_cumulative_booking_rejected_email(req, full_msg):
+    print('\n--------start : send_cumulative_booking_rejected_email-----------')
+
+    requester_email = req.email  # From CumulativeRequest model
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Rejected ❌"
+
+    # Handle missing data with defaults
+    full_name = req.full_name or "User"
+    organization = req.organization_name or "N/A"
+    event_type = req.event_type or "N/A"
+    guest_count = req.guest_count or "N/A"
+    event_details = req.event_details or "N/A"
+    purpose = req.purpose or "N/A"
+    start_date = req.start_date or "N/A"
+    weekdays = req.weekdays or "N/A"
+    time = req.time or "N/A"
+    duration = req.duration or "N/A"
+    num_weeks = req.num_weeks or "N/A"
+    special_requirements = req.special_requirements or "None"
+    venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    booking_id = req.cumulative_request_id
+
+    body = f"""
+Dear {full_name if full_name.strip() else 'Requester'},
+
+We regret to inform you that your venue booking request has been rejected.
+
+📌 **Request Details**
+- Booking ID: {booking_id}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- Start Date: {start_date}
+- Weekdays: {weekdays}
+- Time: {time}:00 hrs
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+💬 **Admin Feedback**
+{full_msg}
+
+If you believe this was a mistake or you have further queries, feel free to reach out to the venue in-charge.
+
+Regards,  
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking rejection email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : send_cumulative_booking_rejected_email-----------\n')
 
 
 
@@ -764,11 +997,162 @@ def approve_request(request, request_id):
     return redirect('/venue_admin/requests')
 
 
+def approve_cumulative_request(request, cumulative_request_id):
+    print()
+    print()
+    print('-------in approve_cumulative_request()-------')
+    print('-------in approve_cumulative_request()-------')
+    print('-------in approve_cumulative_request()-------')
+    print()
+    print()
+
+    if request.method == "POST":
+        print('in approve_cumulative_request() --- POST received')
+        
+        # Print all keys and values from the POST data
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        feedback_reason = request.POST.get('feedback_reason')
+        feedback_comments = request.POST.get('feedback_comments')
+        admin_reason = request.POST.get('feedbackReason_Admin')
+        admin_comments = request.POST.get('feedbackComments_Admin')
+
+        print("Feedback Reason:", feedback_reason)
+        print("Feedback Comments:", feedback_comments)
+        print("Admin Reason:", admin_reason)
+        print("Admin Comments:", admin_comments)
+
+        # Get the cumulative request
+        cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+        user = CustomUser.objects.get(email=request.user)
+
+        # Get all individual requests associated with this cumulative request
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cumulative_request_id,
+            status='pending'  # Only approve pending requests
+        )
+
+        if not individual_requests.exists():
+            messages.error(request, "No pending requests found for this cumulative booking.")
+            return redirect('/venue_admin/requests')
+
+        with transaction.atomic():
+            # Process each individual request
+            for req in individual_requests:
+                # Check for conflicting requests for each individual date
+                pending_requests = Request.objects.filter(
+                    venue=req.venue,
+                    date=req.date,
+                    status='pending',
+                    venue__department_incharge=user,
+                ).exclude(request_id=req.request_id)
+
+                start_time = req.time
+                end_time = start_time + req.duration
+
+                conflicting_requests = []
+                for existing in pending_requests:
+                    existing_start = existing.time
+                    existing_end = existing.time + existing.duration
+
+                    # Overlap conditions for slot-based conflict:
+                    if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time):
+                        conflicting_requests.append(existing)
+
+                if conflicting_requests:
+                    # Reject all conflicting requests
+                    for conflict in conflicting_requests:
+                        forward_request_to_alternate(conflict)
+
+                # Prepare data for serializer
+                booking_data = {
+                    "booking_id": uuid.uuid4(),
+                    "request": str(req.request_id),
+                    "user": str(req.user.id),
+                    "date": req.date,
+                    "time": req.time,
+                    "duration": req.duration,
+                    "venue": str(req.venue.id),
+                    "event_details": req.event_details,
+                    "additional_comments_Venueadmin": feedback_comments,
+                    "reason_for_approval": feedback_reason,
+                }
+
+                serializer = BookingSerializer(data=booking_data)
+
+                if serializer.is_valid():
+                    # Save booking
+                    booking = serializer.save()
+                    
+                    # Update request status to "approved"
+                    req.status = "approved"
+                    req.save(update_fields=["status"])
+
+                    # # Send approval email
+                    # try:
+                    #     # send_booking_accepted_email(req, feedback_reason, feedback_comments)
+                    #     send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments)
+
+                    # except Exception as e:
+                    #     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
+                else:
+                    print("❌ Serializer errors:", serializer.errors)
+                    messages.error(request, f"Error approving request {req.request_id}.")
+                    continue  # Skip to next request if this one fails
+
+            # Update the cumulative request status
+            send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments)
+            
+            cumulative_req.status = "approved"
+            cumulative_req.reasons = feedback_reason
+            cumulative_req.save(update_fields=["status", "reasons"])
+
+            messages.success(request, "All requests in the cumulative booking have been approved!")
+            print("✅ All cumulative bookings processed successfully")
+
+        return redirect('/venue_admin/cumulative_requests')
+
+    return redirect('/venue_admin/cumulative_requests')
+
+
+
+# def approved_bookings_view(request):
+#     user_id = request.user.id
+    
+#     # ✅ Get the user (already logged in)
+#     try:
+#         user = CustomUser.objects.get(id=user_id)
+#     except CustomUser.DoesNotExist:
+#         return render(request, 'venue_admin/approved_bookings.html', {
+#             'user': None,
+#             'managed_venues': [],
+#             'approved_bookings': []
+#         })
+
+#     # ✅ Get venues managed by the user
+#     managed_venues = Venue.objects.filter(department_incharge=user)
+
+#     # ✅ Get approved bookings for those venues
+#     approved_bookings = Booking.objects.filter(
+#         venue__in=managed_venues,
+#         status='active'
+#     ).select_related('user', 'venue')
+
+
+#     # ✅ Pass data to context
+#     context = {
+#         'user': user,
+#         'managed_venues': managed_venues,
+#         'approved_bookings': approved_bookings
+#     }
+
+#     return render(request, 'venue_admin/approved_bookings.html', context)
 
 
 def approved_bookings_view(request):
     user_id = request.user.id
-    
+
     # ✅ Get the user (already logged in)
     try:
         user = CustomUser.objects.get(id=user_id)
@@ -776,7 +1160,7 @@ def approved_bookings_view(request):
         return render(request, 'venue_admin/approved_bookings.html', {
             'user': None,
             'managed_venues': [],
-            'approved_bookings': []
+            'approved_bookings_with_requests': []
         })
 
     # ✅ Get venues managed by the user
@@ -786,8 +1170,19 @@ def approved_bookings_view(request):
     approved_bookings = Booking.objects.filter(
         venue__in=managed_venues,
         status='active'
-    ).select_related('user', 'venue')
+    ).select_related('user', 'venue', 'request')  # 🔥 Added 'request' here
 
+    # ✅ Prepare combined list of (booking, request) pairs
+    approved_bookings_with_requests = []
+    for booking in approved_bookings:
+        approved_bookings_with_requests.append({
+            'booking': booking,
+            'request': booking.request  # 🔥 Directly accessing the related Request
+        })
+    print('approved_bookings_with_requests : ', approved_bookings_with_requests)
+    print('------')
+
+    approved_bookings = approved_bookings_with_requests
 
     # ✅ Pass data to context
     context = {

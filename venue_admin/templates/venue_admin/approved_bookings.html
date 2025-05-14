@@ -529,45 +529,37 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for request in approved_bookings %}
-                    <tr id="row-{{ request.request_id }}">
-                        <td>{{ request.user.name }}</td>
-                        <td>{{ request.user.organization_name }}</td>
-                        <td>{{ request.venue.venue_name }}</td>
-                        <td>{{ request.date }}</td>
-                        <td>{{ request.time }}:00</td>
-                        <td>{{ request.duration }} hours</td>
-                        <td>{{ request.event_details|truncatechars:50 }}</td>
-                        <td>
-                            <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
-                                '{{ request.request_id }}', 
-                                '{{ request.user.name }}', 
-                                '{{ request.user.email }}', 
-                                '{{ request.request.phone_number }}', 
-                                '{{ request.venue.venue_name }}', 
-                                '{{ request.date }}', 
-                                '{{ request.time }}', 
-                                '{{ request.duration }}', 
-                                '{{ request.event_details }}', 
-                                '{{ request.event_type }}', 
-                                '{{ request.guest_count }}', 
-                                '{{ request.additional_info }}'
-                            )">
-                                <i class="fas fa-eye"></i> View
-                            </button>
+                    {% for item in approved_bookings %}
+    {% with booking=item.booking request=item.request %}
+        <tr id="row-{{ request.request_id }}">
+            <td>{{ request.user.name }}</td>
+            <td>{{ request.organization_name }}</td>
+            <td>{{ request.venue.venue_name }}</td>
+            <td>{{ request.date }}</td>
+            <td>{{ request.time }}:00</td>
+            <td>{{ request.duration }} hours</td>
+            <td>{{ request.event_details|truncatechars:50 }}</td>
+            <td>
+                <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
+                    '{{ request.request_id }}', 
+                    '{{ request.user.name }}', 
+                    '{{ request.user.email }}', 
+                    '{{ request.phone_number }}', 
+                    '{{ request.venue.venue_name }}', 
+                    '{{ request.date }}', 
+                    '{{ request.time }}', 
+                    '{{ request.duration }}', 
+                    '{{ request.event_details }}', 
+                    '{{ request.event_type }}', 
+                    '{{ request.guest_count }}', 
+                    '{{ request.additional_info }}'
+                )">
+                    <i class="fas fa-eye"></i> View
+                </button>
                         </td>
                     </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8">
-                            <div class="empty-state">
-                                <i class="far fa-calendar-check"></i>
-                                <h3>No Approved Bookings</h3>
-                                <p>There are currently no approved bookings</p>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                {% endwith %}
+            {% endfor %}
                 </tbody>
             </table>
         </div>
@@ -624,20 +616,26 @@
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-clock"></i> Time</div>
-                    <div class="detail-value">${time}</div>
+                    <div class="detail-value">${time}:00</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-hourglass-half"></i> Duration</div>
                     <div class="detail-value">${duration} hours</div>
                 </div>
+
+
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-calendar-week"></i> Event Type</div>
                     <div class="detail-value">${eventType}</div>
-                </div>
+                </div> 
+
+
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-users"></i> Expected Attendance</div>
                     <div class="detail-value">${expectedCrowd} people</div>
-                </div>
+                </div> 
+
+
                 <div class="detail-group detail-notes">
                     <div class="detail-label"><i class="fas fa-align-left"></i> Event Description</div>
                     <div class="detail-value">${eventDetails}</div>

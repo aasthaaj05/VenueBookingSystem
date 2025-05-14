@@ -969,7 +969,17 @@ def process_booking_multiple(request):
             guest_count = request.POST.get("guest_count")
             event_details = request.POST.get("event_details")
             purpose = request.POST.get("purpose", "")
-            special_requirements = request.POST.get("specialRequirements", "")
+            special_requirements = request.POST.get("special_requirements", "")
+            ss = request.POST.get("special_requirements", "")
+            print(ss)
+            print(ss)
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
+            print('[[[[[[[[[]]]]]]]]]')
             num_weeks = int(request.POST.get("num_weeks", 1))
             weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
 
@@ -1443,7 +1453,7 @@ def booking_status(request):
         return JsonResponse({"error": "User ID not found in session"}, status=400)
 
     # Fetch only the requests made by the logged-in user
-    requests = Request.objects.filter(user_id=user_id).select_related('venue').order_by('-date')
+    requests = Request.objects.filter(user_id=user_id,cumulative_booking=0).select_related('venue').order_by('-date')
 
     print(f"User ID: {user_id}, Requests: {requests}")  # Debugging
 
@@ -1459,6 +1469,43 @@ def booking_status(request):
     
 
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
+
+
+
+
+
+
+# from django.db.models import Count
+# from request_booking.models import Request, CumulativeRequest  # adjust if needed
+
+# @login_required
+# def cumulative_booking_status(request):
+#     """
+#     View to fetch and display cumulative booking requests for the logged-in user only.
+#     """
+#     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
+
+#     if not user_id:
+#         return JsonResponse({"error": "User ID not found in session"}, status=400)
+
+#     # Fetch only the cumulative requests made by the logged-in user
+#     cumulative_requests = CumulativeRequest.objects.filter(user_id=user_id).order_by('-created_at')
+
+#     person_name = request.session.get('name')
+
+#     print('In booking_status(): showing cumulative requests')
+#     print(f"User ID: {user_id}")
+#     print(f"Cumulative Requests: {cumulative_requests}")
+
+#     return render(request, "request_booking/booking_status.html", {
+#         "cumulative_requests": cumulative_requests,
+#         "person_name": person_name
+#     })
+
+
+
+
+
 
 
 from django.shortcuts import render
@@ -1753,6 +1800,16 @@ from django.http import HttpResponse
 import pprint
 import uuid
 
+def print_session_values(request):
+    print("------ Session Values ------")
+    if not request.session.items():
+        print("Session is empty.")
+    else:
+        for key, value in request.session.items():
+            print(f"{key} : {value}")
+    print("----------------------------")
+
+
 
 class RequestMultipleWeekAvailabilityView(View):
     def get(self, request, *args, **kwargs):
@@ -1761,10 +1818,27 @@ class RequestMultipleWeekAvailabilityView(View):
         #     {'id': 1, 'venue_name': 'Main Hall', 'capacity': 200},
         #     {'id': 2, 'venue_name': 'Conference Room A', 'capacity': 50},
         # ]
-        # return render(request, 'booking_form.html', {'venues': venues})
         venues = Venue.objects.all()
+
         print("heherer ewrewrhewjwhrjwh in request multiple")
-        return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
+        print_session_values(request)
+
+        # Get email and name from session
+        user_email = request.session.get('email')
+        user_name = request.session.get('name')
+
+        # Print session values for debugging (optional)
+        print("------ Session Values ------")
+        print(f"email : {user_email}")
+        print(f"name : {user_name}")
+
+        # Pass email and name to the form along with other context data
+        return render(request, "request_booking/check_multiple_week_avail.html", {
+            "venues": venues,
+            "email": user_email,
+            "name": user_name
+        })
+        # return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
     def post(self, request, *args, **kwargs):
         print('in RequestMultipleWeekAvailabilityView POST')
