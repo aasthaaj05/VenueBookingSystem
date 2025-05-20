@@ -6,6 +6,13 @@ from django.core.management.base import BaseCommand
 from gymkhana.models import Venue, Building
 from users.models import CustomUser
 
+import os
+import json
+import uuid
+import pandas as pd
+from django.core.management.base import BaseCommand
+from venueapp.models import Venue, Building, CustomUser  # Adjust the import paths as per your project
+
 class Command(BaseCommand):
     help = "Import venues from a file (CSV or Excel) into the database"
 
@@ -13,10 +20,9 @@ class Command(BaseCommand):
         parser.add_argument('file_path', type=str, help="Path to the file (CSV or Excel)")
 
     def handle(self, *args, **kwargs):
-        file_path = kwargs['file_path']  # Read file path from arguments
+        file_path = kwargs['file_path']
 
         try:
-            # Determine file type and read accordingly
             _, file_extension = os.path.splitext(file_path)
             if file_extension.lower() == ".csv":
                 df = pd.read_csv(file_path)
@@ -26,55 +32,75 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.ERROR("Unsupported file format. Please provide a CSV or Excel file."))
                 return
 
-            # Rename columns to match Django model fields
+            # Rename columns for internal use
             df.rename(columns={
                 'Building Name': 'building_name',
-                'No': 'room_number',
-                'Class Room Number': 'venue_name',
-                'Floor Number': 'floor_number',
-                'Capacity': 'capacity',
-                'Features': 'facilities',
-                'Pictures URL': 'photo_url',
-                'Exact Location of the Venue': 'address',
-                'Incharge Email': 'incharge_email',
-                'Description': 'description'
+                'Floor': 'floor_number',
+                'Venue Name': 'venue_name',
+                'Class Room/Lab/Seminar Hall': 'class_type',
+                'Class Room No/Lab No/Seminar Hall No': 'class_number',
+                'D/h': 'depth_or_height',
+                'Area (Sqm)': 'area_sqm',
+                'Capacity(eg 120, 50)': 'capacity',
+                'Features(eg projector, MIC , wifi, etc)': 'facilities',
+                'Pictures URL': 'picture_urls',
+                'Venue Can be Used for(eg hands-on session, lecture, lab,etc)': 'usage_type',
+                'Venue Location(eg  AC 101 is in AC first floor near boat club)': 'venue_location',
+                'Department incharge name': 'incharge_name',
+                'Department incharge phone number': 'dept_incharge_phone',
+                'Department incharge email': 'dept_incharge_email',
+                'Department assistant name 1': 'dept_assistant_name1',
+                'Department assistant name 2': 'dept_assistant_name2',
+                'Campus (North/South)': 'campus'
             }, inplace=True)
 
-            for index, row in df.iterrows():
-                # Get or create the building
+            for _, row in df.iterrows():
+                # Building
                 building, _ = Building.objects.get_or_create(
-                    name=row['building_name'],
-                    defaults={'location': row['address']}  # Default location
+                    name=row.get('building_name', 'Unknown'),
+                    defaults={'location': row.get('venue_location', '')}
                 )
 
-                # Get department incharge user
-                incharge_email = row.get('incharge_email')
-                incharge_user = CustomUser.objects.filter(email=incharge_email).first()
+                # Incharge User (optional fallback if not found)
+                incharge_email = row.get('dept_incharge_email')
+                incharge_user = CustomUser.objects.filter(email=incharge_email).first() if incharge_email else None
 
-                # Convert facilities to a valid JSON format
+                # Facilities
                 try:
-                    facilities = json.loads(row['facilities']) if row['facilities'] else []
-                except json.JSONDecodeError:
+                    facilities = json.loads(row['facilities']) if isinstance(row['facilities'], str) else []
+                except Exception:
                     facilities = []
 
-                # Create and save venue
                 venue = Venue(
                     id=uuid.uuid4(),
-                    venue_name=row['venue_name'],
-                    description=row.get('description', ''),
-                    photo_url=row.get('photo_url', ''),
-                    capacity=row['capacity'],
-                    address=row['address'],
-                    facilities=facilities,  # Store as JSON
+                    venue_name=row.get('venue_name'),
+                    description='',
+                    photo_url=row.get('picture_urls', ''),
+                    capacity=int(row.get('capacity', 0)),
+                    address=row.get('venue_location', ''),
+                    facilities=facilities,
                     department_incharge=incharge_user,
-                    building=building,  # ForeignKey relation
-                    floor_number=row.get('floor_number'),
-                    room_number=row.get('room_number', '')
+                    building=building,
+                    floor_number=int(row.get('floor_number')) if pd.notnull(row.get('floor_number')) else None,
+                    room_number=row.get('class_number', ''),
+                    class_type=row.get('class_type', ''),
+                    class_number=row.get('class_number', ''),
+                    length=float(row.get('Length', 0)) if pd.notnull(row.get('Length')) else None,
+                    depth_or_height=float(row.get('depth_or_height', 0)) if pd.notnull(row.get('depth_or_height')) else None,
+                    area_sqm=float(row.get('area_sqm', 0)) if pd.notnull(row.get('area_sqm')) else None,
+                    usage_type=row.get('usage_type', ''),
+                    venue_location=row.get('venue_location', ''),
+                    dept_incharge_phone=row.get('dept_incharge_phone', ''),
+                    dept_incharge_email=incharge_email,
+                    dept_assistant_name1=row.get('dept_assistant_name1', ''),
+                    dept_assistant_name2=row.get('dept_assistant_name2', ''),
+                    campus=row.get('campus', '')
                 )
                 venue.save()
-                print(f"Created venue: {venue.venue_name}")
+                self.stdout.write(self.style.SUCCESS(f"Created venue: {venue.venue_name}"))
 
-            print("Venue import completed successfully.")
+            self.stdout.write(self.style.SUCCESS("Venue import completed successfully."))
 
         except Exception as e:
-            print("Error importing venues:", e)
+            self.stdout.write(self.style.ERROR(f"Error importing venues: {e}"))
+
