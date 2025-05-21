@@ -5,13 +5,8 @@ import json
 from django.core.management.base import BaseCommand
 from gymkhana.models import Venue, Building
 from users.models import CustomUser
-
-import os
-import json
-import uuid
-import pandas as pd
-from django.core.management.base import BaseCommand
-from venueapp.models import Venue, Building, CustomUser  # Adjust the import paths as per your project
+from math import isnan
+  # Adjust the import paths as per your project
 
 class Command(BaseCommand):
     help = "Import venues from a file (CSV or Excel) into the database"
@@ -76,18 +71,18 @@ class Command(BaseCommand):
                     venue_name=row.get('venue_name'),
                     description='',
                     photo_url=row.get('picture_urls', ''),
-                    capacity=int(row.get('capacity', 0)),
+                    capacity= 0 if pd.isna(row['capacity']) else int(row['capacity']),
                     address=row.get('venue_location', ''),
                     facilities=facilities,
                     department_incharge=incharge_user,
                     building=building,
-                    floor_number=int(row.get('floor_number')) if pd.notnull(row.get('floor_number')) else None,
+                    floor_number=int(row.get('floor_number')) if pd.notnull(row.get('floor_number')) else 0,
                     room_number=row.get('class_number', ''),
                     class_type=row.get('class_type', ''),
                     class_number=row.get('class_number', ''),
-                    length=float(row.get('Length', 0)) if pd.notnull(row.get('Length')) else None,
-                    depth_or_height=float(row.get('depth_or_height', 0)) if pd.notnull(row.get('depth_or_height')) else None,
-                    area_sqm=float(row.get('area_sqm', 0)) if pd.notnull(row.get('area_sqm')) else None,
+                    length=float(row.get('Length', 0)) if pd.notnull(row.get('Length')) else 0,
+                    depth_or_height=float(row.get('depth_or_height', 0)) if pd.notnull(row.get('depth_or_height')) else 0,
+                    area_sqm=float(row.get('area_sqm', 0)) if pd.notnull(row.get('area_sqm')) else 0,
                     usage_type=row.get('usage_type', ''),
                     venue_location=row.get('venue_location', ''),
                     dept_incharge_phone=row.get('dept_incharge_phone', ''),
