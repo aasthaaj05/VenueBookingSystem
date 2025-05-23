@@ -1129,7 +1129,7 @@ def forward_request_to_alternate(request):
 
         # ✅ Send email to notify requester about forwarding
         send_request_forwarded_email(request, new_request.venue)
-
+        print('.........Ended in forward_request_to_alternate().......')
         return new_request
     else:
         request.status = 'rejected'
@@ -1142,7 +1142,6 @@ def forward_request_to_alternate(request):
             msg='Booking conflict with another approved request.'
         )
         
-    print('.........Ended in forward_request_to_alternate().......')
 
 
 
@@ -1210,7 +1209,6 @@ def approve_request(request, request_id):
             venue=req.venue,
             date=req.date,
             status='pending',
-            venue__department_incharge=user,
             ).exclude(request_id=req.request_id)
 
         start_time = req.time
