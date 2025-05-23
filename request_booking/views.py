@@ -1703,64 +1703,238 @@ def booking_status(request):
 from django.db.models import OuterRef, Subquery
 
 
+# @login_required
+# def cumulative_booking_status(request):
+#     """
+#     View to fetch and display booking requests for the logged-in user only.
+#     """
+#     print()
+#     print()
+#     print('in cumulatuve_booking_status() ')
+#     print()
+#     print()
+    
+#     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
+
+#     if not user_id:
+#         return JsonResponse({"error": "User ID not found in session"}, status=400)
+
+#     # Fetch only the requests made by the logged-in user
+#     # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
+#     # Get distinct cumulative requests with their latest entry
+#     # requests = Request.objects.filter(
+#     #     user_id=user_id,
+#     #     cumulative_booking='1'
+#     # ).order_by('cumulative_request_id', '-date').distinct('cumulative_request_id')
+
+#     # Get one request per cumulative_request_id (the most recent one by date)
+#     # requests = Request.objects.filter(
+#     #     cumulative_request_id=OuterRef('cumulative_request_id'),
+#     #     user_id=user_id,
+#     #     cumulative_booking='1'
+#     # ).order_by('-date')
+
+#     # requests = Request.objects.filter(
+#     #     user_id=user_id,
+#     #     cumulative_booking='1',
+#     #     id__in=Subquery(requests.values('id')[:1])
+#     # ).order_by('cumulative_request_id', '-date')
+#     # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
+#     requests = Request.objects.filter(
+#         user_id=user_id,
+#         cumulative_booking=True
+#     ).select_related('venue').order_by('cumulative_request_id')
+
+
+
+#     print(f"User ID: {user_id}, Requests: {requests}")  # Debugging
+
+#     person_name = request.session.get('name')
+
+#     print('in cumulatuve_booking_status booking status function')
+#     print()
+#     print()
+#     print('requests : ', requests)
+#     print('preseon name : ' , person_name)
+#     print()
+#     print()
+    
+
+#     return render(request, "request_booking/cumulative_booking_status.html", {"pending_requests": requests , "person_name": person_name})
+
+
+
+
+
+# @login_required
+# def cumulative_booking_status(request):
+#     """
+#     View to fetch and display cumulative booking requests for the logged-in user only.
+#     """
+#     user_id = request.session.get('user_id')
+#     if not user_id:
+#         return JsonResponse({"error": "User ID not found in session"}, status=400)
+
+#     # Fetch cumulative requests (parent records)
+#     cumulative_requests = CumulativeRequest.objects.filter(
+#         user_id=user_id
+#     ).select_related('venue').order_by('-created_at')
+
+#     person_name = request.session.get('name')
+    
+#     return render(request, "request_booking/cumulative_booking_status.html", {
+#         "pending_requests": cumulative_requests,
+#         "person_name": person_name
+#     })
+
+
+from users.models import CustomUser
+
 @login_required
 def cumulative_booking_status(request):
-    """
-    View to fetch and display booking requests for the logged-in user only.
-    """
-    print()
-    print()
-    print('in cumulatuve_booking_status() ')
-    print()
-    print()
+    # Get logged-in user
+    user = request.user
     
-    user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
+    try:
+        # Fetch user from CustomUser model
+        user_obj = CustomUser.objects.get(email=user.email)
+    except CustomUser.DoesNotExist:
+        return render(request, 'request_booking/cumulative_booking_status.html', {
+            'pending_requests': []
+        })
 
-    if not user_id:
-        return JsonResponse({"error": "User ID not found in session"}, status=400)
+    # Fetch all cumulative requests made by this user (regardless of status)
+    cumulative_requests = CumulativeRequest.objects.select_related('venue', 'user').filter(
+        user=user_obj
+    ).order_by('-created_at')
 
-    # Fetch only the requests made by the logged-in user
-    # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
-    # Get distinct cumulative requests with their latest entry
-    # requests = Request.objects.filter(
-    #     user_id=user_id,
-    #     cumulative_booking='1'
-    # ).order_by('cumulative_request_id', '-date').distinct('cumulative_request_id')
+    # Prepare the context data with all dates
+    pending_cumulative_requests = []
+    for cr in cumulative_requests:
+        # Get all individual requests associated with this cumulative request
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cr.cumulative_request_id
+        ).select_related('venue', 'user')
+        
+        # Format dates for display
+        dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+        
+        pending_cumulative_requests.append({
+            'cumulative_request_id': str(cr.cumulative_request_id),
+            'email': cr.email or cr.user.email,
+            'phone_number': cr.phone_number or cr.user.phone_number,
+            'event_type': cr.event_type,
+            'dates': dates,  # All dates from individual requests
+            'start_date': cr.start_date.strftime('%Y-%m-%d'),
+            'weekdays': cr.weekdays,  # String representation of weekdays
+            'time': f"{cr.time}:00",
+            'duration': f"{cr.duration}",
+            'num_weeks': cr.num_weeks,
+            'venue': {
+                'venue_name': cr.venue.venue_name if cr.venue else 'Unknown Venue',
+                'capacity': cr.venue.capacity if cr.venue else 'N/A',
+            },
+            'user': {
+                'name': cr.user.name if cr.user else 'Unknown',
+                'organization_name': cr.user.organization_name if cr.user else 'Unknown'
+            },
+            'guest_count': cr.guest_count,
+            'event_details': cr.event_details if cr.event_details else 'N/A',
+            'status': cr.status,
+            'reasons': cr.reasons if cr.reasons else None,
+            'purpose': cr.purpose if cr.purpose else 'N/A',
+            'additional_info': individual_requests.first().additional_info if individual_requests.exists() else 'N/A',
+            'special_requirements': cr.special_requirements,
+            'individual_request_count': individual_requests.count(),
+            'individual_requests': [str(req.request_id) for req in individual_requests]
+        })
+        print('pending_cumulative_requests : ', pending_cumulative_requests)
 
-    # Get one request per cumulative_request_id (the most recent one by date)
-    # requests = Request.objects.filter(
-    #     cumulative_request_id=OuterRef('cumulative_request_id'),
-    #     user_id=user_id,
-    #     cumulative_booking='1'
-    # ).order_by('-date')
+    context = {
+        'pending_requests': pending_cumulative_requests,
+        'person_name': user_obj.name  # Add person_name to context
+    }
 
-    # requests = Request.objects.filter(
-    #     user_id=user_id,
-    #     cumulative_booking='1',
-    #     id__in=Subquery(requests.values('id')[:1])
-    # ).order_by('cumulative_request_id', '-date')
-    # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
-    requests = Request.objects.filter(
-        user_id=user_id,
-        cumulative_booking=True
-    ).select_related('venue').order_by('cumulative_request_id')
+    return render(request, 'request_booking/cumulative_booking_status.html', context)
 
 
 
-    print(f"User ID: {user_id}, Requests: {requests}")  # Debugging
+'''
+def cumulative_request_booking(request): 
+    user = request.user
+    try:
+        # Fetch user from CustomUser model
+        user = CustomUser.objects.get(email=user)
+    except CustomUser.DoesNotExist:
+        return render(request, 'faculty_advisor/pending_requests.html', {
+            'requests': []
+        })
 
-    person_name = request.session.get('name')
+    # Fetch cumulative requests with status 'waiting_for_approval' or 'pending'
+    cumulative_requests = CumulativeRequest.objects.select_related('venue', 'user').filter(
+        Q(status="waiting_for_approval") | Q(status="pending"),
+        # venue__department_incharge=user
+    ).order_by('-created_at')
+    print('cumulative_requests : ', cumulative_requests)
 
-    print('in cumulatuve_booking_status booking status function')
-    print()
-    print()
-    print('requests : ', requests)
-    print('preseon name : ' , person_name)
-    print()
-    print()
-    
+    # Prepare the context data
+    pending_cumulative_requests = []
+    for cr in cumulative_requests:
+        # Get all individual requests associated with this cumulative request
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cr.cumulative_request_id
+        ).select_related('venue', 'user')
+        
+        # Format dates for display
+        dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+        
+        pending_cumulative_requests.append({
+            'cumulative_request_id': str(cr.cumulative_request_id),
+            'email': cr.email or cr.user.email,
+            'phone_number': cr.phone_number or cr.user.phone_number,
+            'event_type': cr.event_type,
+            'dates': dates,  # All dates from individual requests
+            'start_date': cr.start_date.strftime('%Y-%m-%d'),
+            'weekdays': cr.weekdays,  # String representation of weekdays
+            'time': f"{cr.time}:00",
+            'duration': f"{cr.duration}",
+            'num_weeks': cr.num_weeks,
+            'venue': {
+                'venue_name': cr.venue.venue_name if cr.venue else 'Unknown Venue',
+                'capacity': cr.venue.capacity if cr.venue else 'N/A',
+            },
+            'user': {
+                'name': cr.user.name if cr.user else 'Unknown',
+                'organization_name': cr.user.organization_name if cr.user else 'Unknown'
+            },
+            'guest_count': cr.guest_count,
+            'event_details': cr.event_details if cr.event_details else 'N/A',
+            'status': cr.status,
+            'reasons': cr.reasons if cr.status == 'rejected' else None,
+            'purpose': cr.purpose if cr.purpose else 'N/A',
+            # 'additional_info': cr.additional_info,
+            'additional_info': individual_requests.first().additional_info if individual_requests.exists() else 'N/A',
+            'special_requirements': cr.special_requirements,
+            'individual_request_count': individual_requests.count(),  # How many individual requests
+            'individual_requests': [str(req.request_id) for req in individual_requests]  # List of request IDs
+        })
 
-    return render(request, "request_booking/cumulative_booking_status.html", {"pending_requests": requests , "person_name": person_name})
+    context = {
+        'pending_requests': pending_cumulative_requests
+    }
+
+    print("Cumulative Context:")
+    print(json.dumps(context, indent=4))
+    print('====END OF CONTEXT====')
+
+    return render(request, 'venue_admin/get_cumulative_requests.html', context)
+
+
+'''
+
+
+
+
 
 
 

@@ -740,6 +740,7 @@
                     
                     
                         {% for cumulative_request in pending_requests %}
+                        
                         <tr id="row-{{ cumulative_request.cumulative_request_id }}">
                             <td>{{ cumulative_request.user.name }}</td>
                             <td>{{ cumulative_request.venue.venue_name }}</td>

@@ -199,7 +199,7 @@ def reject_cumulative_request(request, cumulative_request_id):
             cumulative_req.reasons = reason
             cumulative_req.save(update_fields=["status", "reasons"])
 
-            send_cumulative_booking_rejected_email(req, store_rejection_msg)
+            send_cumulative_booking_rejected_email(req, cumulative_req,store_rejection_msg)
 
             messages.success(request, "Cumulative booking and all its requests have been rejected.")
             print("✅ Cumulative booking rejected successfully")
@@ -954,7 +954,7 @@ def send_booking_rejected_email(req, full_msg):
     print()
     print()
 
-def send_cumulative_booking_rejected_email(req, full_msg):
+def send_cumulative_booking_rejected_email(req,cumulative_req, full_msg):
     print('\n--------start : send_cumulative_booking_rejected_email-----------')
 
     requester_email = req.email  # From CumulativeRequest model
@@ -976,11 +976,11 @@ def send_cumulative_booking_rejected_email(req, full_msg):
     guest_count = req.guest_count or "N/A"
     event_details = req.event_details or "N/A"
     purpose = req.purpose or "N/A"
-    start_date = req.start_date or "N/A"
-    weekdays = req.weekdays or "N/A"
+    start_date = cumulative_req.start_date or "N/A"
+    weekdays = cumulative_req.weekdays or "N/A"
     time = req.time or "N/A"
-    duration = req.duration or "N/A"
-    num_weeks = req.num_weeks or "N/A"
+    duration = cumulative_req.duration or "N/A"
+    num_weeks = cumulative_req.num_weeks or "N/A"
     special_requirements = req.special_requirements or "None"
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
