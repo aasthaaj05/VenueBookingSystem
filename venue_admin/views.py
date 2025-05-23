@@ -302,7 +302,6 @@ def request_booking(request):
     # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
     requests = Request.objects.select_related('venue', 'user').filter(
         Q(status="pending"),
-        venue__department_incharge=user,
         cumulative_booking=0,
     )
 
@@ -370,8 +369,9 @@ def cumulative_request_booking(request):
     # Fetch cumulative requests with status 'waiting_for_approval' or 'pending'
     cumulative_requests = CumulativeRequest.objects.select_related('venue', 'user').filter(
         Q(status="waiting_for_approval") | Q(status="pending"),
-        venue__department_incharge=user
+        # venue__department_incharge=user
     ).order_by('-created_at')
+    print('cumulative_requests : ', cumulative_requests)
 
     # Prepare the context data
     pending_cumulative_requests = []
@@ -433,18 +433,195 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+# New function to notify venue in-charge
+def send_booking_accepted_email_to_incharge(req):
+    print('\n--------start : send_booking_accepted_email_to_incharge-----------')
+    print('\n--------start : send_booking_accepted_email_to_incharge-----------')
+    print('\n--------start : send_booking_accepted_email_to_incharge-----------')
 
-# send_booking_accepted_email(req , feedback_reason , feedback_comments)
-def send_booking_accepted_email(req , feedback_reason , feedback_comments):
-    print()
-    print()
-    print('--------start : send_booking_accepted_email-----------')
+    venue = req.venue
+    incharge_email = venue.dept_incharge_email
+    print('incharge_email : ', incharge_email)
+
+    if not incharge_email:
+        print("In-charge email not found.")
+        return
+
+    requester_name = req.user.name
+    requester_email = req.user.email
+    requester_phone_number = req.phone_number
+
+    print('requester_name : ', requester_name)
+    print('requester_email : ', requester_email)
+    print('requester_phone_number : ', requester_phone_number)
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = incharge_email
+    print('//----sender_email : ', sender_email)
+    print('incharge_email : ', incharge_email)
+    msg['Subject'] = "Booking Confirmed for Your Venue"
+
+    body = f"""
+    Dear {venue.department_incharge.name if venue.department_incharge else 'In-charge'},
+
+    A venue booking request for your venue has been approved.
+
+    Booking Details:
+    - Booking ID: {req.request_id}
+    - Venue: {venue.venue_name}
+    - Date: {req.date}
+    - Time: {req.time}
+    - Duration: {req.duration} hours
+    - Event Details: {req.event_details}
+
+    Requester Information:
+    - Name: {requester_name}
+    - Email: {requester_email}
+    - Phone Number : {requester_phone_number}
+
+    Please ensure the venue is accessible and ready at the scheduled time.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+    print('Send email')
+    with smtplib.SMTP(smtp_server, smtp_port) as server:
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(msg)
+
+    # try:
+    #     server = smtplib.SMTP(smtp_server, smtp_port)
+    #     print('poipipio')
+    #     server.starttls()
+    #     print('starttls , starttls , starttls , starttls , starttls')
+    #     print('sender_password : ', sender_password)
+    #     print('sender_email : ', sender_email)
+    #     server.login(sender_email, sender_password)
+    #     print('login ., login , login , login , login , login')
+    #     # server.sendmail(sender_email, incharge_email, msg.as_string())
+    #     # print('sendmail , sendmail , sendmail , sendmail , sendmail')
+    #     # server.quit()
+    #     server.send_message(msg)
+    #     print("Email sent successfully to in-charge.")
+    # except Exception as e:
+    #     print("Failed to send email to in-charge:", e)
+
+
+
+
+
+# # send_booking_accepted_email(req , feedback_reason , feedback_comments)
+# def send_booking_accepted_email(req , feedback_reason , feedback_comments):
+#     print()
+#     print()
+#     print('--------start : send_booking_accepted_email-----------')
+#     requester_email = req.user.email  # Get requester's email
+#     print('requester_email : ' , requester_email)
+#     print('venue incharge mail', req.venue.dept_incharge_email)
+
+#     if not requester_email:
+#         print("Requester email not found.")
+#         return
+
+#     # Get incharge contact info from venue
+#     venue = req.venue
+#     incharge_email = venue.dept_incharge_email or "Not available"
+#     incharge_phone = venue.dept_incharge_phone or "Not available"
+
+#     print('incharge_email : ',incharge_email)
+#     print('incharge_phone : ', incharge_phone)
+
+    
+
+#     # Email content
+#     msg = MIMEMultipart()
+#     msg['From'] = sender_email
+#     msg['To'] = requester_email
+#     print('sender_email : ', sender_email)
+#     print('requester_email : ', requester_email)
+#     msg['Subject'] = "Venue Booking Approved ✅"
+
+#     body = f"""
+#     Dear {req.user.name},
+
+#     Your venue booking request has been approved! 🎉
+
+#     Booking Details:
+#     - Booking ID: {req.request_id}
+#     - Venue: {req.venue.venue_name}
+#     - Date: {req.date}
+#     - Time: {req.time}
+#     - Duration: {req.duration} hours
+#     - Event Details: {req.event_details}
+
+#     Feedback from Admin:
+#     - Feedback : {feedback_reason}
+#     - Comments : {feedback_comments}
+
+#     Please ensure you arrive on time and follow the venue guidelines.
+
+#     If you have any questions, feel free to contact the venue in-charge to ensure your needs for the venue are met.
+
+#     Venue In-Charge Contact:
+#     - Email: {incharge_email}
+#     - Phone: {incharge_phone}
+
+#     Regards,  
+#     COEP Venue Booking System
+#     """
+
+#     msg.attach(MIMEText(body, 'plain'))
+
+#     # Send email
+#     try:
+#         with smtplib.SMTP(smtp_server, smtp_port) as server:
+#             server.starttls()
+#             server.login(sender_email, sender_password)
+#             server.send_message(msg)
+
+#         print(f"Booking approval email sent to {requester_email}")
+#     except Exception as e:
+#         print(f"Failed to send email: {e}")
+
+
+#     print('-----end send_booking_accepted_email--------')
+#     # Call new function to notify the in-charge
+#     send_booking_accepted_email_to_incharge(req)
+
+#     print()
+#     print()
+
+
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from django.utils.timezone import now
+
+
+def send_booking_accepted_email(req, feedback_reason, feedback_comments):
+    print('\n\n--------start : send_booking_accepted_email-----------')
+    print('\n\n--------start : send_booking_accepted_email-----------')
+    print('\n\n--------start : send_booking_accepted_email-----------')
+    print('\n\n--------start : send_booking_accepted_email-----------')
     requester_email = req.user.email  # Get requester's email
-    print('requester_email : ' , requester_email)
+    print('requester_email : ', requester_email)
+    print('venue incharge mail', req.venue.dept_incharge_email)
 
     if not requester_email:
         print("Requester email not found.")
         return
+
+    # Get incharge contact info from venue
+    venue = req.venue
+    incharge_email = venue.dept_incharge_email or "Not available"
+    incharge_phone = venue.dept_incharge_phone or "Not available"
+
+    print('incharge_email : ', incharge_email)
+    print('incharge_phone : ', incharge_phone)
 
     
 
@@ -452,6 +629,8 @@ def send_booking_accepted_email(req , feedback_reason , feedback_comments):
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = requester_email
+    print('sender_email : ', sender_email)
+    print('requester_email : ', requester_email)
     msg['Subject'] = "Venue Booking Approved ✅"
 
     body = f"""
@@ -473,7 +652,11 @@ def send_booking_accepted_email(req , feedback_reason , feedback_comments):
 
     Please ensure you arrive on time and follow the venue guidelines.
 
-    If you have any questions, feel free to contact the venue in-charge.
+    If you have any questions, feel free to contact the venue in-charge to ensure your needs for the venue are met.
+
+    Venue In-Charge Contact:
+    - Email: {incharge_email}
+    - Phone: {incharge_phone}
 
     Regards,  
     COEP Venue Booking System
@@ -484,18 +667,30 @@ def send_booking_accepted_email(req , feedback_reason , feedback_comments):
     # Send email
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
+            print('sender_email : ', sender_email)
+            print('sender_password : ', sender_password)
+            print('type(sender_email) : ', type(sender_email))
+            print('type(sender_password) : ', type(sender_password))
             server.starttls()
+            print('*********')
+            
             server.login(sender_email, sender_password)
+            
+            print('//111//111//222/!!')
             server.send_message(msg)
-
-        print(f"Booking approval email sent to {requester_email}")
+            print('sender_email : ', sender_email)
+            print('sender_password : ', sender_password)
+            print(f"Booking approval email sent to {requester_email}")
     except Exception as e:
         print(f"Failed to send email: {e}")
+    finally:
+        print('-----end send_booking_accepted_email--------')
+        # Call new function to notify the in-charge
+        send_booking_accepted_email_to_incharge(req)
+        print('\n\n')
 
 
-    print('-----end send_booking_accepted_email--------')
-    print()
-    print()
+
 
 # Example usage:
 # send_booking_accepted_email(req)
@@ -510,14 +705,104 @@ from email.mime.text import MIMEText
 # Replace with your actual SMTP credentials
 smtp_server = 'smtp.gmail.com'
 smtp_port = 587
-sender_email = 'your_email@gmail.com'
-sender_password = 'your_app_password'
 
-def send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments):
-    print('\n--------start : send_booking_accepted_email-----------')
+def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments):
+    print('\n--------start : venue_admin_send_cumulative_booking_accepted_email-----------')
+    print(req)
+    # print(json.dumps(req, indent=4))  # Nicely formatted JSON-style print
 
     # Use email from request row directly
-    requester_email = req.email
+    requester_email = cumulative_req.venue.venue_admin
+    print(' requester_email : ', requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email  # Consider changing to venue in-charge email if needed
+    msg['Subject'] = "Venue Booking Approved ✅"
+
+    # Handle missing data with defaults
+    full_name = req.full_name or "User"
+    organization = req.organization_name or "N/A"
+    event_type = req.event_type or "N/A"
+    guest_count = req.guest_count or "N/A"
+    additional_info = req.additional_info or "N/A"
+    event_details = req.event_details or "N/A"
+    purpose = req.purpose or "N/A"
+    start_date = cumulative_req.start_date or "N/A"
+    weekdays = cumulative_req.weekdays or "N/A"
+    time = req.time or "N/A"
+    duration = req.duration or "N/A"
+    num_weeks = cumulative_req.num_weeks or "N/A"
+    special_requirements = req.special_requirements or "None"
+    venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    booking_id = req.cumulative_request_id
+
+    body = f"""
+Dear Venue In-charge,
+
+Please be informed that a new venue booking request has been approved and requires your attention for further arrangements.
+
+Here are the details and requirements of the booking:
+
+📌 **Booking ID:** {booking_id}
+- Requester Name: {full_name}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- Start Date: {start_date}
+- Weekdays: {weekdays}
+- Time: {time}:00 hrs
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+Please contact the requester for any clarifications or further arrangements needed to ensure all requirements for the venue are met.
+
+Requester Contact:
+- Email: {req.email}
+- Phone (if available): {getattr(req, 'phone_number', 'N/A')}
+
+Thank you for your cooperation.
+
+Regards,
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking approval email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : venue_admin_send_cumulative_booking_accepted_email-----------\n')
+
+
+
+
+
+
+def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments):
+    print('\n--------start : send_cumulative_booking_accepted_email-----------')
+    print(req)
+    # print(json.dumps(req, indent=4))  # Nicely formatted JSON-style print
+
+    # Use email from request row directly
+    requester_email = req.user.email
+    print('requester_email : ', requester_email)
 
     if not requester_email:
         print("Requester email not found.")
@@ -529,6 +814,8 @@ def send_cumulative_booking_accepted_email(req, feedback_reason, feedback_commen
     msg['To'] = requester_email
     msg['Subject'] = "Venue Booking Approved ✅"
 
+    print('ppjofsjd')
+
     # Handle missing data with defaults
     full_name = req.full_name or "User"
     organization = req.organization_name or "N/A"
@@ -537,14 +824,18 @@ def send_cumulative_booking_accepted_email(req, feedback_reason, feedback_commen
     additional_info = req.additional_info or "N/A"
     event_details = req.event_details or "N/A"
     purpose = req.purpose or "N/A"
-    start_date = req.start_date or "N/A"
-    weekdays = req.weekdays or "N/A"
+    # start_date = req.start_date or "N/A"
+    start_date = req.date or "N/A"
+    
+    weekdays = cumulative_req.weekdays or "N/A"
     time = req.time or "N/A"
-    duration = req.duration or "N/A"
-    num_weeks = req.num_weeks or "N/A"
+    duration = cumulative_req.duration or "N/A"
+    num_weeks = cumulative_req.num_weeks or "N/A"
     special_requirements = req.special_requirements or "None"
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
+
+    print('][]iuoueoiuf')
 
     body = f"""
 Dear {full_name if full_name.strip() else 'Requester'},
@@ -572,7 +863,9 @@ Your venue booking request has been approved! 🎉
 
 Please ensure to follow all venue rules and be present on time.
 
-For any queries, contact the venue in-charge.
+For any queries, contact the venue in-charge:
+- Email : {req.venue.dept_incharge_email}
+- Phone Number : {req.venue.dept_incharge_phone}
 
 Regards,  
 COEP Venue Booking System
@@ -1102,7 +1395,8 @@ def approve_cumulative_request(request, cumulative_request_id):
                     continue  # Skip to next request if this one fails
 
             # Update the cumulative request status
-            send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments)
+            send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
+            venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
             
             cumulative_req.status = "approved"
             cumulative_req.reasons = feedback_reason

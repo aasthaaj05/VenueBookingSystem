@@ -28,6 +28,7 @@ class Command(BaseCommand):
                 return
 
             # Rename columns for internal use
+            print('-pofofjojoojjo')
             df.rename(columns={
                 'Building Name': 'building_name',
                 'Floor': 'floor_number',
@@ -46,8 +47,12 @@ class Command(BaseCommand):
                 'Department incharge email': 'dept_incharge_email',
                 'Department assistant name 1': 'dept_assistant_name1',
                 'Department assistant name 2': 'dept_assistant_name2',
-                'Campus (North/South)': 'campus'
+                'Campus (North/South)': 'campus',
+                'Venue Admin': 'venue_admin',
             }, inplace=True)
+            print('111111')
+            print(df)
+            print('mmm')
 
             for _, row in df.iterrows():
                 # Building
@@ -65,6 +70,10 @@ class Command(BaseCommand):
                     facilities = json.loads(row['facilities']) if isinstance(row['facilities'], str) else []
                 except Exception:
                     facilities = []
+
+                print('pppppppppp')
+                print('capacity : ', row['capacity'])
+                print('iii')
 
                 venue = Venue(
                     id=uuid.uuid4(),
@@ -89,8 +98,10 @@ class Command(BaseCommand):
                     dept_incharge_email=incharge_email,
                     dept_assistant_name1=row.get('dept_assistant_name1', ''),
                     dept_assistant_name2=row.get('dept_assistant_name2', ''),
-                    campus=row.get('campus', '')
+                    campus=row.get('campus', ''),
+                    venue_admin=row.get('venue_admin',''),
                 )
+                print('uuuuu')
                 venue.save()
                 self.stdout.write(self.style.SUCCESS(f"Created venue: {venue.venue_name}"))
 

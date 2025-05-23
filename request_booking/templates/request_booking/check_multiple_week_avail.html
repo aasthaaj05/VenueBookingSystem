@@ -1051,7 +1051,7 @@
                 </div>
 
                 <div class="form-grid">
-                    <div class="form-group">
+                    {% comment %} <div class="form-group">
                         <label for="start_time">Start Time</label>
                         <input type="time" name="start_time" class="form-control" required>
                         <i class="fas fa-clock form-icon"></i>
@@ -1061,7 +1061,38 @@
                         <label for="end_time">End Time</label>
                         <input type="time" name="end_time" class="form-control" required>
                         <i class="fas fa-clock form-icon"></i>
+                    </div> {% endcomment %}
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <input type="number" name="start_time" class="form-control" min="0" step="1" placeholder="e.g. 10" required>
+                        <i class="fas fa-clock form-icon"></i>
+                        <small class="form-text text-muted">Enter whole numbers only (e.g. 10, 12, 20)</small>
                     </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="number" name="end_time" class="form-control" min="0" step="1" placeholder="e.g. 20" required>
+                        <i class="fas fa-clock form-icon"></i>
+                        <small class="form-text text-muted">Enter whole numbers only (e.g. 10, 12, 20)</small>
+                    </div>
+                    
+                    <script>
+                    // Additional validation to prevent time format input
+                    document.querySelectorAll('input[type="number"]').forEach(input => {
+                        input.addEventListener('input', function(e) {
+                            // Remove any non-digit characters
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        
+                        input.addEventListener('paste', function(e) {
+                            // Prevent pasting time formats like "2:30"
+                            e.preventDefault();
+                            let paste = (e.clipboardData || window.clipboardData).getData('text');
+                            if (/^\d+$/.test(paste)) {
+                                this.value = paste;
+                            }
+                        });
+                    });
+                    </script>
                 </div>
 
                 <div class="form-group">

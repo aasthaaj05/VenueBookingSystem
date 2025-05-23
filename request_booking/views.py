@@ -1016,10 +1016,13 @@ def process_booking_multiple(request):
             print('lkvjdspojvojofjoifuoiujeoajwoihjo')
 
             # Time parsing
-            start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
-            end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
+            # start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
+            # end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
+            start_time = int(start_time_str)
+            end_time = int(end_time_str)
             duration = end_time - start_time
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            # start_date = int(start_date_str)
             # end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
             created_count = 0
@@ -1051,12 +1054,27 @@ def process_booking_multiple(request):
                 duration=duration,
                 status='waiting_for_approval'
             )
+            # Create a mapping from day names to numbers (Monday=0)
+            DAY_TO_NUM = {
+                'Monday': 0,
+                'Tuesday': 1,
+                'Wednesday': 2,
+                'Thursday': 3,
+                'Friday': 4,
+                'Saturday': 5,
+                'Sunday': 6
+            }
 
-
+            
 
             for week in range(num_weeks):
                 week_start = start_date + timedelta(weeks=week)
                 for weekday in weekdays:
+                    mail_start_time = start_time
+                    mail_duration = duration
+
+                    # weekday_num = DAY_TO_NUM[weekday]
+                    # print('weekday_num : ', weekday_num)
                     offset = (weekday - week_start.weekday() + 7) % 7
                     current_date = week_start + timedelta(days=offset)
 
@@ -1090,6 +1108,43 @@ def process_booking_multiple(request):
             print('iuikkkkkkkddjq87701740970')
             print('iuikkkkkkkddjq87701740970')
             print('iuikkkkkkkddjq87701740970')
+            # Reverse the dictionary: from {0: 'Monday', 1: 'Tuesday', ...}
+            NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
+            weekday_names = tuple([NUM_TO_DAY[num] for num in weekdays])
+
+            print("Parsed weekday names:", weekday_names)
+
+            try:
+                cumulative_send_confirmation_email_to_requester(
+                    email=email,
+                    full_name=full_name,
+                    venue_obj=venue,
+                    event_type=event_type,
+                    purpose=purpose,
+                    start_date=start_date,
+                    start_time=mail_start_time,
+                    booking_duration=mail_duration,  # Update this if your logic has actual duration
+                    num_week = num_weeks,
+                    weekdays = weekday_names,
+                )
+            except Exception as e:
+                print(f"Failed to send confirmation email to requester: {e}")
+
+            try:
+                cumulative_send_booking_request_email_to_admin(email=email,
+                    full_name=full_name,
+                    venue_obj=venue,
+                    event_type=event_type,
+                    purpose=purpose,
+                    start_date=start_date,
+                    start_time=mail_start_time,
+                    booking_duration=mail_duration,  # Update this if your logic has actual duration
+                    num_week = num_weeks,
+                    weekdays = weekday_names)
+
+            except Exception as e:
+                print(f"Failed to send confirmation email to requester: {e}")
+
             print('iuikkkkkkkddjq87701740970')
             print()
             print()
@@ -1108,7 +1163,7 @@ def process_booking_multiple(request):
             print(f"ValueError: {ve}")
             messages.error(request, "Invalid input. Please check your form.")
 
-        return redirect("faculty_advisor:booking_status")
+        return redirect("request_booking:booking_status")
     else:
         venues = Venue.objects.all()
         print("heherer ewrewrhewjwhrjwh in request multiple")
@@ -1276,9 +1331,9 @@ def send_forwarded_notification(to_email , request, venue_obj, alt_venue_1, alt_
     msg['Subject'] = "Venue Booking Request has been initiated"
 
     body = f"""
-    Dear {venue_obj.department_incharge.name},
+    Dear {request.user.name},
 
-    A new venue booking request has been initiated.
+    Your new venue booking request has been initiated.
 
     Request Details:
     - Requested by: {request.user.name} ({request.user.email})
@@ -1331,7 +1386,10 @@ from django.utils.timezone import now
 
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
-    venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
+    # venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
+
+    # hardcoded it , as there will be only one venue admin
+    venue_incharge_email = venue_obj.venue_admin
     print()
     print('---------in send_booking_request_email()------')
     print()
@@ -1358,7 +1416,7 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
     msg['Subject'] = "New Venue Booking Request"
 
     body = f"""
-    Dear {venue_obj.department_incharge.name},
+    Sir/Mam,
 
     A new venue booking request has been submitted.
 
@@ -1400,6 +1458,177 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
 
 
 
+
+def cumulative_send_booking_request_email_to_admin(email, full_name, venue_obj, event_type, purpose,
+                                                   start_date, start_time, booking_duration,
+                                                   num_week, weekdays):
+    print()
+    print('---------in cumulative_send_booking_request_email_to_admin()------')
+    
+    try:
+        # Debug prints
+        print(f"Admin email: {email} (type: {type(email).__name__})")
+        print(f"Admin full_name: {full_name} (type: {type(full_name).__name__})")
+        print(f"venue_obj: {venue_obj} (type: {type(venue_obj).__name__})")
+        print(f"venue_obj.venue_name: {getattr(venue_obj, 'venue_name', 'N/A')}")
+        print(f"event_type: {event_type} (type: {type(event_type).__name__})")
+        print(f"purpose: {purpose} (type: {type(purpose).__name__})")
+        print(f"start_date: {start_date} (type: {type(start_date).__name__})")
+        print(f"start_time: {start_time} (type: {type(start_time).__name__})")
+        print(f"booking_duration: {booking_duration} (type: {type(booking_duration).__name__})")
+        print(f"num_week: {num_week} (type: {type(num_week).__name__})")
+        print(f"weekdays: {weekdays} (type: {type(weekdays).__name__})")
+        print()
+
+        if not email:
+            print("Admin email not found.")
+            return
+
+        # Format current timestamp
+        formatted_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
+
+        # Compose email
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = venue_obj.venue_admin
+        msg['Subject'] = "New Venue Booking Request Initiated"
+
+        body = f"""
+Dear {full_name},
+
+A new venue booking request has been initiated and requires your review.
+
+Request Details:
+- Venue: {venue_obj.venue_name}
+- Date: {start_date}
+- Time: {start_time}
+- Duration: {booking_duration} hours
+- Number of Weeks: {num_week}
+- Weekdays: {weekdays}
+- Purpose: {purpose}
+- Event Type: {event_type}
+- Status: Pending
+- Requested At: {formatted_time}
+
+Please review the request and take the necessary action.
+
+Regards,
+COEP Venue Booking System
+"""
+
+        msg.attach(MIMEText(body, 'plain'))
+
+        # Send email
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Booking request email sent to venue admin: {email}")
+
+    except Exception as e:
+        print(f"Failed to send booking request email: {e}")
+
+    print('---------Ended ---- cumulative_send_booking_request_email_to_admin()------')
+
+
+
+
+
+'''
+cumulative_request_id=cumulative_request_id,
+                user=user,
+                full_name=full_name,
+                email=email,
+                phone_number=phone_number,
+                organization_name=organization_name,
+                event_type=event_type,
+                guest_count=guest_count,
+                event_details=event_details,
+                purpose=purpose,
+                special_requirements=special_requirements,
+                venue=venue,
+                start_date=start_date,
+                num_weeks=num_weeks,
+                weekdays=",".join([str(day) for day in weekdays]),  # Store as comma-separated string
+                time=start_time,
+                duration=duration,
+                status='waiting_for_approval'
+'''
+
+
+
+def cumulative_send_confirmation_email_to_requester(email, full_name, venue_obj, event_type, purpose, start_date, start_time, booking_duration , num_week , weekdays):
+    print()
+    print('---------in send_confirmation_email_to_requester()------')
+    print(f'Requester email: {email}')
+    print()
+    print()
+    print('---------in cumulative_send_confirmation_email_to_requester()------')
+    print(f"email: {email} (type: {type(email).__name__})")
+    print(f"full_name: {full_name} (type: {type(full_name).__name__})")
+    print(f"venue_obj: {venue_obj} (type: {type(venue_obj).__name__})")
+    print(f"venue_obj.venue_name: {getattr(venue_obj, 'venue_name', 'N/A')}")
+    print(f"event_type: {event_type} (type: {type(event_type).__name__})")
+    print(f"purpose: {purpose} (type: {type(purpose).__name__})")
+    print(f"start_date: {start_date} (type: {type(start_date).__name__})")
+    print(f"start_time: {start_time} (type: {type(start_time).__name__})")
+    print(f"booking_duration: {booking_duration} (type: {type(booking_duration).__name__})")
+    print(f"num_week: {num_week} (type: {type(num_week).__name__})")
+    print(f"weekdays: {weekdays} (type: {type(weekdays).__name__})")
+    print()
+
+
+    if not email:
+        print("Requester email not found.")
+        return
+
+    # Format current timestamp
+    formatted_time = datetime.now().strftime('%d-%m-%Y %I:%M %p')
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = email
+    msg['Subject'] = "Your Venue Booking Request Has Been Initiated"
+
+    body = f"""
+    Dear {full_name},
+
+    Your venue booking request has been successfully initiated.
+
+    Request Details:
+    - Venue: {venue_obj.venue_name}
+    - Date: {start_date}
+    - Time: {start_time}
+    - Duration: {booking_duration} hours
+    - Number of Weeks : {num_week}
+    - Weekdays : {weekdays}
+    - Purpose: {purpose}
+    - Event Type: {event_type}
+    - Status: Initiated
+    - Requested At: {formatted_time}
+
+    We will notify you once your request is reviewed by the venue admin.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Confirmation email sent to requester: {email}")
+    except Exception as e:
+        print(f"Failed to send email to {email}: {e}")
+
+    print('---------Ended ---- send_confirmation_email_to_requester()------')
 
 
 
@@ -1470,6 +1699,68 @@ def booking_status(request):
 
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
 
+
+from django.db.models import OuterRef, Subquery
+
+
+@login_required
+def cumulative_booking_status(request):
+    """
+    View to fetch and display booking requests for the logged-in user only.
+    """
+    print()
+    print()
+    print('in cumulatuve_booking_status() ')
+    print()
+    print()
+    
+    user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
+
+    if not user_id:
+        return JsonResponse({"error": "User ID not found in session"}, status=400)
+
+    # Fetch only the requests made by the logged-in user
+    # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
+    # Get distinct cumulative requests with their latest entry
+    # requests = Request.objects.filter(
+    #     user_id=user_id,
+    #     cumulative_booking='1'
+    # ).order_by('cumulative_request_id', '-date').distinct('cumulative_request_id')
+
+    # Get one request per cumulative_request_id (the most recent one by date)
+    # requests = Request.objects.filter(
+    #     cumulative_request_id=OuterRef('cumulative_request_id'),
+    #     user_id=user_id,
+    #     cumulative_booking='1'
+    # ).order_by('-date')
+
+    # requests = Request.objects.filter(
+    #     user_id=user_id,
+    #     cumulative_booking='1',
+    #     id__in=Subquery(requests.values('id')[:1])
+    # ).order_by('cumulative_request_id', '-date')
+    # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
+    requests = Request.objects.filter(
+        user_id=user_id,
+        cumulative_booking=True
+    ).select_related('venue').order_by('cumulative_request_id')
+
+
+
+    print(f"User ID: {user_id}, Requests: {requests}")  # Debugging
+
+    person_name = request.session.get('name')
+
+    print('in cumulatuve_booking_status booking status function')
+    print()
+    print()
+    print('requests : ', requests)
+    print('preseon name : ' , person_name)
+    print()
+    print()
+    
+
+    return render(request, "request_booking/cumulative_booking_status.html", {"pending_requests": requests , "person_name": person_name})
 
 
 
@@ -1818,7 +2109,9 @@ class RequestMultipleWeekAvailabilityView(View):
         #     {'id': 1, 'venue_name': 'Main Hall', 'capacity': 200},
         #     {'id': 2, 'venue_name': 'Conference Room A', 'capacity': 50},
         # ]
-        venues = Venue.objects.all()
+        # venues = Venue.objects.all()
+        venues = Venue.objects.all().values_list('venue_name', flat=True)
+        print('venues : ', venues)
 
         print("heherer ewrewrhewjwhrjwh in request multiple")
         print_session_values(request)
@@ -1904,7 +2197,11 @@ class RequestMultipleWeekAvailabilityView(View):
         formatted_venues = []
 
         for venue in available_venue_response:
-            venue_name = venue.venue_name,
+            venue_name = venue.venue_name[0] if isinstance(venue.venue_name, tuple) else venue.venue_name
+             # Handle 'nan' values if needed
+            if str(venue_name).lower() == 'nan':
+                continue
+            # venue_name = venue.venue_name,
             formatted_venues.append({
                 "id": venue.id,
                 "name": venue_name,
@@ -1917,6 +2214,24 @@ class RequestMultipleWeekAvailabilityView(View):
         print('---------')
         print('---------')
         print('---------')
+        
+        # Weekday number to name mapping (0=Monday)
+        WEEKDAY_MAP = {
+            '0': 'Monday',
+            '1': 'Tuesday',
+            '2': 'Wednesday',
+            '3': 'Thursday',
+            '4': 'Friday',
+            '5': 'Saturday',
+            '6': 'Sunday'
+        }
+
+        # # Get the weekday numbers from session
+        # weekday_numbers = request.session.get('weekdays', [])
+        
+        # # Convert to weekday names
+        # weekday_names = [WEEKDAY_MAP.get(num, 'Unknown') for num in weekday_numbers]
+        # print('weekday_names : ', weekday_names)
         
 
         return render(request, 'request_booking/book_multiple_venues.html', {
@@ -1931,6 +2246,7 @@ class RequestMultipleWeekAvailabilityView(View):
             'end_time': request.session.get('end_time'),
             'num_weeks': request.session.get('num_weeks'),
             'weekdays': request.session.get('weekdays'),
+            # 'weekdays': weekday_names,
             'phone': request.session.get('phone'),
             'guestCount': request.session.get('guestCount'),
             'eventDetails': request.session.get('eventDetails'),
@@ -2011,9 +2327,13 @@ def arnav_check_multiple_week_availability_view(request):
         print("6")
         special_requirements = request.POST.get("specialRequirements", "")
         print("7")
-        start_hour = datetime.strptime(start_time_str, "%H:%M").time().hour
+        # start_hour = datetime.strptime(start_time_str, "%H:%M").time().hour
+        start_hour = int(start_time_str)
+        print(start_hour)
         print("8")
-        end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
+        # end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
+        end_hour = int(end_time_str)
+        print(end_time_str)
         print("9")
         duration = int((int(end_hour) - int(start_hour)))
         print("10")

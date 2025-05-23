@@ -84,6 +84,8 @@ class Venue(models.Model):
     
     campus = models.CharField(max_length=20, choices=[('North', 'North'), ('South', 'South')], blank=True, null=True)
 
+    venue_admin = models.EmailField(blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

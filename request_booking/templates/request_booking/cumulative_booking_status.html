@@ -655,11 +655,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <p>Total Requests: {{ pending_requests|length }}</p>
+                            {% comment %} <p>Total Requests: {{ pending_requests|length }}</p> {% endcomment %}
 
                             {% for request in pending_requests %}
                             <tr data-request-id="{{ request.cumulative_request_id }}">
-                                <td colspan="6"><strong>DEBUG: Inside loop!</strong></td>
                                 <td>{{ request.venue.venue_name }}</td>
                                 <td>{{ request.date }}</td>
                                 <td>{{ request.duration }}</td>

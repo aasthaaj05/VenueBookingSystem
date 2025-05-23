@@ -33,6 +33,7 @@ urlpatterns = [
     path("process_booking/", views.process_booking, name="process_booking"),
     
     path("booking_status/", views.booking_status, name="booking_status"),
+    path("cumulative_booking_status/", views.cumulative_booking_status, name="cumulative_booking_status"),
     path("getUnavailableSlots/", views.getUnavailableSlots, name="get_unavailable_slots"),
     path('buildings/', views.get_buildings, name='get_buildings'),
     path('home/', views.index, name='index'),

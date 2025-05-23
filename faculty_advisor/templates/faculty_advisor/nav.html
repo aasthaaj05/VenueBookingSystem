@@ -246,10 +246,11 @@
                     <li><a href="#services">Services</a></li>
                     {% comment %} <li><a href="#team">Team</a></li> {% endcomment %}
                     <li><a href="#recent-blog-postst">Venues</a></li>
-                    <li><a href="{% url 'faculty_advisor:home' %}">Faculty</a></li>
                     {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
                     <li><a href="{% url 'request_booking:get_buildings' %}" class="btn signup-btn">Book Venue</a></li>
                     <li><a href="{% url 'request_booking:booking_status' %}">Booking Status</a></li>
+                    <li><a href="{% url 'request_booking:cumulative_booking_status' %}">Cumulative Booking Status</a></li>
+                    
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
             </nav>
