@@ -17,10 +17,9 @@ urlpatterns = [
     path('user/requests/', views.get_user_requests, name='get_user_requests'),
     path('calendar/', views.get_available_slots, name='get_available_slots'),
     path('book/', views.book_venue, name='book_venue'),
-    # path('user_dashboard/', views.venue_list, name='user_dashboard'),  
+
     path('user_dashboard/<str:building_name>/', views.user_dashboard, name='user_dashboard'),
 
-    # path('request_multiple/', views.process_booking_multiple, name="request_multiple_week_availability_view"),
 
     path(
         'request_multiple/',

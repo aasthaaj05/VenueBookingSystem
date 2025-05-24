@@ -93,6 +93,13 @@ class Request(models.Model):
     cumulative_request_id = models.UUIDField(null=True, blank=True)  # Link requests together
     cumulative_booking = models.BooleanField(default=False)  # Stores either True (1) or False (0)
 
+    rejection_reason = models.TextField(max_length=1000, blank=True, null=True)
+    feedback_from_admin = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
+    alternate_venues_suggestion = models.CharField(max_length=1000, blank=True, null=True)  # ✅ New field
+
+    additional_comments_Venueadmin = models.CharField(max_length=1000, default="active")  # Booking status
+    reason_for_approval = models.CharField(max_length=1000, default="active")  # Booking status
+
     def __str__(self):
         return f"Request {self.request_id} by {self.user.name} for {self.venue.venue_name} ({self.status})"
 

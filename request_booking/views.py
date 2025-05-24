@@ -1,19 +1,38 @@
 
-
-from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
-from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q, F
-from datetime import datetime, timedelta
 import json
 import sys
 import traceback
+import smtplib
+import calendar
+import pprint
+import uuid
+
+from datetime import datetime, timedelta
+
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
+from django.views.decorators.csrf import csrf_exempt
+from django.views import View
+from django.db.models import Q, F, OuterRef, Subquery
+from django.utils.timezone import now, make_aware
+from django.core.exceptions import ObjectDoesNotExist
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
 
 from services import booking_service
-from gymkhana.models import Booking
-from .models import Venue, Request
+from gymkhana.models import Booking, Venue, Building
+from .models import Request, Venue
+from users.models import CustomUser
 
 
+sender_email = settings.EMAIL_HOST_USER
+sender_password = settings.EMAIL_HOST_PASSWORD
+smtp_server = settings.EMAIL_HOST
+smtp_port = settings.EMAIL_PORT
 
 
 
@@ -38,7 +57,7 @@ def get_venue_details(request, venue_id):
         return JsonResponse({'error': str(e)}, status=400)
 
 
-import json
+
 
 def print_request_details(request):
     print("\n----- REQUEST DETAILS -----\n")
@@ -148,7 +167,6 @@ def get_available_slots(request):
 
             print()
             print()
-            print('in ')
 
             # Calculate duration in hours
             # duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
@@ -177,7 +195,7 @@ def get_available_slots(request):
                 return JsonResponse({'error': 'Missing start_date'}, status=400)
 
             # Get all venues
-            venues = Venue.objects.all().values('id', 'venue_name')  # Get all venue IDs & names
+            venues = Venue.objects.all().values('id', 'venue_name')  
             all_slots = {}
 
             print('Processing venues...')
@@ -224,27 +242,6 @@ def get_available_slots(request):
 
 
 
-import json
-from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
-
-
-
-# sender_email = ""  # Outlook Email
-# sender_password = "coep"      # Outlook Email Password
-# smtp_server = "smtp.office365.com"
-# smtp_port = 587  # Outlook SMTP port
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from django.conf import settings  # Import settings
-
-sender_email = settings.EMAIL_HOST_USER
-sender_password = settings.EMAIL_HOST_PASSWORD
-smtp_server = settings.EMAIL_HOST
-smtp_port = settings.EMAIL_PORT
-
 
 def getUnavailableSlots(request):
     if request.method == "GET":
@@ -263,12 +260,8 @@ def getUnavailableSlots(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)  # Convert exception to string
 
-# def get_buildings(request):
-#     buildings = Venue.objects.values_list('building_name', flat=True).distinct()
-#     return render(request, 'request_booking/building.html', {'buildings': buildings})
 
-from django.shortcuts import render
-from gymkhana.models import Building  # Import Building model
+
 
 def get_buildings(request):
     buildings = Building.objects.values_list('name', flat=True).distinct()  # Fetch building names
@@ -277,66 +270,16 @@ def get_buildings(request):
 
 
 
-# def user_dashboard(request, building_name=None):  # Accept building_name
-#     if request.method == "GET":
-#         print("Inside user_dashboard view")
-#         print("Building Name:", building_name)  # Debugging output
 
-#         # Retrieve stored venue slot availability from the session
-#         all_slots = request.session.get('all_slots', {})
 
-#         print(all_slots)
 
-#         # Extract venue names from all_slots
-#         venue_names = all_slots.keys()
-
-#         # Fetch venues from the database filtered by building_name
-#         venues = Venue.objects.filter(venue_name__in=venue_names)
-
-#         if building_name:
-#             venues = venues.filter(bui=building_name)  # Filter venues by building
-
-#         venues = venues.values('id', 'venue_name', 'capacity', 'facilities', 'photo_url')
-
-#         # Map the venue data with availability
-#         formatted_venues = []
-
-#         for venue in venues:
-#             venue_name = venue['venue_name']
-#             formatted_venues.append({
-#                 "id": venue['id'],
-#                 "name": venue_name,
-#                 "capacity": venue['capacity'],
-#                 "facilities": venue['facilities'],
-#                 "images": venue['photo_url'].split(",") if venue['photo_url'] else [],
-#             })
-
-#         return render(request, 'request_booking/user_dashboard.html', {
-#             "venues": formatted_venues,
-#             "building_name": building_name  # Pass building name to template
-#         })
-
-#     return HttpResponseNotAllowed(['GET'])
-
-from django.http import HttpResponseNotAllowed
-from django.shortcuts import render
-from gymkhana.models import Venue
 
 def user_dashboard(request, building_name=None):  # Accept building_name
     if request.method == "GET":
         print("Inside user_dashboard view")
         print("Building Name:", building_name)  # Debugging output
 
-        # # Retrieve stored venue slot availability from the session
-        # all_slots = request.session.get('all_slots', {})
-        # print(all_slots)
-
-        # Extract venue names from all_slots
-        # venue_names = all_slots.keys()
-
-        # Fetch venues from the database filtered by building_name
-        # venues = Venue.objects.filter(venue_name__in=venue_names)
-        # print('venues : ' , venues)
+       
 
         # Fetch all venues from the database
         venues = Venue.objects.all()
@@ -418,10 +361,7 @@ def request_slot(request):
 # Cancel a booking request (POST)
 @csrf_exempt
 def cancel_request(request, request_id):
-    # if request.method != 'POST':
-    #     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
-
-    # data = json.loads(request.body)
+    
     req_id = request_id
     req_id = req_id.replace('-', '')  # Remove all hyphens
 
@@ -505,7 +445,6 @@ def book_venue(request):
 
 
         # Fetch user details from session
-        # Fetch user details from session
         user_data = {
             "name": request.session.get("name"),  # Full name from session
             "email": request.session.get("email"),
@@ -526,232 +465,6 @@ def book_venue(request):
 
 
 
-
-
-from datetime import datetime
-from django.utils.timezone import now  # Handles timezone-aware datetime
-
-# @csrf_exempt
-# def process_booking(request):
-#     print('process_booking func : request --> ',request)
-#     """Processes the booking request and saves details in the database."""
-#     if request.method == "POST":
-#         print('POST : process_booking func : request --> ',request)
-#         data = {
-#             "event_type": request.POST.get("eventType"),
-#             "other_event_type": request.POST.get("otherEventType"),
-#             "name": request.session.get("firstName"),  # Full name from session
-#             "email": request.session.get("email"),  # From session
-#             "organization_name": request.session.get("organization_name"),  # Fixed typo (extra space)
-#             "phone": request.POST.get("phone"),
-#             "alternate_venue_1": request.POST.get("alternateVenue1"),
-#             "alternate_venue_2": request.POST.get("alternateVenue2"),
-#             "venue": request.POST.get("venue"),
-#             "guest_count": request.POST.get("guestCount"),
-#             "purpose": request.POST.get("purpose"),
-#         }
-#         print(data)
-
-#         # Save to database
-#         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
-#         alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
-#         alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
-
-#         current_datetime = now()  # Get current date and time
-
-        
-
-#         current_time = now().time()
-#         time_in_hours = current_time.hour  # Extract hour as an integer
-
-#         print('in process_booking func : before Request.objects.create')
-
-#         print('curr_date : ', now().date())
-
-#         current_time = datetime.now()
-#         formatted_time = current_time.strftime("%Y-%m-%d %H:%M:%S.%f")  # Microseconds included
-#         print('formatted_time',formatted_time)
-
-#         # print('session : ' , request.session)
-#         print("Session Data (JSON Format):", json.dumps(dict(request.session), indent=4))  # JSON format
-#         # print("Session Data (Pretty Print):")
-#         # pprint(dict(request.session))  # Pretty print
-
-#         session_dict = json.dumps(dict(request.session))
-#         print('type of session_dict' , type(session_dict))
-
-#         if request.user.role in ['club' , 'fests' , 'student_chapter']:
-#             status="waiting_for_approval"
-#         else:
-#             status="pending"
-
-#         '''
-#         ('club', 'Club'),
-#         ('fests', 'Fests'),
-#         ('student_chapter', 'Student Chapter'),
-#         ('faculty', 'Faculty'),
-#         ('HOD', 'HOD'),
-#         ('Dean', 'Dean'),
-#         ('VC', 'VC'),
-#         ('Registrar', 'Registrar'),
-#         ('outsider', 'Outsider'),
-#         '''
-
-#         # booked_date 
-
-#         print()
-#         print()
-#         print(f""" in process_booking func
-#             Request.objects.create(
-#                 user={request.user},
-#                 date={request.session.get('start_date')},  # Store current date
-#                 time={request.session.get('start_time')},
-#                 duration={request.session.get("booking_duration")},  
-#                 venue={venue_obj},
-#                 need={data["purpose"]},
-#                 event_details={data["event_type"]},
-#                 status={status},
-#                 created_at={formatted_time},
-#             )
-#             """)
-#         print()
-#         print()
-
-#         checker=Request.objects.filter(user=request.user,
-#             date=request.session.get('start_date'),  # Store current date
-#             # time=time_in_hours,  # Convert time to integer
-#             time = request.session.get('start_time'),
-#             duration=request.session.get("booking_duration"),  
-#             venue=venue_obj,
-#             alternate_venue_1=alt_venue_1,
-#             alternate_venue_2=alt_venue_2,
-#             need=data["purpose"],
-#             event_details=data["event_type"],
-#             status=status).exists()
-#         if not checker:
-#             Request.objects.create(
-#                 user=request.user,
-#                 date=request.session.get('start_date'),  # Store current date
-#                 # time=time_in_hours,  # Convert time to integer
-#                 time = request.session.get('start_time'),
-#                 duration=request.session.get("booking_duration"),  
-#                 venue=venue_obj,
-#                 alternate_venue_1=alt_venue_1,
-#                 alternate_venue_2=alt_venue_2,
-#                 need=data["purpose"],
-#                 event_details=data["event_type"],
-#                 status=status,
-#                 created_at = formatted_time,
-#             )
-#             send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status , formatted_time)
-
-#             print('in process_booking func : after Request.objects.create')
-
-#         # return render(request, "request_booking/booking_status.html", {"success": True, "venue": data["venue"]})
-#         return redirect("/request_booking/booking_status")  
-    
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
-
-from datetime import datetime
-import json
-from django.http import JsonResponse
-from django.shortcuts import redirect
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.timezone import now  # Handles timezone-aware datetime
-from .models import Request, Venue
-
-# @csrf_exempt
-# def process_booking(request):
-#     if request.method == "POST":
-#         print('POST : process_booking func : request --> ', request)
-
-#         # Extracting data from POST request and session
-#         data = {
-#             "event_type": request.POST.get("eventType"),
-#             "other_event_type": request.POST.get("otherEventType"),
-#             "name": request.session.get("firstName"),
-#             "email": request.session.get("email"),  # Fetch email
-#             "phone_number": request.POST.get("phone"),  # Fetch phone number
-#             "organization_name": request.session.get("organization_name"),
-#             "alternate_venue_1": request.POST.get("alternateVenue1"),
-#             "alternate_venue_2": request.POST.get("alternateVenue2"),
-#             "venue": request.POST.get("venue"),
-#             "guest_count": request.POST.get("guestCount"),
-#             "purpose": request.POST.get("purpose"),
-#             "additional_info": request.POST.get("additionalInfo"),  # Extra details
-#         }
-
-#         print("Received data:", data)
-
-#         # Fetch venue objects
-#         venue_obj = Venue.objects.get(venue_name=data["venue"]) if data["venue"] else None
-#         alt_venue_1 = Venue.objects.get(id=data["alternate_venue_1"]) if data["alternate_venue_1"] else None
-#         alt_venue_2 = Venue.objects.get(id=data["alternate_venue_2"]) if data["alternate_venue_2"] else None
-
-#         # Determine request status based on user role
-#         if request.user.role in ['club', 'fests', 'student_chapter']:
-#             status = "waiting_for_approval"
-#         else:
-#             status = "pending"
-
-#         # Checking if a similar request exists
-#         checker = Request.objects.filter(
-#             user=request.user,
-#             date=request.session.get("start_date"),
-#             time=request.session.get("start_time"),
-#             duration=request.session.get("booking_duration"),
-#             venue=venue_obj,
-#             alternate_venue_1=alt_venue_1,
-#             alternate_venue_2=alt_venue_2,
-#             need=data["purpose"],
-#             event_details=data["event_type"],
-#             status=status,
-#             phone_number=data["phone_number"],  # Match phone number
-#             email=data["email"],  # Match email
-#             additional_info=data["additional_info"],  # Match extra info
-#         ).exists()
-
-#         if not checker:
-#             # Creating a new request entry
-#             booking_request = Request.objects.create(
-#                 user=request.user,
-#                 date=request.session.get("start_date"),
-#                 time=request.session.get("start_time"),
-#                 duration=request.session.get("booking_duration"),
-#                 venue=venue_obj,
-#                 alternate_venue_1=alt_venue_1,
-#                 alternate_venue_2=alt_venue_2,
-#                 need=data["purpose"],
-#                 event_details=data["event_type"],
-#                 status=status,
-#                 phone_number=data["phone_number"],  # Store phone number
-#                 email=data["email"],  # Store email
-#                 additional_info=data["additional_info"],  # Store additional info
-#             )
-
-#             # Send confirmation email
-#             send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, status, now())
-
-#             print('Booking request successfully created:', booking_request)
-
-#         return redirect("/request_booking/booking_status")
-
-#     return JsonResponse({"error": "Invalid request"}, status=400)
-
-
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from datetime import datetime
-from .models import Request, Venue
-
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from datetime import datetime
-from .models import Request, Venue
 
 
 
@@ -795,9 +508,7 @@ def process_booking(request):
 
         # Convert date and time to appropriate formats
         try:
-            # start_time_obj = datetime.strptime(start_time, "%H:%M").time()
-            # end_time_obj = datetime.strptime(end_time, "%H:%M").time()
-            # Convert string time to datetime.time object
+            
             start_time_obj = datetime.strptime(start_time, "%H:%M").time()
             end_time_obj = datetime.strptime(end_time, "%H:%M").time()
 
@@ -812,7 +523,6 @@ def process_booking(request):
             duration = end_time - start_time
 
             # Calculate duration in minutes
-            # duration = (datetime.combine(date_obj, end_time_obj) - datetime.combine(date_obj, start_time_obj)).seconds // 60
             print(f"Parsed Date: {date_obj}, Start Time: {start_time_obj}, End Time: {end_time_obj}, Duration: {duration} minutes")
 
             # Fetch venue instances
@@ -975,11 +685,7 @@ def process_booking_multiple(request):
             print(ss)
             print('[[[[[[[[[]]]]]]]]]')
             print('[[[[[[[[[]]]]]]]]]')
-            print('[[[[[[[[[]]]]]]]]]')
-            print('[[[[[[[[[]]]]]]]]]')
-            print('[[[[[[[[[]]]]]]]]]')
-            print('[[[[[[[[[]]]]]]]]]')
-            print('[[[[[[[[[]]]]]]]]]')
+            
             num_weeks = int(request.POST.get("num_weeks", 1))
             weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
 
@@ -1011,13 +717,9 @@ def process_booking_multiple(request):
             print(f"Parsed weekdays: {weekdays}")
 
             print('lkvjdspojvojofjoifuoiujeoajwoihjo')
-            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
-            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
-            print('lkvjdspojvojofjoifuoiujeoajwoihjo')
+           
 
-            # Time parsing
-            # start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
-            # end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
+            
             start_time = int(start_time_str)
             end_time = int(end_time_str)
             duration = end_time - start_time
@@ -1111,8 +813,7 @@ def process_booking_multiple(request):
                     created_count += 1
 
             print('iuikkkkkkkddjq87701740970')
-            print('iuikkkkkkkddjq87701740970')
-            print('iuikkkkkkkddjq87701740970')
+            
             # Reverse the dictionary: from {0: 'Monday', 1: 'Tuesday', ...}
             NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
             weekday_names = tuple([NUM_TO_DAY[num] for num in weekdays])
@@ -1174,10 +875,7 @@ def process_booking_multiple(request):
         print("heherer ewrewrhewjwhrjwh in request multiple")
         return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
-from datetime import datetime, timedelta
-from django.utils.timezone import make_aware
-from django.db.models import Q
-import calendar
+
 
 
 
@@ -1198,10 +896,7 @@ def check_multiple_week_availability_view(request):
 
             available_venues = []
             user=request.user
-            # event_type = request.POST.get("eventType")
-            # full_name = request.POST.get("fullName")
-            # email = request.POST.get("email", user.email)
-            # organization_name = request.POST.get("organization_name")
+            
             start_time_str = request.POST.get("start_time")
             print("1")
             end_time_str = request.POST.get("end_time")
@@ -1263,15 +958,6 @@ def check_multiple_week_availability_view(request):
 
 
 
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-
-
-
-
-# utils/email_utils.py
 
 from django.core.mail import send_mail
 
@@ -1376,24 +1062,8 @@ def send_forwarded_notification(to_email , request, venue_obj, alt_venue_1, alt_
 
 
 
-# Example usage:
-# send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, "Pending")
-
-    
-
-
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from django.utils.timezone import now
-
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
-    # Get venue in-charge email
-    # venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
-
-    # hardcoded it , as there will be only one venue admin
+    
     venue_incharge_email = venue_obj.venue_admin
     print()
     print('---------in send_booking_request_email()------')
@@ -1456,8 +1126,6 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
 
     print('---------Ended ---- send_booking_request_email()------')
 
-# Example usage:
-# send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, data, "Pending")
 
 
 
@@ -1540,26 +1208,6 @@ COEP Venue Booking System
 
 
 
-'''
-cumulative_request_id=cumulative_request_id,
-                user=user,
-                full_name=full_name,
-                email=email,
-                phone_number=phone_number,
-                organization_name=organization_name,
-                event_type=event_type,
-                guest_count=guest_count,
-                event_details=event_details,
-                purpose=purpose,
-                special_requirements=special_requirements,
-                venue=venue,
-                start_date=start_date,
-                num_weeks=num_weeks,
-                weekdays=",".join([str(day) for day in weekdays]),  # Store as comma-separated string
-                time=start_time,
-                duration=duration,
-                status='waiting_for_approval'
-'''
 
 
 
@@ -1639,30 +1287,6 @@ def cumulative_send_confirmation_email_to_requester(email, full_name, venue_obj,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import Request
-
-
-
 @login_required
 def booking_status(request):
     """
@@ -1672,15 +1296,7 @@ def booking_status(request):
     print()
     print('in booking_status() ')
     print()
-    print()
-    print()
-    print()
-    print()
-    print()
-    print()
-    print()
-    print()
-    print()
+    
     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
 
     if not user_id:
@@ -1705,92 +1321,9 @@ def booking_status(request):
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
 
 
-from django.db.models import OuterRef, Subquery
-
-
-# @login_required
-# def cumulative_booking_status(request):
-#     """
-#     View to fetch and display booking requests for the logged-in user only.
-#     """
-#     print()
-#     print()
-#     print('in cumulatuve_booking_status() ')
-#     print()
-#     print()
-    
-#     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
-
-#     if not user_id:
-#         return JsonResponse({"error": "User ID not found in session"}, status=400)
-
-#     # Fetch only the requests made by the logged-in user
-#     # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
-#     # Get distinct cumulative requests with their latest entry
-#     # requests = Request.objects.filter(
-#     #     user_id=user_id,
-#     #     cumulative_booking='1'
-#     # ).order_by('cumulative_request_id', '-date').distinct('cumulative_request_id')
-
-#     # Get one request per cumulative_request_id (the most recent one by date)
-#     # requests = Request.objects.filter(
-#     #     cumulative_request_id=OuterRef('cumulative_request_id'),
-#     #     user_id=user_id,
-#     #     cumulative_booking='1'
-#     # ).order_by('-date')
-
-#     # requests = Request.objects.filter(
-#     #     user_id=user_id,
-#     #     cumulative_booking='1',
-#     #     id__in=Subquery(requests.values('id')[:1])
-#     # ).order_by('cumulative_request_id', '-date')
-#     # requests = Request.objects.filter(user_id=user_id,cumulative_booking='1').select_related('venue').order_by('-date')
-#     requests = Request.objects.filter(
-#         user_id=user_id,
-#         cumulative_booking=True
-#     ).select_related('venue').order_by('cumulative_request_id')
 
 
 
-#     print(f"User ID: {user_id}, Requests: {requests}")  # Debugging
-
-#     person_name = request.session.get('name')
-
-#     print('in cumulatuve_booking_status booking status function')
-#     print()
-#     print()
-#     print('requests : ', requests)
-#     print('preseon name : ' , person_name)
-#     print()
-#     print()
-    
-
-#     return render(request, "request_booking/cumulative_booking_status.html", {"pending_requests": requests , "person_name": person_name})
-
-
-
-
-
-# @login_required
-# def cumulative_booking_status(request):
-#     """
-#     View to fetch and display cumulative booking requests for the logged-in user only.
-#     """
-#     user_id = request.session.get('user_id')
-#     if not user_id:
-#         return JsonResponse({"error": "User ID not found in session"}, status=400)
-
-#     # Fetch cumulative requests (parent records)
-#     cumulative_requests = CumulativeRequest.objects.filter(
-#         user_id=user_id
-#     ).select_related('venue').order_by('-created_at')
-
-#     person_name = request.session.get('name')
-    
-#     return render(request, "request_booking/cumulative_booking_status.html", {
-#         "pending_requests": cumulative_requests,
-#         "person_name": person_name
-#     })
 
 
 from users.models import CustomUser
@@ -1824,8 +1357,7 @@ def cumulative_booking_status(request):
         # Format dates for display
         dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
 
-        # unique_weekdays_list = list(dict.fromkeys(cr.weekdays))  # Preserves order
-        # weekdays_string = ','.join(map(str, unique_weekdays_list))
+        
 
         # Step 1: Clean and deduplicate the weekday numbers
         clean_weekdays = list(dict.fromkeys(cr.weekdays.split(',')))
@@ -1895,122 +1427,8 @@ def cumulative_booking_status(request):
 
 
 
-'''
-def cumulative_request_booking(request): 
-    user = request.user
-    try:
-        # Fetch user from CustomUser model
-        user = CustomUser.objects.get(email=user)
-    except CustomUser.DoesNotExist:
-        return render(request, 'faculty_advisor/pending_requests.html', {
-            'requests': []
-        })
-
-    # Fetch cumulative requests with status 'waiting_for_approval' or 'pending'
-    cumulative_requests = CumulativeRequest.objects.select_related('venue', 'user').filter(
-        Q(status="waiting_for_approval") | Q(status="pending"),
-        # venue__department_incharge=user
-    ).order_by('-created_at')
-    print('cumulative_requests : ', cumulative_requests)
-
-    # Prepare the context data
-    pending_cumulative_requests = []
-    for cr in cumulative_requests:
-        # Get all individual requests associated with this cumulative request
-        individual_requests = Request.objects.filter(
-            cumulative_request_id=cr.cumulative_request_id
-        ).select_related('venue', 'user')
-        
-        # Format dates for display
-        dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
-        
-        pending_cumulative_requests.append({
-            'cumulative_request_id': str(cr.cumulative_request_id),
-            'email': cr.email or cr.user.email,
-            'phone_number': cr.phone_number or cr.user.phone_number,
-            'event_type': cr.event_type,
-            'dates': dates,  # All dates from individual requests
-            'start_date': cr.start_date.strftime('%Y-%m-%d'),
-            'weekdays': cr.weekdays,  # String representation of weekdays
-            'time': f"{cr.time}:00",
-            'duration': f"{cr.duration}",
-            'num_weeks': cr.num_weeks,
-            'venue': {
-                'venue_name': cr.venue.venue_name if cr.venue else 'Unknown Venue',
-                'capacity': cr.venue.capacity if cr.venue else 'N/A',
-            },
-            'user': {
-                'name': cr.user.name if cr.user else 'Unknown',
-                'organization_name': cr.user.organization_name if cr.user else 'Unknown'
-            },
-            'guest_count': cr.guest_count,
-            'event_details': cr.event_details if cr.event_details else 'N/A',
-            'status': cr.status,
-            'reasons': cr.reasons if cr.status == 'rejected' else None,
-            'purpose': cr.purpose if cr.purpose else 'N/A',
-            # 'additional_info': cr.additional_info,
-            'additional_info': individual_requests.first().additional_info if individual_requests.exists() else 'N/A',
-            'special_requirements': cr.special_requirements,
-            'individual_request_count': individual_requests.count(),  # How many individual requests
-            'individual_requests': [str(req.request_id) for req in individual_requests]  # List of request IDs
-        })
-
-    context = {
-        'pending_requests': pending_cumulative_requests
-    }
-
-    print("Cumulative Context:")
-    print(json.dumps(context, indent=4))
-    print('====END OF CONTEXT====')
-
-    return render(request, 'venue_admin/get_cumulative_requests.html', context)
 
 
-'''
-
-
-
-
-
-
-
-
-
-# from django.db.models import Count
-# from request_booking.models import Request, CumulativeRequest  # adjust if needed
-
-# @login_required
-# def cumulative_booking_status(request):
-#     """
-#     View to fetch and display cumulative booking requests for the logged-in user only.
-#     """
-#     user_id = request.session.get('user_id')  # Get the logged-in user's ID from session
-
-#     if not user_id:
-#         return JsonResponse({"error": "User ID not found in session"}, status=400)
-
-#     # Fetch only the cumulative requests made by the logged-in user
-#     cumulative_requests = CumulativeRequest.objects.filter(user_id=user_id).order_by('-created_at')
-
-#     person_name = request.session.get('name')
-
-#     print('In booking_status(): showing cumulative requests')
-#     print(f"User ID: {user_id}")
-#     print(f"Cumulative Requests: {cumulative_requests}")
-
-#     return render(request, "request_booking/booking_status.html", {
-#         "cumulative_requests": cumulative_requests,
-#         "person_name": person_name
-#     })
-
-
-
-
-
-
-
-from django.shortcuts import render
-from .models import Venue
 
 def venue_list(request):
     # Fetch all venue details
@@ -2039,34 +1457,6 @@ def venue_list(request):
 
 def index(request):
     return render(request , 'request_booking/index.html')
-
-
-
-
-# def cancel_booking(request):
-#     if request.method == 'POST':
-#         request_id = request.POST.get('request_id')
-#         cancel_reason = request.POST.get('cancel_reason')
-        
-#         try:
-#             # Get the booking request
-#             booking = BookingRequest.objects.get(request_id=request_id, user=request.user)
-            
-#             # Update the status and save reason
-#             booking.status = 'cancelled'
-#             booking.cancellation_reason = cancel_reason
-#             booking.save()
-            
-#             messages.success(request, 'Booking has been cancelled successfully.')
-#             return redirect('bookings')  # Redirect to your bookings page
-            
-#         except BookingRequest.DoesNotExist:
-#             messages.error(request, 'Booking not found or you are not authorized to cancel it.')
-#             return redirect('bookings')
-    
-#     # If not POST, redirect back
-#     return redirect('request_booking/booking_status')
-
 
 
 
@@ -2115,78 +1505,9 @@ def send_cancellation_email_to_user(user_email, user_name, venue_name, event_dat
 
 
 
-
-
-
-
-
-
-
-
-# def cancel_booking(request):
-#     print()
-#     print()
-#     print('---cancel_booking()---')
-#     print()
-#     print()
-#     if request.method == 'POST':
-#         request_id = request.POST.get('request_id')
-#         cancel_reason = request.POST.get('cancel_reason')
-
-#         print("cancel_reason : " , cancel_reason)
-#         print()
-#         print()
-#         print('---cancel_booking()---')
-#         print('---cancel_booking()---')
-#         print('---cancel_booking()---')
-#         print('---cancel_booking()---')
-        
-#         try:
-#             # Get the booking
-#             booking = Booking.objects.get(request__request_id=request_id, user=request.user)
-
-#             # Check if status is either 'approved' or 'pending'
-#             if booking.request.status not in ['approved', 'pending']:
-#                 print("booking.status not in [approved, pending]")
-#                 messages.error(request, f'Only bookings with status "approved" or "pending" can be cancelled. Current status: {booking.status}')
-#                 return redirect('/request_booking/booking_status')
-            
-#             # Cancel the booking
-#             booking.status = 'user-cancelled'
-#             booking.msg = cancel_reason  # If you want to store user comment
-#             booking.save()
-
-#             # Also update the corresponding request status to 'user-cancelled'
-#             booking.request.status = 'user-cancelled'
-#             booking.request.reasons = cancel_reason  # Store the reason if needed
-#             booking.request.save()
-
-#             send_cancellation_email_to_user(
-#                 user_email=booking.user.email,
-#                 user_name=booking.user.name,
-#                 venue_name=booking.venue.venue_name,
-#                 event_date=booking.date,
-#                 event_time=booking.time,
-#                 cancel_reason=cancel_reason
-#             )
-#             print('mail donemail donemail donemail donemail donemail done')
-
-#             messages.success(request, 'Booking has been cancelled successfully.')
-#             return redirect('/request_booking/booking_status')  # Replace with your actual redirect target
-
-#         except Booking.DoesNotExist:
-#             messages.error(request, 'Booking not found or you are not authorized to cancel it.')
-#             return redirect('/request_booking/booking_status')  # Replace with your actual redirect target
-    
-#     # If not POST, redirect back
-#     return redirect('/request_booking/booking_status')
-
-
 def cancel_booking(request):
     print('\n\n---cancel_booking()---\n\n')
-    print('\n\n---cancel_booking()---\n\n')
-    print('\n\n---cancel_booking()---\n\n')
-    print('\n\n---cancel_booking()---\n\n')
+    
     
     if request.method == 'POST':
         request_id = request.POST.get('request_id')
@@ -2201,10 +1522,7 @@ def cancel_booking(request):
             if req_obj.status == 'approved':
                 print('approved')
                 print('approved')
-                print('approved')
-                print('approved')
-                print('approved')
-                print('approved')
+                
                 # Booking exists → cancel both
                 try:
                     booking = Booking.objects.get(request=req_obj, user=request.user)
@@ -2238,10 +1556,7 @@ def cancel_booking(request):
             elif req_obj.status == 'pending':
                 print('pending')
                 print('pending')
-                print('pending')
-                print('pending')
-                print('pending')
-                print('pending')
+                
                 # Only Request exists → cancel request
                 req_obj.status = 'user-cancelled'
                 req_obj.reasons = cancel_reason
@@ -2271,35 +1586,9 @@ def cancel_booking(request):
     return redirect('/request_booking/booking_status')
 
 
-'''
-import json
-
-# Get the JSON data from the response
-json_data = json.loads(available_venue_response.content.decode('utf-8'))
-
-# If the JSON contains a list, access the first element
-if isinstance(json_data, list) and len(json_data) > 0:
-    first_element = json_data[0]
-    print("First element:", first_element)
-    print("Type of first element:", type(first_element))
-# If the JSON contains a dictionary, you might want to access specific keys
-elif isinstance(json_data, dict):
-    print("JSON data is a dictionary:", json_data)
-    # Access keys as needed
-    # Example: first_key = list(json_data.keys())[0]
-else:
-    print("Unexpected JSON structure:", json_data)
-'''
 
 
 
-
-
-from django.shortcuts import render
-from django.views import View
-from django.http import HttpResponse
-import pprint
-import uuid
 
 def print_session_values(request):
     print("------ Session Values ------")
@@ -2314,12 +1603,7 @@ def print_session_values(request):
 
 class RequestMultipleWeekAvailabilityView(View):
     def get(self, request, *args, **kwargs):
-        # Handle GET request - render the empty form
-        # venues = [  # Mock data - replace with your actual venue query
-        #     {'id': 1, 'venue_name': 'Main Hall', 'capacity': 200},
-        #     {'id': 2, 'venue_name': 'Conference Room A', 'capacity': 50},
-        # ]
-        # venues = Venue.objects.all()
+        
         venues = Venue.objects.all().values_list('venue_name', flat=True)
         print('venues : ', venues)
 
@@ -2341,7 +1625,6 @@ class RequestMultipleWeekAvailabilityView(View):
             "email": user_email,
             "name": user_name
         })
-        # return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
     def post(self, request, *args, **kwargs):
         print('in RequestMultipleWeekAvailabilityView POST')
@@ -2436,12 +1719,7 @@ class RequestMultipleWeekAvailabilityView(View):
             '6': 'Sunday'
         }
 
-        # # Get the weekday numbers from session
-        # weekday_numbers = request.session.get('weekdays', [])
         
-        # # Convert to weekday names
-        # weekday_names = [WEEKDAY_MAP.get(num, 'Unknown') for num in weekday_numbers]
-        # print('weekday_names : ', weekday_names)
         
 
         return render(request, 'request_booking/book_multiple_venues.html', {
@@ -2470,36 +1748,6 @@ class RequestMultipleWeekAvailabilityView(View):
                           content_type="text/plain")
 
 
-"""
-# Check if it's a JsonResponse (which it should be for success cases)
-    if isinstance(response, JsonResponse):
-        import json
-        data = json.loads(response.content)
-        
-        if data["status"] == "success":
-            # Get the venues from the database using the data from the response
-            # Assuming data["venues"] contains venue IDs or relevant data to identify venues
-            from django.apps import apps
-            Venue = apps.get_model('your_app_name', 'Venue')
-            
-            # This step might vary depending on what exactly is in data["venues"]
-            # If it's a list of venue IDs:
-            venues = Venue.objects.filter(id__in=data["venues"])
-            
-            # If you need to extract building_name from one of the venues
-            building_name = venues[0].building.name if venues and venues[0].building else ""
-            
-            return render(request, 'request_booking/user_dashboard.html', {
-                "venues": venues,
-                "building_name": building_name
-            })
-        else:
-            # Handle error case
-            return render(request, 'request_booking/user_dashboard.html', {
-                "error_message": data["message"]
-            })
-
-"""            
 
 
 
@@ -2519,10 +1767,7 @@ def arnav_check_multiple_week_availability_view(request):
 
         available_venues = []
         user=request.user
-            # event_type = request.POST.get("eventType")
-            # full_name = request.POST.get("fullName")
-            # email = request.POST.get("email", user.email)
-            # organization_name = request.POST.get("organization_name")
+            
         start_time_str = request.POST.get("start_time")
         print("1")
         end_time_str = request.POST.get("end_time")
@@ -2541,7 +1786,6 @@ def arnav_check_multiple_week_availability_view(request):
         start_hour = int(start_time_str)
         print(start_hour)
         print("8")
-        # end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
         end_hour = int(end_time_str)
         print(end_time_str)
         print("9")
@@ -2573,17 +1817,6 @@ def arnav_check_multiple_week_availability_view(request):
 
         print("venues available:", available_venues)
 
-            # return JsonResponse({
-            #     "status": "success",
-            #     "venues": available_venues,
-            # })
+           
         return available_venues
 
-    #     except Exception as e:
-    #         return JsonResponse({
-    #             "status": "error",
-    #             "message": f"Error occurred: {str(e)}"
-    #         }, status=400)
-
-    # else:
-    #     return render(request, "request_booking/check_multiple_week_avail.html")

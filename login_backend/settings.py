@@ -169,7 +169,7 @@ EMAIL_HOST = 'smtp.office365.com'  # Change as per your SMTP provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'arnavp22.comp@coeptech.ac.in'  # Your sender email
-EMAIL_HOST_PASSWORD = ''  # Your email password (use environment variables for security)
+EMAIL_HOST_PASSWORD = 'arnab^130jlf!ls;djAwarnab^130jlf!ls;djAw'  # Your email password (use environment variables for security)
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Set default sender email
 
 
