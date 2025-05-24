@@ -61,9 +61,9 @@
             <div class="input-box button">
                 <input type="submit" value="Login">
             </div>
-            <div class="text">
+            {% comment %} <div class="text">
                 <h3>Don't have an account? <a href="{% url 'users:register' %}">Register</a></h3>
-            </div>
+            </div> {% endcomment %}
             <div class="text">
                 <h3><a href="{% url 'auth_otp:forgot_password' %}">Forgot Password?</a></h3>
             </div>

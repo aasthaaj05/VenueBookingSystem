@@ -740,6 +740,7 @@
                     
                     
                         {% for cumulative_request in pending_requests %}
+                        
                         <tr id="row-{{ cumulative_request.cumulative_request_id }}">
                             <td>{{ cumulative_request.user.name }}</td>
                             <td>{{ cumulative_request.venue.venue_name }}</td>
@@ -770,7 +771,11 @@
                                         '{{ cumulative_request.guest_count }}',
                                         '{{ cumulative_request.additional_info }}',
                                         '{{ cumulative_request.special_requirements }}',
-                                        '{{ cumulative_request.purpose }}'
+                                        '{{ cumulative_request.purpose }}',
+                                        '{{ cumulative_request.start_date }}',
+                                        '{{ cumulative_request.weekdays }}',
+                                        '{{ cumulative_request.num_weeks }}',
+                                        '{{ cumulative_request.user.organization_name }}'
                                     )">
                                         <i class="fas fa-eye"></i> View
                                     </button>
@@ -934,7 +939,7 @@
         let currentRequestId = null;
         let currentActionType = null;
 
-        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements, need) {
+        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements, need, start_date , week_days, num_weeks, organization_name) {
             currentRequestId = requestId;
 
             console.log('special_requirements...',special_requirements)
@@ -943,7 +948,7 @@
             const detailsHtml = `
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-users"></i> Organization</div>
-                    <div class="detail-value">${need}</div>
+                    <div class="detail-value">${organization_name}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-user-tie"></i> Requester Name</div>
@@ -960,6 +965,18 @@
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Venue</div>
                     <div class="detail-value">${venue}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Start Date</div>
+                    <div class="detail-value">${start_date}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Weekdays</div>
+                    <div class="detail-value">${week_days}</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Number of Weeks</div>
+                    <div class="detail-value">${num_weeks} weeks</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-calendar-alt"></i> Date</div>

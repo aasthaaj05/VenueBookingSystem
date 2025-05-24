@@ -1039,9 +1039,16 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="start_date">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" required>
+                        <input type="date" name="start_date" id="start_date" class="form-control" required>
                         <i class="fas fa-calendar-day form-icon"></i>
                     </div>
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const today = new Date().toISOString().split('T')[0];
+                            document.getElementById('start_date').setAttribute('min', today);
+                        });
+                    </script>
 
                     <div class="form-group">
                         <label for="num_weeks">Number of Weeks</label>

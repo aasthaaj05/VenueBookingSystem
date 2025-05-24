@@ -199,7 +199,7 @@ def reject_cumulative_request(request, cumulative_request_id):
             cumulative_req.reasons = reason
             cumulative_req.save(update_fields=["status", "reasons"])
 
-            send_cumulative_booking_rejected_email(req, store_rejection_msg)
+            send_cumulative_booking_rejected_email(req, cumulative_req,store_rejection_msg)
 
             messages.success(request, "Cumulative booking and all its requests have been rejected.")
             print("✅ Cumulative booking rejected successfully")
@@ -383,6 +383,33 @@ def cumulative_request_booking(request):
         
         # Format dates for display
         dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+
+         # Step 1: Clean and deduplicate the weekday numbers
+        clean_weekdays = list(dict.fromkeys(cr.weekdays.split(',')))
+
+        # Step 2: Mapping numbers to weekday names
+        weekday_map = {
+            '0': 'Monday',
+            '1': 'Tuesday',
+            '2': 'Wednesday',
+            '3': 'Thursday',
+            '4': 'Friday',
+            '5': 'Saturday',
+            '6': 'Sunday'
+        }
+
+        # Step 3: Get list of weekday names
+        weekday_names = [weekday_map[num] for num in clean_weekdays if num in weekday_map]
+
+        # Step 4: Create comma-separated string
+        weekday_str = ', '.join(weekday_names)
+
+        # Print result
+        print('clean_weekdays :', clean_weekdays)
+        print('weekday_names :', weekday_names)
+        print('weekday_str :', weekday_str)
+
+
         
         pending_cumulative_requests.append({
             'cumulative_request_id': str(cr.cumulative_request_id),
@@ -391,7 +418,7 @@ def cumulative_request_booking(request):
             'event_type': cr.event_type,
             'dates': dates,  # All dates from individual requests
             'start_date': cr.start_date.strftime('%Y-%m-%d'),
-            'weekdays': cr.weekdays,  # String representation of weekdays
+            'weekdays': weekday_str,  # String representation of weekdays
             'time': f"{cr.time}:00",
             'duration': f"{cr.duration}",
             'num_weeks': cr.num_weeks,
@@ -954,7 +981,7 @@ def send_booking_rejected_email(req, full_msg):
     print()
     print()
 
-def send_cumulative_booking_rejected_email(req, full_msg):
+def send_cumulative_booking_rejected_email(req,cumulative_req, full_msg):
     print('\n--------start : send_cumulative_booking_rejected_email-----------')
 
     requester_email = req.email  # From CumulativeRequest model
@@ -976,11 +1003,11 @@ def send_cumulative_booking_rejected_email(req, full_msg):
     guest_count = req.guest_count or "N/A"
     event_details = req.event_details or "N/A"
     purpose = req.purpose or "N/A"
-    start_date = req.start_date or "N/A"
-    weekdays = req.weekdays or "N/A"
+    start_date = cumulative_req.start_date or "N/A"
+    weekdays = cumulative_req.weekdays or "N/A"
     time = req.time or "N/A"
-    duration = req.duration or "N/A"
-    num_weeks = req.num_weeks or "N/A"
+    duration = cumulative_req.duration or "N/A"
+    num_weeks = cumulative_req.num_weeks or "N/A"
     special_requirements = req.special_requirements or "None"
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
