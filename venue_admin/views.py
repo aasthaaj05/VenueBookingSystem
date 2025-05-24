@@ -1,35 +1,46 @@
-from django.shortcuts import render
-
-# Create your views here.
 from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.db import transaction
 from django.db.models import Q
 from django.contrib import messages
-
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
 from collections import defaultdict
 import uuid
-
 # from .models import Request, Booking, Venue, Rejection, RejectedBooking
 from gymkhana.serializers import (
     VenueSerializer,
     RequestSerializer,
     RejectionSerializer,
+    BookingSerializer,
 )
 from gymkhana.models import Request, Booking, Venue, Rejection, RejectedBooking
 from users.models import CustomUser
 from django.views.decorators.csrf import csrf_exempt
-
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.conf import settings  # Import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from gymkhana.models import Venue
+from request_booking.models import Request
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+import logging
+from django.http import JsonResponse
+from request_booking.models import CumulativeRequest
+from request_booking.models import CumulativeRequest
+from django.db.models import Q
+import json
+import smtplib
+from django.utils.timezone import now
+import ssl
 
-
+logger = logging.getLogger(__name__)
 
 
 sender_email = settings.EMAIL_HOST_USER
@@ -53,16 +64,6 @@ def get_cumulative_requests(request):
     
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from gymkhana.models import Venue
-from request_booking.models import Request
-
-
-
-from django.contrib.auth import logout
-from django.shortcuts import redirect
-
 def logout_view(request):
     # Clear the session data
     request.session.flush()
@@ -74,19 +75,9 @@ def logout_view(request):
     return redirect('/users/login')  # Change 'login' to the actual login page name
 
 
-from django.shortcuts import get_object_or_404, redirect
-from django.http import JsonResponse
-import logging
-from django.http import JsonResponse
-
-logger = logging.getLogger(__name__)
-
 def reject_request(request, request_id):
     print("""Reject a request and store the reason in the rejection table.""")
     req = get_object_or_404(Request, request_id=request_id)
-
-    print("""23r23fr23frq23r Reject a request and store the reason in the rejection table.""")
-
     print("Form data (POST):", request.POST)
     print("GET data (URL params):", request.GET)
     print("User:", request.user)
@@ -96,9 +87,6 @@ def reject_request(request, request_id):
 
     if req.status != 'pending':
         return JsonResponse({"error": "Request is not in a pending state."}, status=400)
-
-    print("#############################################Req found!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
     reason = request.POST.get("feedback_reason", "")
     feedback_from_admin = request.POST.get("feedback_comments", "")
     alternate_venues_suggestion = request.POST.get("alternative_options", "")
@@ -143,10 +131,7 @@ def reject_request(request, request_id):
     return redirect('/venue_admin/requests')
 
 def reject_cumulative_request(request, cumulative_request_id):
-    print()
     print("-------in reject_cumulative_request()-------")
-    print("Method:", request.method)
-    print()
 
     if request.method == "POST":
         print('POST data received in reject_cumulative_request():')
@@ -189,11 +174,7 @@ def reject_cumulative_request(request, cumulative_request_id):
                 )
                 store_rejection_msg = rejection.msg
 
-                # # Send rejection email
-                # try:
-                #     # send_booking_rejected_email(req, rejection.msg)
-                # except Exception as e:
-                #     logger.error(f"Failed to send rejection email for request {req.request_id}: {e}")
+                # Send rejection email
 
             cumulative_req.status = 'rejected'
             cumulative_req.reasons = reason
@@ -244,11 +225,6 @@ def pending_requests_by_date(request):
         grouped_requests[str(req.date)].append(RequestSerializer(req).data)
 
     return Response(grouped_requests, status=status.HTTP_200_OK)
-
-
-
-import json
-
 
 
 @api_view(['GET'])  # Accept user_id in the request body
@@ -340,21 +316,8 @@ def request_booking(request):
     # print('context : ', context)  # Debugging output
     print("Context:")
     print(json.dumps(context, indent=4))
-
-    print('[]][][][][]')
-
-
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html', context)
-    # return render(request, 'venue_admin/venue_admin_get_pending_requests.html', {
-    #     'pending_requests': json.dumps(context['pending_requests'])
-    # })
 
-from request_booking.models import CumulativeRequest
-
-
-
-from request_booking.models import CumulativeRequest
-from django.db.models import Q
 
 def cumulative_request_booking(request): 
     user = request.user
@@ -456,9 +419,7 @@ def cumulative_request_booking(request):
 
 
 
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
+
 
 # New function to notify venue in-charge
 def send_booking_accepted_email_to_incharge(req):
@@ -519,220 +480,6 @@ def send_booking_accepted_email_to_incharge(req):
         server.starttls()
         server.login(sender_email, sender_password)
         server.send_message(msg)
-
-    # try:
-    #     server = smtplib.SMTP(smtp_server, smtp_port)
-    #     print('poipipio')
-    #     server.starttls()
-    #     print('starttls , starttls , starttls , starttls , starttls')
-    #     print('sender_password : ', sender_password)
-    #     print('sender_email : ', sender_email)
-    #     server.login(sender_email, sender_password)
-    #     print('login ., login , login , login , login , login')
-    #     # server.sendmail(sender_email, incharge_email, msg.as_string())
-    #     # print('sendmail , sendmail , sendmail , sendmail , sendmail')
-    #     # server.quit()
-    #     server.send_message(msg)
-    #     print("Email sent successfully to in-charge.")
-    # except Exception as e:
-    #     print("Failed to send email to in-charge:", e)
-
-
-
-
-
-# # send_booking_accepted_email(req , feedback_reason , feedback_comments)
-# def send_booking_accepted_email(req , feedback_reason , feedback_comments):
-#     print()
-#     print()
-#     print('--------start : send_booking_accepted_email-----------')
-#     requester_email = req.user.email  # Get requester's email
-#     print('requester_email : ' , requester_email)
-#     print('venue incharge mail', req.venue.dept_incharge_email)
-
-#     if not requester_email:
-#         print("Requester email not found.")
-#         return
-
-#     # Get incharge contact info from venue
-#     venue = req.venue
-#     incharge_email = venue.dept_incharge_email or "Not available"
-#     incharge_phone = venue.dept_incharge_phone or "Not available"
-
-#     print('incharge_email : ',incharge_email)
-#     print('incharge_phone : ', incharge_phone)
-
-    
-
-#     # Email content
-#     msg = MIMEMultipart()
-#     msg['From'] = sender_email
-#     msg['To'] = requester_email
-#     print('sender_email : ', sender_email)
-#     print('requester_email : ', requester_email)
-#     msg['Subject'] = "Venue Booking Approved ✅"
-
-#     body = f"""
-#     Dear {req.user.name},
-
-#     Your venue booking request has been approved! 🎉
-
-#     Booking Details:
-#     - Booking ID: {req.request_id}
-#     - Venue: {req.venue.venue_name}
-#     - Date: {req.date}
-#     - Time: {req.time}
-#     - Duration: {req.duration} hours
-#     - Event Details: {req.event_details}
-
-#     Feedback from Admin:
-#     - Feedback : {feedback_reason}
-#     - Comments : {feedback_comments}
-
-#     Please ensure you arrive on time and follow the venue guidelines.
-
-#     If you have any questions, feel free to contact the venue in-charge to ensure your needs for the venue are met.
-
-#     Venue In-Charge Contact:
-#     - Email: {incharge_email}
-#     - Phone: {incharge_phone}
-
-#     Regards,  
-#     COEP Venue Booking System
-#     """
-
-#     msg.attach(MIMEText(body, 'plain'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP(smtp_server, smtp_port) as server:
-#             server.starttls()
-#             server.login(sender_email, sender_password)
-#             server.send_message(msg)
-
-#         print(f"Booking approval email sent to {requester_email}")
-#     except Exception as e:
-#         print(f"Failed to send email: {e}")
-
-
-#     print('-----end send_booking_accepted_email--------')
-#     # Call new function to notify the in-charge
-#     send_booking_accepted_email_to_incharge(req)
-
-#     print()
-#     print()
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from django.utils.timezone import now
-
-
-# def send_booking_accepted_email(req, feedback_reason, feedback_comments):
-#     print('\n\n--------start : send_booking_accepted_email-----------')
-#     print('\n\n--------start : send_booking_accepted_email-----------')
-#     print('\n\n--------start : send_booking_accepted_email-----------')
-#     print('\n\n--------start : send_booking_accepted_email-----------')
-#     requester_email = req.user.email  # Get requester's email
-#     print('requester_email : ', requester_email)
-#     print('venue incharge mail', req.venue.dept_incharge_email)
-
-#     if not requester_email:
-#         print("Requester email not found.")
-#         return
-
-#     # Get incharge contact info from venue
-#     venue = req.venue
-#     incharge_email = venue.dept_incharge_email or "Not available"
-#     incharge_phone = venue.dept_incharge_phone or "Not available"
-
-#     print('incharge_email : ', incharge_email)
-#     print('incharge_phone : ', incharge_phone)
-
-    
-
-#     # Email content
-#     msg = MIMEMultipart()
-#     msg['From'] = sender_email
-#     msg['To'] = requester_email
-#     print('sender_email : ', sender_email)
-#     print('requester_email : ', requester_email)
-#     msg['Subject'] = "Venue Booking Approved ✅"
-
-#     body = f"""
-#     Dear {req.user.name},
-
-#     Your venue booking request has been approved! 🎉
-
-#     Booking Details:
-#     - Booking ID: {req.request_id}
-#     - Venue: {req.venue.venue_name}
-#     - Date: {req.date}
-#     - Time: {req.time}
-#     - Duration: {req.duration} hours
-#     - Event Details: {req.event_details}
-
-#     Feedback from Admin:
-#     - Feedback : {feedback_reason}
-#     - Comments : {feedback_comments}
-
-#     Please ensure you arrive on time and follow the venue guidelines.
-
-#     If you have any questions, feel free to contact the venue in-charge to ensure your needs for the venue are met.
-
-#     Venue In-Charge Contact:
-#     - Email: {incharge_email}
-#     - Phone: {incharge_phone}
-
-#     Regards,  
-#     COEP Venue Booking System
-#     """
-
-#     msg.attach(MIMEText(body, 'plain'))
-
-#     # Send email
-#     try:
-#         with smtplib.SMTP(smtp_server, smtp_port) as server:
-#             print('sender_email : ', sender_email)
-#             print('sender_password : ', sender_password)
-#             print('type(sender_email) : ', type(sender_email))
-#             print('type(sender_password) : ', type(sender_password))
-#             server.starttls()
-#             print('*********')
-            
-#             server.login(sender_email, sender_password)
-            
-#             print('//111//111//222/!!')
-#             server.send_message(msg)
-#             print('sender_email : ', sender_email)
-#             print('sender_password : ', sender_password)
-#             print(f"Booking approval email sent to {requester_email}")
-#     except Exception as e:
-#         print(f"Failed to send email: {e}")
-#     finally:
-#         print('-----end send_booking_accepted_email--------')
-#         # Call new function to notify the in-charge
-#         send_booking_accepted_email_to_incharge(req)
-#         print('\n\n')
-
-
-
-
-# Example usage:
-# send_booking_accepted_email(req)
-
-
-
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import ssl
-
-sender_email = settings.EMAIL_HOST_USER
-sender_password = settings.EMAIL_HOST_PASSWORD
-smtp_server = settings.EMAIL_HOST
-smtp_port = settings.EMAIL_PORT
 
 
 def send_booking_accepted_email(req, feedback_reason, feedback_comments):
@@ -842,22 +589,6 @@ COEP Venue Booking System
     send_booking_accepted_email_to_incharge(req)
     print('\n\n')
 
-
-
-
-
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
-sender_email = settings.EMAIL_HOST_USER
-sender_password = settings.EMAIL_HOST_PASSWORD
-smtp_server = settings.EMAIL_HOST
-smtp_port = settings.EMAIL_PORT
-
-
 def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments):
     print('\n--------start : venue_admin_send_cumulative_booking_accepted_email-----------')
     print(req)
@@ -966,8 +697,6 @@ def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason,
     msg['To'] = requester_email
     msg['Subject'] = "Venue Booking Approved ✅"
 
-    print('ppjofsjd')
-
     # Handle missing data with defaults
     full_name = req.full_name or "User"
     organization = req.organization_name or "N/A"
@@ -986,8 +715,6 @@ def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason,
     special_requirements = req.special_requirements or "None"
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
-
-    print('][]iuoueoiuf')
 
     body = f"""
 Dear {full_name if full_name.strip() else 'Requester'},
@@ -1037,12 +764,6 @@ COEP Venue Booking System
 
     print('--------end : send_booking_accepted_email-----------\n')
 
-
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 def send_booking_rejected_email(req, full_msg):
     print()
@@ -1181,12 +902,6 @@ COEP Venue Booking System
     print('--------end : send_cumulative_booking_rejected_email-----------\n')
 
 
-
-
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-
 def send_request_forwarded_email(req, new_venue):
     print()
     print()
@@ -1233,17 +948,11 @@ def send_request_forwarded_email(req, new_venue):
     # Send email
     try:
         with smtplib.SMTP(smtp_server, smtp_port) as server:
-            print('=-=-')
             server.ehlo()  # Identify yourself to the server
-            print('aaaaa')
             server.starttls()  # Secure the connection
-            print('11111')
-            server.ehlo()  # Re-identify yourself after TLS
-            print('22222')
-            server.login(SENDER_EMAIL, SENDER_PASSWORD)
-            print('ojojoj')
+            server.ehlo()  # Re-identify yourself after TLS)
+            server.login(sender_email, sender_password)
             server.send_message(msg)
-            print('-------km')
 
         print(f"Forwarding email sent to {requester_email}")
     except Exception as e:
@@ -1253,17 +962,6 @@ def send_request_forwarded_email(req, new_venue):
     print()
     print()
 
-
-
-
-
-
-import uuid
-from django.db import transaction
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from gymkhana.models import Request, Booking
-from gymkhana.serializers import BookingSerializer
 
 def forward_request_to_alternate(request):
 
@@ -1309,17 +1007,7 @@ from datetime import datetime, date
 
 
 def approve_request(request, request_id):
-    print()
-    print()
     print('-------in approve_request()-------')
-    print('-------in approve_request()-------')
-    print('-------in approve_request()-------')
-    print('-------in approve_request()-------')
-    print('-------in approve_request()-------')
-    print()
-    print()
-    print()
-    print()
 
     if request.method == "POST":
         print('in approve_request() ---ipsdcgjmfo-')
@@ -1330,9 +1018,7 @@ def approve_request(request, request_id):
         for key, value in request.POST.items():
             print(f"{key}: {value}")
 
-        print('ooooooooo')
         print(request.POST.items())
-        print('pppppp')
         feedback_reason = request.POST.get('feedback_reason')
         feedback_comments = request.POST.get('feedback_comments')
         alternative_options = request.POST.get('alternative_options')
@@ -1340,9 +1026,6 @@ def approve_request(request, request_id):
         print(feedback_reason)  # "Event appropriate for venue"
         print(feedback_comments)  # "dlsf"
         print(alternative_options)  # ""`
-        print()
-        print()
-        print('pppppppjjj')
 
 
         admin_reason = request.POST.get('feedbackReason_Admin')
@@ -1351,18 +1034,8 @@ def approve_request(request, request_id):
         print("additional_comments_Venueadmin",admin_comments)
         print("reason_for_approval",admin_reason)
 
-        print('ijnsidhogwg')
 
         req = get_object_or_404(Request, request_id=request_id)
-
-        # start_time = int(req.time.timestamp())  # Converts datetime to UNIX timestamp (integer)
-        # end_time = start_time + int(req.duration)
-
-
-        # start_time = datetime.combine(date.today(), req.time)  # Create a datetime object
-        # start_time_seconds = int(start_time.timestamp())  # Convert to UNIX timestamp
-
-        # end_time_seconds = start_time_seconds + int(req.duration)  # Assuming req.duration is in seconds
 
         user=CustomUser.objects.get(email=request.user)
         pending_requests = Request.objects.filter(
@@ -1381,10 +1054,6 @@ def approve_request(request, request_id):
 
             print('in conflict response for loop')
             print('-------------')
-            print('-------------')
-            print('-------------')
-            print()
-            print()
             
             # ✅ Overlap conditions for slot-based conflict:
             if not (existing_end <= start_time or existing_start >= end_time):
@@ -1421,14 +1090,8 @@ def approve_request(request, request_id):
             "additional_comments_Venueadmin":feedback_comments,
             "reason_for_approval":feedback_reason,       #dropdown
         }
-        print()
-        print('kkkkkkkkkkkk')
         print("additional_comments_Venueadmin",feedback_comments)
         print("reason_for_approval",feedback_reason)
-        print()
-        print()
-        print()
-        print()
 
         serializer = BookingSerializer(data=booking_data)
 
@@ -1448,8 +1111,6 @@ def approve_request(request, request_id):
                     send_booking_accepted_email(req , feedback_reason , feedback_comments)
                 except Exception as e:
                     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
-                print()
-                print()
 
             return redirect('/venue_admin/requests')
         else:
@@ -1460,12 +1121,7 @@ def approve_request(request, request_id):
 
 
 def approve_cumulative_request(request, cumulative_request_id):
-    print()
-    print()
     print('-------in approve_cumulative_request()-------')
-    
-    print()
-    print()
 
     if request.method == "POST":
         print('in approve_cumulative_request() --- POST received')
@@ -1585,41 +1241,6 @@ def approve_cumulative_request(request, cumulative_request_id):
         return redirect('/venue_admin/cumulative_requests')
 
     return redirect('/venue_admin/cumulative_requests')
-
-
-
-# def approved_bookings_view(request):
-#     user_id = request.user.id
-    
-#     # ✅ Get the user (already logged in)
-#     try:
-#         user = CustomUser.objects.get(id=user_id)
-#     except CustomUser.DoesNotExist:
-#         return render(request, 'venue_admin/approved_bookings.html', {
-#             'user': None,
-#             'managed_venues': [],
-#             'approved_bookings': []
-#         })
-
-#     # ✅ Get venues managed by the user
-#     managed_venues = Venue.objects.filter(department_incharge=user)
-
-#     # ✅ Get approved bookings for those venues
-#     approved_bookings = Booking.objects.filter(
-#         venue__in=managed_venues,
-#         status='active'
-#     ).select_related('user', 'venue')
-
-
-#     # ✅ Pass data to context
-#     context = {
-#         'user': user,
-#         'managed_venues': managed_venues,
-#         'approved_bookings': approved_bookings
-#     }
-
-#     return render(request, 'venue_admin/approved_bookings.html', context)
-
 
 def approved_bookings_view(request):
     user_id = request.user.id

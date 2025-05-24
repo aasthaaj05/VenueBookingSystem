@@ -17,6 +17,7 @@ urlpatterns = [
     path('reject_request/<uuid:request_id>', views.reject_request, name='reject_request'),
     path("approved-bookings/", views.approved_bookings_view, name="approved_bookings"),
     path('approve_request/<uuid:request_id>', views.approve_request, name="approve_request"),
+    
     path(
         'approve_cumulative_request/<uuid:cumulative_request_id>',
         views.approve_cumulative_request,
