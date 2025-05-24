@@ -1227,8 +1227,9 @@ def approve_request(request, request_id):
             print()
             
             # ✅ Overlap conditions for slot-based conflict:
-            if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time)  :
+            if not (existing_end <= start_time or existing_start >= end_time):
                 conflicting_requests.append(existing)
+
 
         if conflicting_requests:
             # Reject all conflicting requests
