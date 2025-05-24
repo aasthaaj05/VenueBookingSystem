@@ -698,8 +698,11 @@
                                         {% endif %}"
 
                                         data-duration="{{ request.duration }}"
-                                        data-start-date = "{{request.time}}"
+                                        data-start-time = "{{request.time}}"
+                                        data-start-date = "{{ request.start_date}}"
                                         data-status="{{ request.status }}"
+                                        data-numberofweek = "{{request.num_weeks}}"
+                                        data-weekdays = "{{ request.weekdays }}"
                                         data-need="{{ request.event_details }}"
                                         data-requirements="{{ request.additional_info|default:'None' }}"
                                         data-special-requirements="{{ request.special_requirements|default:'None' }}"
@@ -810,8 +813,11 @@
                 duration: button.getAttribute('data-duration'),
                 status: button.getAttribute('data-status'),
                 need: button.getAttribute('data-need'),
+                start_time:button.getAttribute('data-start-time'),
                 start_date:button.getAttribute('data-start-date'),
+                number_of_weeks:button.getAttribute('data-numberofweek'),
                 requirements: button.getAttribute('data-requirements'),
+                week_days:button.getAttribute('data-weekdays'),
                 purpose: button.getAttribute('data-purpose'),
                 special_requirements:button.getAttribute('data-special-requirements'),
                 requestId: button.getAttribute('data-request-id'),
@@ -841,21 +847,37 @@
                     <div class="detail-label">Venue Name</div>
                     <div class="detail-value">${data.venue}</div>
                 </div>
+                
                 <div class="detail-item">
-                    <div class="detail-label">Booking Date</div>
-                    <div class="detail-value">${data.date}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Start Time</div>
+                    <div class="detail-label">Booking Start Date</div>
                     <div class="detail-value">${data.start_date}</div>
                 </div>
                 <div class="detail-item">
+                    <div class="detail-label">Number of Weeks</div>
+                    <div class="detail-value">${data.number_of_weeks} weeks</div>
+                </div>
+
+                <div class="detail-item">
+                    <div class="detail-label">Booking Days</div>
+                    <div class="detail-value">${data.week_days}</div>
+                </div>
+
+
+                <div class="detail-item">
+                    <div class="detail-label">Booking Dates</div>
+                    <div class="detail-value">${data.date}</div>
+                </div>
+                
+                
+                <div class="detail-item">
+                    <div class="detail-label">Start Time</div>
+                    <div class="detail-value">${data.start_time}</div>
+                </div>
+                
+                
+                <div class="detail-item">
                     <div class="detail-label">Duration</div>
                     <div class="detail-value">${data.duration} hours</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.event_description} hours</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
@@ -863,10 +885,13 @@
                         <i class="fas ${statusIcon}"></i> ${data.status.toUpperCase()}
                     </div>
                 </div>
-                <div class="detail-item full-width">
+                
+                <div class="detail-item">
                     <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.need}</div>
+                    <div class="detail-value">${data.event_description} hours</div>
                 </div>
+                
+                
                 <div class="detail-item full-width">
                     <div class="detail-label">Purpose of Booking</div>
                     <div class="detail-value">${data.requirements}</div>

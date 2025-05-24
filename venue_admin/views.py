@@ -383,6 +383,33 @@ def cumulative_request_booking(request):
         
         # Format dates for display
         dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+
+         # Step 1: Clean and deduplicate the weekday numbers
+        clean_weekdays = list(dict.fromkeys(cr.weekdays.split(',')))
+
+        # Step 2: Mapping numbers to weekday names
+        weekday_map = {
+            '0': 'Monday',
+            '1': 'Tuesday',
+            '2': 'Wednesday',
+            '3': 'Thursday',
+            '4': 'Friday',
+            '5': 'Saturday',
+            '6': 'Sunday'
+        }
+
+        # Step 3: Get list of weekday names
+        weekday_names = [weekday_map[num] for num in clean_weekdays if num in weekday_map]
+
+        # Step 4: Create comma-separated string
+        weekday_str = ', '.join(weekday_names)
+
+        # Print result
+        print('clean_weekdays :', clean_weekdays)
+        print('weekday_names :', weekday_names)
+        print('weekday_str :', weekday_str)
+
+
         
         pending_cumulative_requests.append({
             'cumulative_request_id': str(cr.cumulative_request_id),
@@ -391,7 +418,7 @@ def cumulative_request_booking(request):
             'event_type': cr.event_type,
             'dates': dates,  # All dates from individual requests
             'start_date': cr.start_date.strftime('%Y-%m-%d'),
-            'weekdays': cr.weekdays,  # String representation of weekdays
+            'weekdays': weekday_str,  # String representation of weekdays
             'time': f"{cr.time}:00",
             'duration': f"{cr.duration}",
             'num_weeks': cr.num_weeks,

@@ -1065,6 +1065,7 @@ def process_booking_multiple(request):
                 'Sunday': 6
             }
 
+            weekdays = list(dict.fromkeys(weekdays))  # Removes duplicates while preserving order
             
 
             for week in range(num_weeks):
@@ -1077,6 +1078,10 @@ def process_booking_multiple(request):
                     # print('weekday_num : ', weekday_num)
                     offset = (weekday - week_start.weekday() + 7) % 7
                     current_date = week_start + timedelta(days=offset)
+
+                    print('------')
+                    print('current_date : ' , current_date)
+                    print('----')
 
                     # Create the Request
                     new_req = Request.objects.create(
@@ -1818,6 +1823,37 @@ def cumulative_booking_status(request):
         
         # Format dates for display
         dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+
+        # unique_weekdays_list = list(dict.fromkeys(cr.weekdays))  # Preserves order
+        # weekdays_string = ','.join(map(str, unique_weekdays_list))
+
+        # Step 1: Clean and deduplicate the weekday numbers
+        clean_weekdays = list(dict.fromkeys(cr.weekdays.split(',')))
+
+        # Step 2: Mapping numbers to weekday names
+        weekday_map = {
+            '0': 'Monday',
+            '1': 'Tuesday',
+            '2': 'Wednesday',
+            '3': 'Thursday',
+            '4': 'Friday',
+            '5': 'Saturday',
+            '6': 'Sunday'
+        }
+
+        # Step 3: Get list of weekday names
+        weekday_names = [weekday_map[num] for num in clean_weekdays if num in weekday_map]
+
+        # Step 4: Create comma-separated string
+        weekday_str = ', '.join(weekday_names)
+
+        # Print result
+        print('clean_weekdays :', clean_weekdays)
+        print('weekday_names :', weekday_names)
+        print('weekday_str :', weekday_str)
+
+
+
         
         pending_cumulative_requests.append({
             'cumulative_request_id': str(cr.cumulative_request_id),
@@ -1826,7 +1862,7 @@ def cumulative_booking_status(request):
             'event_type': cr.event_type,
             'dates': dates,  # All dates from individual requests
             'start_date': cr.start_date.strftime('%Y-%m-%d'),
-            'weekdays': cr.weekdays,  # String representation of weekdays
+            'weekdays': weekday_str,  # String representation of weekdays
             'time': f"{cr.time}:00",
             'duration': f"{cr.duration}",
             'num_weeks': cr.num_weeks,
