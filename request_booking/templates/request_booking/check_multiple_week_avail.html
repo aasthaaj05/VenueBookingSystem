@@ -1009,15 +1009,16 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="fullName">Full Name</label>
-                        <input type="text" name="fullName" class="form-control" placeholder="Your full name" value = {{ name }} required>
+                        <input type="text" name="fullName" class="form-control" placeholder="Your full name" value="{{ user_data.name }}" required>
                         <i class="fas fa-user form-icon"></i>
                     </div>
-
+                    
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="your.email@example.com" value={{ email }} required>
+                        <input type="email" name="email" class="form-control" placeholder="your.email@example.com" value="{{ user_data.email }}" required>
                         <i class="fas fa-envelope form-icon"></i>
                     </div>
+                    
 
                     <div class="form-group">
                         <label for="organization_name">Organization Name</label>

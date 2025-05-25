@@ -437,6 +437,7 @@
     {% if venues %}
     <div class="venues-container">
         {% for venue in venues %}
+        
         <div class="venue-card">
             <div class="carousel-wrapper">
                 <div class="carousel-container">
@@ -449,11 +450,11 @@
                     </div>
                 </div>
                 <div class="venue-info">
-                    <h3>{{ venue.name }}</h3>
+                    <h3>{{ venue.name.0 }}</h3>
                     <div class="venue-details">
                         
                         <h4>Capacity: {{ venue.capacity }} people</h4>
-                        <h4>Faciliqqties:</h4>
+                        <h4>Facilities:</h4>
                         <ul class="facilities-list">
                             {% for facility in venue.facilities %}
                             <li>{{ facility }}</li>
@@ -650,6 +651,7 @@
                 startTime: "{{ start_time|escapejs }}",
                 endTime: "{{ end_time|escapejs }}",
                 phone: "{{ phone|escapejs }}",
+                
                 guestCount: "{{ guestCount|escapejs }}",
                 eventDetails: "{{ eventDetails|escapejs }}",
                 purpose: "{{ purpose|escapejs }}",

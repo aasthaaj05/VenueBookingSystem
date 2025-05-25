@@ -130,6 +130,66 @@ def reject_request(request, request_id):
     # return JsonResponse(data, status=200)
     return redirect('/venue_admin/requests')
 
+# def reject_cumulative_request(request, cumulative_request_id):
+#     print("-------in reject_cumulative_request()-------")
+
+#     if request.method == "POST":
+#         print('POST data received in reject_cumulative_request():')
+#         for key, value in request.POST.items():
+#             print(f"{key}: {value}")
+
+#         reason = request.POST.get("feedback_reason", "")
+#         feedback_from_admin = request.POST.get("feedback_comments", "")
+#         alternate_venues_suggestion = request.POST.get("alternative_options", "")
+
+#         print("Reason:", reason)
+#         print("Admin Feedback:", feedback_from_admin)
+#         print("Alternatives:", alternate_venues_suggestion)
+
+#         cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+#         individual_requests = Request.objects.filter(
+#             cumulative_request_id=cumulative_request_id,
+#             status='pending'  # Only reject pending requests
+#         )
+
+#         if not individual_requests.exists():
+#             messages.error(request, "No pending requests found for this cumulative booking.")
+#             return redirect('/venue_admin/cumulative_requests')
+
+#         store_rejection_msg=""
+
+#         with transaction.atomic():
+#             for req in individual_requests:
+#                 req.status = 'rejected'
+#                 req.reasons = reason
+#                 req.save(update_fields=["status", "reasons"])
+
+#                 rejection = Rejection.objects.create(
+#                     request=req,
+#                     user=req.user,
+#                     reason=reason,
+#                     msg=f"{feedback_from_admin}\n\nSuggested Alternatives:\n{alternate_venues_suggestion}".strip(),
+#                     feedback_from_admin=feedback_from_admin,
+#                     alternate_venues_suggestion=alternate_venues_suggestion,
+#                 )
+#                 store_rejection_msg = rejection.msg
+
+#                 # Send rejection email
+
+#             cumulative_req.status = 'rejected'
+#             cumulative_req.reasons = reason
+#             cumulative_req.save(update_fields=["status", "reasons"])
+
+#             send_cumulative_booking_rejected_email(req, cumulative_req,store_rejection_msg)
+
+#             messages.success(request, "Cumulative booking and all its requests have been rejected.")
+#             print("✅ Cumulative booking rejected successfully")
+
+#         return redirect('/venue_admin/cumulative_requests')
+
+#     return redirect('/venue_admin/cumulative_requests')
+
+
 def reject_cumulative_request(request, cumulative_request_id):
     print("-------in reject_cumulative_request()-------")
 
@@ -138,9 +198,25 @@ def reject_cumulative_request(request, cumulative_request_id):
         for key, value in request.POST.items():
             print(f"{key}: {value}")
 
-        reason = request.POST.get("feedback_reason", "")
-        feedback_from_admin = request.POST.get("feedback_comments", "")
-        alternate_venues_suggestion = request.POST.get("alternative_options", "")
+         # Debug: Print all POST data
+        print('\n--- POST Data ---')
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        reason = request.POST.get("feedbackReason_Admin", "")
+        feedback_from_admin = request.POST.get("feedbackComments_Admin", "")
+        alternate_venues_suggestion = request.POST.get("alternativeOptions", "")  # Make sure this matches your HTML
+
+        # Get feedback data
+        # feedback_reason = request.POST.get('feedbackReason_Admin', 'No reason provided')
+        feedback_reason = request.POST.get('feedback_reason', 'No reason provided')
+        cumulative_req_feedback_reason = feedback_reason
+        # feedback_comments
+        # feedback_comments = request.POST.get('feedbackComments_Admin', 'No comments')
+        feedback_comments = request.POST.get('feedback_comments', 'No comments')
+        cumulative_req_feedback_comments = feedback_comments
+        alternative_options = request.POST.get('alternative_options', 'No alternatives suggested')
+        cumulative_req_alternative_options = alternative_options
 
         print("Reason:", reason)
         print("Admin Feedback:", feedback_from_admin)
@@ -164,6 +240,13 @@ def reject_cumulative_request(request, cumulative_request_id):
                 req.reasons = reason
                 req.save(update_fields=["status", "reasons"])
 
+                
+                print("Reason:", reason)
+                print("Feedback from admin:", feedback_from_admin)
+                print("Alternate venues suggestion:", alternate_venues_suggestion)
+                print("Combined message:", f"{feedback_from_admin}\n\nSuggested Alternatives:\n{alternate_venues_suggestion}".strip())
+
+
                 rejection = Rejection.objects.create(
                     request=req,
                     user=req.user,
@@ -180,7 +263,27 @@ def reject_cumulative_request(request, cumulative_request_id):
             cumulative_req.reasons = reason
             cumulative_req.save(update_fields=["status", "reasons"])
 
-            send_cumulative_booking_rejected_email(req, cumulative_req,store_rejection_msg)
+            
+            cumulative_req.reasons = feedback_reason
+            print('cumulative_req_feedback_reason : ', cumulative_req_feedback_reason)
+            print('cumulative_req_feedback_comments : ', cumulative_req_feedback_comments)
+            cumulative_req.reason_to_reject = cumulative_req_feedback_reason
+            cumulative_req.additional_comments = cumulative_req_feedback_comments
+            cumulative_req.suggest_alternate_venues = cumulative_req_alternative_options
+            cumulative_req.accept=0
+            '''
+            feedback_reason = request.POST.get('feedback_reason', 'No reason provided')
+            cumulative_req_feedback_reason = feedback_reason
+            # feedback_comments
+            # feedback_comments = request.POST.get('feedbackComments_Admin', 'No comments')
+            feedback_comments = request.POST.get('feedback_comments', 'No comments')
+            cumulative_req_feedback_comments = feedback_comments
+            alternative_options = request.POST.get('alternative_options', 'No alternatives suggested')
+            cumulative_req_alternative_options = alternative_options
+            '''
+            cumulative_req.save()  # Save all changes including feedback details
+
+            send_cumulative_booking_rejected_email(req, cumulative_req, store_rejection_msg)
 
             messages.success(request, "Cumulative booking and all its requests have been rejected.")
             print("✅ Cumulative booking rejected successfully")
@@ -963,170 +1066,65 @@ def send_request_forwarded_email(req, new_venue):
     print()
 
 
-def forward_request_to_alternate(request):
-
-    print('.........in forward_request_to_alternate().......')
-    if request.alternate_venue_1:
-        # Create a new request based on the existing one
-        new_request = Request.objects.create(
-            user=request.user,
-            date=request.date,
-            time=request.time,
-            duration=request.duration,
-            venue=request.alternate_venue_1,
-            need=request.need,
-            alternate_venue_1=request.alternate_venue_2,
-            alternate_venue_2=None,
-            event_details=request.event_details,
-            status='pending',
-            reasons="Forwarded from another venue"
-        )
-        # Update the original request status
-        request.status = 'forwarded'
-        request.save()
-
-        # ✅ Send email to notify requester about forwarding
-        send_request_forwarded_email(request, new_request.venue)
-        print('.........Ended in forward_request_to_alternate().......')
-        return new_request
-    else:
-        request.status = 'rejected'
-        request.reasons = 'Slot is unavailable due to conflicting booking.'
-        request.save()
-        Rejection.objects.create(
-            request=request,
-            user=request.user,
-            reason='Slot is unavailable due to conflicting booking.',
-            msg='Booking conflict with another approved request.'
-        )
+# def forward_request_to_alternate(request):
+#     if request.venue== request.alternate_venue_1 and request.alternate_venue_1 == request.alternate_venue_2:
+#         # Update the original request status
+#         request.status = 'forwarded'
+#         request.save()
+#         return None
         
+    
+#     if request.venue== request.alternate_venue_1:
+#         request.alternate_venue_1 = request.alternate_venue_2
 
 
 
-from datetime import datetime, date
+#     print('.........in forward_request_to_alternate().......')
+#     if request.alternate_venue_1:
+#         if request.alternate_venue_1==request.alternate_venue_2:
+#             request.alternate_venue_2=None
+        
+#         # Create a new request based on the existing one
+#         new_request = Request.objects.create(
+#             user=request.user,
+#             date=request.date,
+#             time=request.time,
+#             duration=request.duration,
+#             venue=request.alternate_venue_1,
+#             need=request.need,
+#             alternate_venue_1=request.alternate_venue_2,
+#             alternate_venue_2=None,
+#             event_details=request.event_details,
+#             status='pending',
+#             reasons="Forwarded from another venue"
+#         )
+#         # Update the original request status
+#         request.status = 'forwarded'
+#         request.save()
 
+#         # ✅ Send email to notify requester about forwarding
+#         send_request_forwarded_email(request, new_request.venue)
+#         print('.........Ended in forward_request_to_alternate().......')
+#         return new_request
+#     else:
+#         request.status = 'rejected'
+#         request.reasons = 'Slot is unavailable due to conflicting booking.'
+#         request.save()
+#         Rejection.objects.create(
+#             request=request,
+#             user=request.user,
+#             reason='Slot is unavailable due to conflicting booking.',
+#             msg='Booking conflict with another approved request.'
+#         )
+        
 
 def approve_request(request, request_id):
     print('-------in approve_request()-------')
 
     if request.method == "POST":
-        print('in approve_request() ---ipsdcgjmfo-')
-        # req = get_object_or_404(Request, request_id=request_id)
-        # start_time = req.time
-        # end_time = req.time + req.duration
-        # Print all keys and values from the POST data
-        for key, value in request.POST.items():
-            print(f"{key}: {value}")
-
-        print(request.POST.items())
-        feedback_reason = request.POST.get('feedback_reason')
-        feedback_comments = request.POST.get('feedback_comments')
-        alternative_options = request.POST.get('alternative_options')
-
-        print(feedback_reason)  # "Event appropriate for venue"
-        print(feedback_comments)  # "dlsf"
-        print(alternative_options)  # ""`
-
-
-        admin_reason = request.POST.get('feedbackReason_Admin')
-        admin_comments = request.POST.get('feedbackComments_Admin')
-
-        print("additional_comments_Venueadmin",admin_comments)
-        print("reason_for_approval",admin_reason)
-
-
-        req = get_object_or_404(Request, request_id=request_id)
-
-        user=CustomUser.objects.get(email=request.user)
-        pending_requests = Request.objects.filter(
-            venue=req.venue,
-            date=req.date,
-            status='pending',
-            ).exclude(request_id=req.request_id)
-
-        start_time = req.time
-        end_time=start_time+req.duration
-
-        conflicting_requests = []
-        for existing in pending_requests:
-            existing_start = existing.time
-            existing_end = existing.time + existing.duration
-
-            print('in conflict response for loop')
-            print('-------------')
-            
-            # ✅ Overlap conditions for slot-based conflict:
-            if not (existing_end <= start_time or existing_start >= end_time):
-                conflicting_requests.append(existing)
-
-
-        if conflicting_requests:
-            # Reject all conflicting requests
-            for conflict in conflicting_requests:
-                if conflict.cumulative_booking:  # No need for == '1' since it's a BooleanField
-                    
-                    # Get the cumulative request using the cumulative_request_id
-                    cumulative_request = CumulativeRequest.objects.get(
-                        cumulative_request_id=conflict.cumulative_request_id
-                    )
-                    # Update the status to 'rejected'
-                    cumulative_request.status = 'rejected'
-                    cumulative_request.save()
-                else:
-                    forward_request_to_alternate(conflict)
-
-
-
-        # Prepare data for serializer
-        booking_data = {
-            "booking_id": uuid.uuid4(),  # ✅ Ensure new UUID is assigned
-            "request": str(req.request_id),  # ✅ Directly pass request object (since it's a OneToOneField)
-            "user": str(req.user.id),
-            "date": req.date,
-            "time": req.time,
-            "duration": req.duration,
-            "venue": str(req.venue.id),
-            "event_details": req.event_details,
-            "additional_comments_Venueadmin":feedback_comments,
-            "reason_for_approval":feedback_reason,       #dropdown
-        }
-        print("additional_comments_Venueadmin",feedback_comments)
-        print("reason_for_approval",feedback_reason)
-
-        serializer = BookingSerializer(data=booking_data)
-
-        if serializer.is_valid():
-            with transaction.atomic():
-                booking = serializer.save()  # Save Booking
-                
-                # ✅ Update request status to "approved" instead of deleting
-                req.status = "approved"
-                req.save(update_fields=["status"])
-
-                print("✅ Booking saved successfully, request updated!")  # Debugging
-                messages.success(request, "Booking approved and request status updated!")
-
-                # send_booking_accepted_email(req)
-                try:
-                    send_booking_accepted_email(req , feedback_reason , feedback_comments)
-                except Exception as e:
-                    logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
-
-            return redirect('/venue_admin/requests')
-        else:
-            print("❌ Serializer errors:", serializer.errors)  # Debugging
-            messages.error(request, "Error approving request.")
-
-    return redirect('/venue_admin/requests')
-
-
-def approve_cumulative_request(request, cumulative_request_id):
-    print('-------in approve_cumulative_request()-------')
-
-    if request.method == "POST":
-        print('in approve_cumulative_request() --- POST received')
+        print('in approve_request() --- POST received')
         
-        # Print all keys and values from the POST data
+        # Print all POST data for debugging
         for key, value in request.POST.items():
             print(f"{key}: {value}")
 
@@ -1140,58 +1138,700 @@ def approve_cumulative_request(request, cumulative_request_id):
         print("Admin Reason:", admin_reason)
         print("Admin Comments:", admin_comments)
 
-        # Get the cumulative request
-        cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
-        user = CustomUser.objects.get(email=request.user)
+        req = get_object_or_404(Request, request_id=request_id)
+        print(f"Processing request {req.request_id} for {req.venue.venue_name} on {req.date}")
 
-        # Get all individual requests associated with this cumulative request
-        individual_requests = Request.objects.filter(
-            cumulative_request_id=cumulative_request_id,
-            status='pending'  # Only approve pending requests
+        # Check for conflicts with both pending and approved requests
+        potential_conflicts = Request.objects.filter(
+            venue=req.venue,
+            date=req.date,
+        ).exclude(
+            Q(status='rejected') | 
+            Q(status='cancelled') | 
+            Q(status='user-cancelled') |
+            Q(status='forwarded') |
+            Q(request_id=req.request_id)
         )
 
+        start_time = req.time
+        end_time = start_time + req.duration
+        print(f"Checking time slot: {start_time} to {end_time}")
+
+        conflicting_requests = []
+        for existing in potential_conflicts:
+            existing_start = existing.time
+            existing_end = existing.time + existing.duration
+            print(f"Comparing with request {existing.request_id} ({existing.status}): {existing_start}-{existing_end}")
+
+            if not (existing_end <= start_time or existing_start >= end_time):
+                print("🛑 CONFLICT DETECTED!")
+                conflicting_requests.append(existing)
+
+        if conflicting_requests:
+            print(f"Found {len(conflicting_requests)} conflicting requests")
+            for conflict in conflicting_requests:
+                if conflict.cumulative_booking:
+                    print(f"Processing cumulative conflict (ID: {conflict.cumulative_request_id})")
+                    # Reject all requests in the conflicting cumulative set
+                    conflict_individual_requests = Request.objects.filter(
+                        cumulative_request_id=conflict.cumulative_request_id
+                    )
+                    conflict_individual_requests.update(status='rejected')
+                    # Update the cumulative request
+                    CumulativeRequest.objects.filter(
+                        cumulative_request_id=conflict.cumulative_request_id
+                    ).update(status='rejected')
+                else:
+                    print(f"Processing individual conflict (ID: {conflict.request_id})")
+                    forward_request_to_alternate(conflict)
+
+        # Prepare booking data
+        booking_data = {
+            "booking_id": uuid.uuid4(),
+            "request": str(req.request_id),
+            "user": str(req.user.id),
+            "date": req.date,
+            "time": req.time,
+            "duration": req.duration,
+            "venue": str(req.venue.id),
+            "event_details": req.event_details,
+            "additional_comments_Venueadmin": feedback_comments,
+            "reason_for_approval": feedback_reason,
+        }
+
+        serializer = BookingSerializer(data=booking_data)
+        if serializer.is_valid():
+            with transaction.atomic():
+                booking = serializer.save()
+                req.status = "approved"
+                req.save(update_fields=["status"])
+                print("✅ Booking approved successfully")
+                
+                try:
+                    send_booking_accepted_email(req, feedback_reason, feedback_comments)
+                except Exception as e:
+                    logger.error(f"Failed to send approval email: {e}")
+                
+                messages.success(request, "Booking approved successfully!")
+            return redirect('/venue_admin/requests')
+        else:
+            print("❌ Serializer errors:", serializer.errors)
+            messages.error(request, "Error approving request.")
+
+    return redirect('/venue_admin/requests')
+
+
+def forward_request_to_alternate(request):
+    print(f"Forwarding request {request.request_id} to alternate venue")
+    
+    # Check if we have alternate venues to try
+    if not request.alternate_venue_1 and not request.alternate_venue_2:
+        print("No alternate venues available - rejecting request")
+        request.status = 'rejected'
+        request.rejection_reason = 'No available alternate venues'
+        request.save()
+        return None
+
+    # Determine which alternate venue to try first
+    if request.alternate_venue_1 and request.alternate_venue_1 != request.venue:
+        new_venue = request.alternate_venue_1
+        next_alternate = request.alternate_venue_2
+    elif request.alternate_venue_2 and request.alternate_venue_2 != request.venue:
+        new_venue = request.alternate_venue_2
+        next_alternate = None
+    else:
+        print("No valid alternate venues - rejecting request")
+        request.status = 'rejected'
+        request.rejection_reason = 'No available alternate venues'
+        request.save()
+        return None
+
+    print(f"Creating new request for venue {new_venue.venue_name}")
+    
+    # Create new forwarded request
+    new_request = Request.objects.create(
+        user=request.user,
+        date=request.date,
+        time=request.time,
+        duration=request.duration,
+        venue=new_venue,
+        need=request.need,
+        alternate_venue_1=next_alternate,
+        alternate_venue_2=None,
+        event_details=request.event_details,
+        status='pending',
+        reasons="Forwarded from another venue",
+        cumulative_booking=request.cumulative_booking,
+        cumulative_request_id=request.cumulative_request_id
+    )
+
+    # Update original request
+    request.status = 'forwarded'
+    request.save()
+
+    try:
+        send_request_forwarded_email(request, new_venue)
+    except Exception as e:
+        logger.error(f"Failed to send forwarding email: {e}")
+
+    return new_request
+
+
+
+from datetime import datetime, date
+
+
+# def approve_request(request, request_id):
+#     print('-------in approve_request()-------')
+
+#     if request.method == "POST":
+#         print('in approve_request() ---ipsdcgjmfo-')
+#         # req = get_object_or_404(Request, request_id=request_id)
+#         # start_time = req.time
+#         # end_time = req.time + req.duration
+#         # Print all keys and values from the POST data
+#         for key, value in request.POST.items():
+#             print(f"{key}: {value}")
+
+#         print(request.POST.items())
+#         feedback_reason = request.POST.get('feedback_reason')
+#         feedback_comments = request.POST.get('feedback_comments')
+#         alternative_options = request.POST.get('alternative_options')
+
+#         print(feedback_reason)  # "Event appropriate for venue"
+#         print(feedback_comments)  # "dlsf"
+#         print(alternative_options)  # ""`
+
+
+#         admin_reason = request.POST.get('feedbackReason_Admin')
+#         admin_comments = request.POST.get('feedbackComments_Admin')
+
+#         print("additional_comments_Venueadmin",admin_comments)
+#         print("reason_for_approval",admin_reason)
+
+
+#         req = get_object_or_404(Request, request_id=request_id)
+
+#         user=CustomUser.objects.get(email=request.user)
+#         pending_requests = Request.objects.filter(
+#             venue=req.venue,
+#             date=req.date,
+#             status='pending',
+#             ).exclude(request_id=req.request_id)
+
+#         start_time = req.time
+#         end_time=start_time+req.duration
+
+#         conflicting_requests = []
+#         for existing in pending_requests:
+#             existing_start = existing.time
+#             existing_end = existing.time + existing.duration
+
+#             print('in conflict response for loop')
+#             print('-------------')
+            
+#             # ✅ Overlap conditions for slot-based conflict:
+#             if not (existing_end <= start_time or existing_start >= end_time):
+#                 conflicting_requests.append(existing)
+
+
+#         if conflicting_requests:
+#             # Reject all conflicting requests
+#             for conflict in conflicting_requests:
+#                 if conflict.cumulative_booking:  # No need for == '1' since it's a BooleanField
+                    
+#                     # Get the cumulative request using the cumulative_request_id
+#                     cumulative_request = CumulativeRequest.objects.get(
+#                         cumulative_request_id=conflict.cumulative_request_id
+#                     )
+#                     # Update the status to 'rejected'
+#                     cumulative_request.status = 'rejected'
+#                     cumulative_request.save()
+#                 else:
+#                     forward_request_to_alternate(conflict)
+
+
+
+#         # Prepare data for serializer
+#         booking_data = {
+#             "booking_id": uuid.uuid4(),  # ✅ Ensure new UUID is assigned
+#             "request": str(req.request_id),  # ✅ Directly pass request object (since it's a OneToOneField)
+#             "user": str(req.user.id),
+#             "date": req.date,
+#             "time": req.time,
+#             "duration": req.duration,
+#             "venue": str(req.venue.id),
+#             "event_details": req.event_details,
+#             "additional_comments_Venueadmin":feedback_comments,
+#             "reason_for_approval":feedback_reason,       #dropdown
+#         }
+#         print("additional_comments_Venueadmin",feedback_comments)
+#         print("reason_for_approval",feedback_reason)
+
+#         serializer = BookingSerializer(data=booking_data)
+
+#         if serializer.is_valid():
+#             with transaction.atomic():
+#                 booking = serializer.save()  # Save Booking
+                
+#                 # ✅ Update request status to "approved" instead of deleting
+#                 req.status = "approved"
+#                 req.save(update_fields=["status"])
+
+#                 print("✅ Booking saved successfully, request updated!")  # Debugging
+#                 messages.success(request, "Booking approved and request status updated!")
+
+#                 # send_booking_accepted_email(req)
+#                 try:
+#                     send_booking_accepted_email(req , feedback_reason , feedback_comments)
+#                 except Exception as e:
+#                     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
+
+#             return redirect('/venue_admin/requests')
+#         else:
+#             print("❌ Serializer errors:", serializer.errors)  # Debugging
+#             messages.error(request, "Error approving request.")
+
+#     return redirect('/venue_admin/requests')
+
+
+# def approve_cumulative_request(request, cumulative_request_id):
+#     print('-------in approve_cumulative_request()-------')
+
+#     if request.method == "POST":
+#         print('in approve_cumulative_request() --- POST received')
+        
+#         # Print all keys and values from the POST data
+#         for key, value in request.POST.items():
+#             print(f"{key}: {value}")
+
+#         feedback_reason = request.POST.get('feedback_reason')
+#         feedback_comments = request.POST.get('feedback_comments')
+#         admin_reason = request.POST.get('feedbackReason_Admin')
+#         admin_comments = request.POST.get('feedbackComments_Admin')
+
+#         print("Feedback Reason:", feedback_reason)
+#         print("Feedback Comments:", feedback_comments)
+#         print("Admin Reason:", admin_reason)
+#         print("Admin Comments:", admin_comments)
+
+#         # Get the cumulative request
+#         cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+#         user = CustomUser.objects.get(email=request.user)
+
+#         # Get all individual requests associated with this cumulative request
+#         individual_requests = Request.objects.filter(
+#             cumulative_request_id=cumulative_request_id,
+#             status='pending'  # Only approve pending requests
+#         )
+
+#         if not individual_requests.exists():
+#             messages.error(request, "No pending requests found for this cumulative booking.")
+#             return redirect('/venue_admin/requests')
+
+#         with transaction.atomic():
+#             # Process each individual request
+#             for req in individual_requests:
+#                 # Check for conflicting requests for each individual date
+#                 pending_requests = Request.objects.filter(
+#                     venue=req.venue,
+#                     date=req.date,
+#                     status='pending',
+                    
+#                 ).exclude(request_id=req.request_id)
+
+#                 print('pending_requests : ', pending_requests)
+
+#                 start_time = req.time
+#                 end_time = start_time + req.duration
+
+#                 conflicting_requests = []
+#                 for existing in pending_requests:
+#                     existing_start = existing.time
+#                     existing_end = existing.time + existing.duration
+
+#                     # Overlap conditions for slot-based conflict:
+#                     if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time):
+#                         conflicting_requests.append(existing)
+
+#                 print('')
+#                 print('conflicting_requests : ', conflicting_requests)
+#                 if conflicting_requests:
+#                     # Reject all conflicting requests
+#                     for conflict in conflicting_requests:
+#                         if conflict.cumulative_booking:
+#                             print('0980808089098')
+#                             # Get the cumulative request using the cumulative_request_id
+#                             cumulative_request = CumulativeRequest.objects.get(
+#                                 cumulative_request_id=conflict.cumulative_request_id
+#                             )
+#                             print('ocjdsi9cusdoi')
+#                             # Update the status to 'rejected'
+#                             cumulative_request.status = 'rejected'
+#                             cumulative_request.save()
+#                         else:
+#                             print('089098')
+#                             forward_request_to_alternate(conflict)
+
+#                 # Prepare data for serializer
+#                 booking_data = {
+#                     "booking_id": uuid.uuid4(),
+#                     "request": str(req.request_id),
+#                     "user": str(req.user.id),
+#                     "date": req.date,
+#                     "time": req.time,
+#                     "duration": req.duration,
+#                     "venue": str(req.venue.id),
+#                     "event_details": req.event_details,
+#                     "additional_comments_Venueadmin": feedback_comments,
+#                     "reason_for_approval": feedback_reason,
+#                 }
+
+#                 serializer = BookingSerializer(data=booking_data)
+
+#                 if serializer.is_valid():
+#                     # Save booking
+#                     booking = serializer.save()
+                    
+#                     # Update request status to "approved"
+#                     req.status = "approved"
+#                     req.save(update_fields=["status"])
+
+#                     # # Send approval email
+#                     # try:
+#                     #     # send_booking_accepted_email(req, feedback_reason, feedback_comments)
+#                     #     send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments)
+
+#                     # except Exception as e:
+#                     #     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
+#                 else:
+#                     print("❌ Serializer errors:", serializer.errors)
+#                     messages.error(request, f"Error approving request {req.request_id}.")
+#                     continue  # Skip to next request if this one fails
+
+#             # Update the cumulative request status
+#             send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
+#             venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
+            
+#             cumulative_req.status = "approved"
+#             cumulative_req.reasons = feedback_reason
+#             cumulative_req.save(update_fields=["status", "reasons"])
+
+#             messages.success(request, "All requests in the cumulative booking have been approved!")
+#             print("✅ All cumulative bookings processed successfully")
+
+#         return redirect('/venue_admin/cumulative_requests')
+
+#     return redirect('/venue_admin/cumulative_requests')
+
+
+# def approve_cumulative_request(request, cumulative_request_id):
+#     print('\n\n===== START: approve_cumulative_request() =====')
+#     print(f'Cumulative Request ID: {cumulative_request_id}')
+#     print(f'Request method: {request.method}')
+
+#     if request.method == "POST":
+#         print('\n=== Processing POST request ===')
+        
+#         # Debug: Print all POST data
+#         print('\n--- POST Data ---')
+#         for key, value in request.POST.items():
+#             print(f"{key}: {value}")
+
+#         # Get feedback data
+#         feedback_reason = request.POST.get('feedback_reason', 'No reason provided')
+#         feedback_comments = request.POST.get('feedback_comments', 'No comments')
+#         admin_reason = request.POST.get('feedbackReason_Admin', 'No admin reason')
+#         admin_comments = request.POST.get('feedbackComments_Admin', 'No admin comments')
+
+#         print('\n--- Feedback Data ---')
+#         print(f"Feedback Reason: {feedback_reason}")
+#         print(f"Feedback Comments: {feedback_comments}")
+#         print(f"Admin Reason: {admin_reason}")
+#         print(f"Admin Comments: {admin_comments}")
+
+#         # Get the cumulative request
+#         print('\n--- Fetching Cumulative Request ---')
+#         try:
+#             cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+#             print(f'Found CumulativeRequest: {cumulative_req}')
+#             print(f'Status: {cumulative_req.status}')
+#             print(f'User: {cumulative_req.user.email}')
+#             print(f'Venue: {cumulative_req.venue.venue_name}')
+#         except Exception as e:
+#             print(f'❌ Error fetching cumulative request: {str(e)}')
+#             messages.error(request, "Cumulative request not found.")
+#             return redirect('/venue_admin/requests')
+
+#         # Get all individual requests
+#         print('\n--- Fetching Individual Requests ---')
+#         individual_requests = Request.objects.filter(
+#             cumulative_request_id=cumulative_request_id,
+#             status='pending'
+#         )
+#         print(f'Found {individual_requests.count()} pending individual requests')
+
+#         if not individual_requests.exists():
+#             print('❌ No pending requests found for this cumulative booking')
+#             messages.error(request, "No pending requests found for this cumulative booking.")
+#             return redirect('/venue_admin/requests')
+
+#         with transaction.atomic():
+#             print('\n=== Starting Transaction ===')
+            
+#             for req in individual_requests:
+#                 print(f'\n--- Processing Request {req.request_id} ---')
+#                 print(f'Date: {req.date}, Time: {req.time}, Duration: {req.duration} mins')
+#                 print(f'Venue: {req.venue.venue_name}')
+                
+#                 # Calculate time slots
+#                 start_time = req.time
+#                 end_time = start_time + req.duration
+#                 print(f'Time Slot: {start_time} to {end_time}')
+
+#                 # Find potential conflicts
+#                 print('\n--- Checking for Conflicts ---')
+#                 conflicting_requests = Request.objects.filter(
+#                     venue=req.venue,
+#                     date=req.date,
+#                 ).exclude(
+#                     Q(status='rejected') | 
+#                     Q(status='cancelled') | 
+#                     Q(status='user-cancelled') |
+#                     Q(request_id=req.request_id)
+#                 )
+#                 print(f'Found {conflicting_requests.count()} potential conflicting requests')
+
+#                 actual_conflicts = []
+#                 for existing in conflicting_requests:
+#                     existing_start = existing.time
+#                     existing_end = existing.time + existing.duration
+#                     print(f'\nChecking conflict with request {existing.request_id}:')
+#                     print(f'Existing slot: {existing_start} to {existing_end}')
+#                     print(f'New slot:     {start_time} to {end_time}')
+
+#                     # Check for time overlap
+#                     if not (existing_end <= start_time or existing_start >= end_time):
+#                         print('🛑 CONFLICT DETECTED!')
+#                         actual_conflicts.append(existing)
+#                     else:
+#                         print('✅ No time conflict')
+
+#                 print(f'\nFound {len(actual_conflicts)} actual conflicts')
+
+#                 if actual_conflicts:
+#                     print('\n--- Handling Conflicts ---')
+#                     for conflict in actual_conflicts:
+#                         if conflict.cumulative_booking:
+#                             print(f'🔄 Processing cumulative conflict (ID: {conflict.cumulative_request_id})')
+#                             # Reject all requests in the conflicting cumulative set
+#                             conflict_individual_requests = Request.objects.filter(
+#                                 cumulative_request_id=conflict.cumulative_request_id
+#                             )
+#                             print(f'Found {conflict_individual_requests.count()} requests in conflicting cumulative set')
+#                             conflict_individual_requests.update(status='rejected')
+#                             print('Updated all individual requests in conflicting cumulative set to "rejected"')
+                            
+#                             # Update the cumulative request
+#                             CumulativeRequest.objects.filter(
+#                                 cumulative_request_id=conflict.cumulative_request_id
+#                             ).update(status='rejected')
+#                             print('Updated conflicting cumulative request to "rejected"')
+#                         else:
+#                             print(f'🔄 Processing individual conflict (ID: {conflict.request_id})')
+#                             conflict.status = 'rejected'
+#                             conflict.save()
+#                             print('Updated individual conflicting request to "rejected"')
+
+#                 # Create booking
+#                 print('\n--- Creating Booking ---')
+#                 booking_data = {
+#                     "booking_id": uuid.uuid4(),
+#                     "request": str(req.request_id),
+#                     "user": str(req.user.id),
+#                     "date": req.date,
+#                     "time": req.time,
+#                     "duration": req.duration,
+#                     "venue": str(req.venue.id),
+#                     "event_details": req.event_details,
+#                     "additional_comments_Venueadmin": feedback_comments,
+#                     "reason_for_approval": feedback_reason,
+#                 }
+#                 print('Booking data prepared:')
+#                 for k, v in booking_data.items():
+#                     print(f'{k}: {v}')
+
+#                 serializer = BookingSerializer(data=booking_data)
+#                 if serializer.is_valid():
+#                     print('✅ Booking data is valid')
+#                     booking = serializer.save()
+#                     print(f'Booking created with ID: {booking.booking_id}')
+                    
+#                     # Update request status
+#                     req.status = "approved"
+#                     req.save(update_fields=["status"])
+#                     print('Request status updated to "approved"')
+#                 else:
+#                     print('❌ Serializer errors:', serializer.errors)
+#                     messages.error(request, f"Error approving request {req.request_id}.")
+#                     continue
+
+#             # Finalize cumulative request
+#             print('\n--- Finalizing Cumulative Request ---')
+#             try:
+#                 send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments)
+#                 venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments)
+#                 print('Notification emails sent')
+#             except Exception as e:
+#                 print(f'❌ Error sending emails: {str(e)}')
+
+#             cumulative_req.status = "approved"
+#             cumulative_req.reasons = feedback_reason
+#             cumulative_req.save(update_fields=["status", "reasons"])
+#             print(f'Cumulative request {cumulative_req.cumulative_request_id} approved')
+
+#             messages.success(request, "All requests in the cumulative booking have been approved!")
+#             print("\n===== OPERATION COMPLETED SUCCESSFULLY =====")
+
+#         return redirect('/venue_admin/cumulative_requests')
+
+#     print('\n===== END: Not a POST request =====')
+#     return redirect('/venue_admin/cumulative_requests')
+
+
+
+
+def approve_cumulative_request(request, cumulative_request_id):
+    print('\n\n===== START: approve_cumulative_request() =====')
+    print(f'Cumulative Request ID: {cumulative_request_id}')
+    print(f'Request method: {request.method}')
+
+    if request.method == "POST":
+        print('\n=== Processing POST request ===')
+        
+        # Debug: Print all POST data
+        print('\n--- POST Data ---')
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        # Get feedback data
+        # feedback_reason = request.POST.get('feedbackReason_Admin', 'No reason provided')
+        feedback_reason = request.POST.get('feedback_reason', 'No reason provided')
+        cumulative_req_feedback_reason = feedback_reason
+        # feedback_comments
+        # feedback_comments = request.POST.get('feedbackComments_Admin', 'No comments')
+        feedback_comments = request.POST.get('feedback_comments', 'No comments')
+        cumulative_req_feedback_comments = feedback_comments
+        alternative_options = request.POST.get('alternativeOptions', 'No alternatives suggested')
+
+        print('\n--- Feedback Data ---')
+        print(f"Feedback Reason: {feedback_reason}")
+        print(f"Feedback Comments: {feedback_comments}")
+        print(f"Alternative Options: {alternative_options}")
+
+        # Get the cumulative request
+        print('\n--- Fetching Cumulative Request ---')
+        try:
+            cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+            print(f'Found CumulativeRequest: {cumulative_req}')
+            print(f'Status: {cumulative_req.status}')
+            print(f'User: {cumulative_req.user.email}')
+            print(f'Venue: {cumulative_req.venue.venue_name}')
+            
+            # Store all feedback details in the cumulative request
+            cumulative_req.reason_to_approve = feedback_reason
+            cumulative_req.additional_comments = feedback_comments
+            cumulative_req.alternative_options = alternative_options
+            cumulative_req.accept = 1  # 1 for accept
+            print('Stored all feedback details in cumulative request')
+            
+        except Exception as e:
+            print(f'❌ Error fetching cumulative request: {str(e)}')
+            messages.error(request, "Cumulative request not found.")
+            return redirect('/venue_admin/requests')
+
+        # Get all individual requests
+        print('\n--- Fetching Individual Requests ---')
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cumulative_request_id,
+            status='pending'
+        )
+        print(f'Found {individual_requests.count()} pending individual requests')
+
         if not individual_requests.exists():
+            print('❌ No pending requests found for this cumulative booking')
             messages.error(request, "No pending requests found for this cumulative booking.")
             return redirect('/venue_admin/requests')
 
         with transaction.atomic():
-            # Process each individual request
+            print('\n=== Starting Transaction ===')
+            
             for req in individual_requests:
-                # Check for conflicting requests for each individual date
-                pending_requests = Request.objects.filter(
-                    venue=req.venue,
-                    date=req.date,
-                    status='pending',
-                    venue__department_incharge=user,
-                ).exclude(request_id=req.request_id)
-
+                print(f'\n--- Processing Request {req.request_id} ---')
+                print(f'Date: {req.date}, Time: {req.time}, Duration: {req.duration} mins')
+                print(f'Venue: {req.venue.venue_name}')
+                
+                # Calculate time slots
                 start_time = req.time
                 end_time = start_time + req.duration
+                print(f'Time Slot: {start_time} to {end_time}')
 
-                conflicting_requests = []
-                for existing in pending_requests:
+                # Find potential conflicts
+                print('\n--- Checking for Conflicts ---')
+                conflicting_requests = Request.objects.filter(
+                    venue=req.venue,
+                    date=req.date,
+                ).exclude(
+                    Q(status='rejected') | 
+                    Q(status='cancelled') | 
+                    Q(status='user-cancelled') |
+                    Q(request_id=req.request_id)
+                )
+                print(f'Found {conflicting_requests.count()} potential conflicting requests')
+
+                actual_conflicts = []
+                for existing in conflicting_requests:
                     existing_start = existing.time
                     existing_end = existing.time + existing.duration
+                    print(f'\nChecking conflict with request {existing.request_id}:')
+                    print(f'Existing slot: {existing_start} to {existing_end}')
+                    print(f'New slot:     {start_time} to {end_time}')
 
-                    # Overlap conditions for slot-based conflict:
-                    if (existing_end > start_time and existing_end < end_time) or (existing_start < end_time and existing_start > start_time):
-                        conflicting_requests.append(existing)
+                    # Check for time overlap
+                    if not (existing_end <= start_time or existing_start >= end_time):
+                        print('🛑 CONFLICT DETECTED!')
+                        actual_conflicts.append(existing)
+                    else:
+                        print('✅ No time conflict')
 
-                if conflicting_requests:
-                    # Reject all conflicting requests
-                    for conflict in conflicting_requests:
+                print(f'\nFound {len(actual_conflicts)} actual conflicts')
+
+                if actual_conflicts:
+                    print('\n--- Handling Conflicts ---')
+                    for conflict in actual_conflicts:
                         if conflict.cumulative_booking:
-                            # Get the cumulative request using the cumulative_request_id
-                            cumulative_request = CumulativeRequest.objects.get(
+                            print(f'🔄 Processing cumulative conflict (ID: {conflict.cumulative_request_id})')
+                            # Reject all requests in the conflicting cumulative set
+                            conflict_individual_requests = Request.objects.filter(
                                 cumulative_request_id=conflict.cumulative_request_id
                             )
-                            # Update the status to 'rejected'
-                            cumulative_request.status = 'rejected'
-                            cumulative_request.save()
+                            print(f'Found {conflict_individual_requests.count()} requests in conflicting cumulative set')
+                            conflict_individual_requests.update(status='rejected')
+                            print('Updated all individual requests in conflicting cumulative set to "rejected"')
+                            
+                            # Update the cumulative request
+                            CumulativeRequest.objects.filter(
+                                cumulative_request_id=conflict.cumulative_request_id
+                            ).update(status='rejected')
+                            print('Updated conflicting cumulative request to "rejected"')
                         else:
-                            forward_request_to_alternate(conflict)
+                            print(f'🔄 Processing individual conflict (ID: {conflict.request_id})')
+                            conflict.status = 'rejected'
+                            conflict.save()
+                            print('Updated individual conflicting request to "rejected"')
 
-                # Prepare data for serializer
+                # Create booking
+                print('\n--- Creating Booking ---')
                 booking_data = {
                     "booking_id": uuid.uuid4(),
                     "request": str(req.request_id),
@@ -1204,43 +1844,54 @@ def approve_cumulative_request(request, cumulative_request_id):
                     "additional_comments_Venueadmin": feedback_comments,
                     "reason_for_approval": feedback_reason,
                 }
+                print('Booking data prepared:')
+                for k, v in booking_data.items():
+                    print(f'{k}: {v}')
 
                 serializer = BookingSerializer(data=booking_data)
-
                 if serializer.is_valid():
-                    # Save booking
+                    print('✅ Booking data is valid')
                     booking = serializer.save()
+                    print(f'Booking created with ID: {booking.booking_id}')
                     
-                    # Update request status to "approved"
+                    # Update request status
                     req.status = "approved"
                     req.save(update_fields=["status"])
-
-                    # # Send approval email
-                    # try:
-                    #     # send_booking_accepted_email(req, feedback_reason, feedback_comments)
-                    #     send_cumulative_booking_accepted_email(req, feedback_reason, feedback_comments)
-
-                    # except Exception as e:
-                    #     logger.error(f"Failed to send approval email for request {req.request_id}: {e}")
+                    print('Request status updated to "approved"')
                 else:
-                    print("❌ Serializer errors:", serializer.errors)
+                    print('❌ Serializer errors:', serializer.errors)
                     messages.error(request, f"Error approving request {req.request_id}.")
-                    continue  # Skip to next request if this one fails
+                    continue
 
-            # Update the cumulative request status
-            send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
-            venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments)
-            
+            # Finalize cumulative request
+            print('\n--- Finalizing Cumulative Request ---')
+            try:
+                send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments)
+                venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments)
+                print('Notification emails sent')
+            except Exception as e:
+                print(f'❌ Error sending emails: {str(e)}')
+
             cumulative_req.status = "approved"
             cumulative_req.reasons = feedback_reason
-            cumulative_req.save(update_fields=["status", "reasons"])
+            print('cumulative_req_feedback_reason : ', cumulative_req_feedback_reason)
+            print('cumulative_req_feedback_comments : ', cumulative_req_feedback_comments)
+            cumulative_req.reason_to_approve = cumulative_req_feedback_reason
+            cumulative_req.additional_comments = cumulative_req_feedback_comments
+            cumulative_req.accept=1
+            cumulative_req.save()  # Save all changes including feedback details
+            print(f'Cumulative request {cumulative_req.cumulative_request_id} approved with all details')
 
             messages.success(request, "All requests in the cumulative booking have been approved!")
-            print("✅ All cumulative bookings processed successfully")
+            print("\n===== OPERATION COMPLETED SUCCESSFULLY =====")
 
         return redirect('/venue_admin/cumulative_requests')
 
+    print('\n===== END: Not a POST request =====')
     return redirect('/venue_admin/cumulative_requests')
+
+
+
 
 def approved_bookings_view(request):
     user_id = request.user.id

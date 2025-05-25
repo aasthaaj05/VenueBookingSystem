@@ -648,7 +648,7 @@
                             <tr>
                                 <th>Venue</th>
                                 <th>Date</th>
-                                <th>Duration</th>
+                                <th>Event Details</th>
                                 <th>Status</th>
                                 <th>Event Description</th>
                                 <th>Actions</th>
@@ -668,7 +668,7 @@
                                     +{{ request.dates|length|add:"-3" }} more dates
                                 {% endif %}
                             </td>
-                                <td>{{ request.duration }}</td>
+                                <td>{{ request.event_type }}</td>
                                 <td>
                                     <span class="status-badge status-{{ request.status }}">
                                         {% if request.status == 'pending' %}
@@ -684,6 +684,7 @@
                                     </span>
                                 </td>
                                 <td>{{ request.event_details }}</td>
+                                
                                 <td>
                                     <div class="action-buttons">
                                         <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)"
@@ -714,9 +715,14 @@
                                         data-reason="{{ request.reasons|default:'No reason provided' }}"
                                         data-feedback="{{ request.rejection.feedback_from_admin|default:'No feedback' }}"
                                         data-alternate="{{ request.rejection.alternate_venues_suggestion|default:'None suggested' }}"
+                                        data-additional-comments = "{{request.additional_comments }}"
+                                        data-suggested-venues = "{{request.suggest_alternate_venues }}"
                                         {% elif request.status == "approved" %}
                                         data-accept-reason="{{request.booking.reason_for_approval|default:'No reason provided'}}"
                                         data-accept-feedback="{{request.booking.additional_comments_Venueadmin|default:'No comments provided'}}"
+                                        data-reason-to-approve = "{{ request.reason_to_approve }}"
+                                        data-admin-approval = "{{ request.additional_comments }}"
+                                        
                                         {% endif %}>
                                         <i class="fas fa-eye"></i> View
                                         </button>
@@ -802,6 +808,7 @@
         // Current request ID for cancellation
         let currentRequestId = null;
         
+        
         // Show booking details modal
         function showBookingDetails(button) {
             console.log("View button clicked - preparing to show modal");
@@ -827,6 +834,13 @@
                 acceptReason: button.getAttribute('data-accept-reason') || 'No reason provided',
                 acceptFeedback: button.getAttribute('data-accept-feedback') || 'No comments provided',
                 event_description: button.getAttribute('data-event-description') || 'None',
+                reason_to_reject: button.getAttribute('data-reason-to-reject') || 'None',
+                alternate_venues : button.getAttribute('data-suggested-venues') || 'None',
+                
+                reject_additonal_comments : button.getAttribute('data-additional-comments') || 'None',
+
+                reason_to_approve : button.getAttribute('data-reason-to-approve') || 'None',
+                approval_admin_comments : button.getAttribute('data-admin-approval') || 'None',
     
 
             };
@@ -907,14 +921,15 @@
             
             // Add approval details if status is approved
             if (data.status === 'approved') {
+                
                 html += `
                     <div class="detail-item full-width">
                         <div class="detail-label">Approval Reason</div>
-                        <div class="detail-value" style="color: var(--success-color);">${data.acceptReason}</div>
+                        <div class="detail-value" style="color: var(--success-color);">${data.reason_to_approve}</div>
                     </div>
                     <div class="detail-item full-width">
                         <div class="detail-label">Admin Comments</div>
-                        <div class="detail-value">${data.acceptFeedback}</div>
+                        <div class="detail-value">${data.approval_admin_comments}</div>
                     </div>
                 `;
             }
@@ -928,11 +943,11 @@
                     </div>
                     <div class="detail-item full-width">
                         <div class="detail-label">Admin Feedback</div>
-                        <div class="detail-value">${data.feedback}</div>
+                        <div class="detail-value">${data.reject_additonal_comments}</div>
                     </div>
                     <div class="detail-item full-width">
                         <div class="detail-label">Suggested Alternate Venues</div>
-                        <div class="detail-value">${data.alternate}</div>
+                        <div class="detail-value">${data.alternate_venues}</div>
                     </div>
                 `;
             }
