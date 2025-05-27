@@ -109,9 +109,9 @@ DATABASES = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'venue_booking6',
-        'USER': 'root',
-        'PASSWORD': 'Arnav@123',
+        'NAME': '',
+        'USER': '',
+        'PASSWORD': '',
         'HOST': 'localhost',  # Change if using a remote server
         'PORT': '3306',  # MySQL default port
     }
@@ -168,8 +168,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.office365.com'  # Change as per your SMTP provider
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'arnavp22.comp@coeptech.ac.in'  # Your sender email
-EMAIL_HOST_PASSWORD = ''  # Your email password (use environment variables for security)
+EMAIL_HOST_USER = 'venuebooking@coeptech.ao.in'  # Your sender email
+EMAIL_HOST_PASSWORD = 'admin@123'  # Your email password (use environment variables for security)
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER  # Set default sender email
 
 

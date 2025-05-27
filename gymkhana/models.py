@@ -64,7 +64,7 @@ class Venue(models.Model):
     department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")
     
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="venues", null=True, blank=True)
-    floor_number = models.IntegerField(blank=True, null=True)
+    floor_number = models.TextField(blank=True, null=True)
     room_number = models.CharField(max_length=50, blank=True, null=True)
 
     # New fields from the table
