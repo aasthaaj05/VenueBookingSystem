@@ -115,7 +115,7 @@ def create_venue(request):
 
 @api_view(['POST'])
 # @permission_classes([IsAuthenticated])
-@csrf_exempt
+# @csrf_exempt
 def approve_request(request, request_id):
     """Approve a request and create a booking."""
     req = get_object_or_404(Request, request_id=request_id)

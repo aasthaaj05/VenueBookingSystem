@@ -196,7 +196,7 @@ def cumulative_booking_status(request):
 
 
 
-@csrf_exempt  # Disable CSRF protection for testing (remove in production)
+# @csrf_exempt  # Disable CSRF protection for testing (remove in production)
 def get_available_slots(request):
     if request.method == "POST":
         try:
@@ -515,7 +515,7 @@ def get_available_slots_1(request_data):
 
 
 # Request a slot (POST)
-@csrf_exempt  # Disable CSRF for testing; remove this in production
+# @csrf_exempt  # Disable CSRF for testing; remove this in production
 def request_slot(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST method allowed'}, status=405)
@@ -534,7 +534,7 @@ def request_slot(request):
         return JsonResponse({'error': str(e)}, status=400)
 
 # Cancel a booking request (POST)
-@csrf_exempt
+# @csrf_exempt
 def cancel_request(request, request_id):
     # if request.method != 'POST':
     #     return JsonResponse({'error': 'Only POST method allowed'}, status=405)
@@ -572,7 +572,7 @@ def get_user_requests(request):
 
 
 
-@csrf_exempt
+# @csrf_exempt
 def book_venue(request):
     print()
     print()
