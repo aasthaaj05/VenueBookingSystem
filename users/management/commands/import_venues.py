@@ -53,9 +53,23 @@ class Command(BaseCommand):
             df.replace('', np.nan, inplace=True)
             df.dropna(how='all', inplace=True)
 
+            # Get existing venue names to check for duplicates
+            existing_venue_names = set(Venue.objects.values_list('venue_name', flat=True))
+            
+            created_count = 0
+            skipped_count = 0
+
             for _, row in df.iterrows():
                 # Skip rows with empty venue_name (assuming it's a required field)
                 if pd.isna(row.get('venue_name')) or not str(row.get('venue_name')).strip():
+                    continue
+
+                venue_name = str(row.get('venue_name', '')).strip()
+                
+                # Check if venue already exists
+                if venue_name in existing_venue_names:
+                    self.stdout.write(self.style.WARNING(f"Venue '{venue_name}' already exists. Skipping..."))
+                    skipped_count += 1
                     continue
 
                 # Building
@@ -111,7 +125,7 @@ class Command(BaseCommand):
 
                 venue = Venue(
                     id=uuid.uuid4(),
-                    venue_name=str(row.get('venue_name', '')).strip(),
+                    venue_name=venue_name,
                     description='',
                     photo_url=str(row.get('picture_urls', '')).strip(),
                     capacity=capacity,
@@ -137,9 +151,16 @@ class Command(BaseCommand):
                 )
                 
                 venue.save()
+                # Add the new venue name to our tracking set
+                existing_venue_names.add(venue_name)
+                created_count += 1
                 self.stdout.write(self.style.SUCCESS(f"Created venue: {venue.venue_name}"))
 
-            self.stdout.write(self.style.SUCCESS(f"Venue import completed successfully. Imported {len(df)} venues."))
+            # Summary output
+            self.stdout.write(self.style.SUCCESS(f"Venue import completed successfully."))
+            self.stdout.write(self.style.SUCCESS(f"Created: {created_count} new venues"))
+            if skipped_count > 0:
+                self.stdout.write(self.style.WARNING(f"Skipped: {skipped_count} existing venues"))
 
         except Exception as e:
             self.stdout.write(self.style.ERROR(f"Error importing venues: {str(e)}"))
