@@ -13,3 +13,4 @@ six==1.17.0
 sqlparse==0.5.3
 tzdata==2025.1
 python-dotenv==1.1.0
+gunicorn==23.0.0
