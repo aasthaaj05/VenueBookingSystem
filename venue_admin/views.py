@@ -1907,7 +1907,7 @@ def approved_bookings_view(request):
         })
 
     # ✅ Get venues managed by the user
-    managed_venues = Venue.objects.filter(department_incharge=user)
+    managed_venues = Venue.objects.filter(venue_admin=user)
 
     # ✅ Get approved bookings for those venues
     approved_bookings = Booking.objects.filter(

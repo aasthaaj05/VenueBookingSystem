@@ -163,4 +163,4 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(f"Skipped: {skipped_count} existing venues"))
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"Error importing venues: {str(e)}"))
+            self.stdout.write(self.style.ERROR(f"Error importing venues: {str(e)}"))    

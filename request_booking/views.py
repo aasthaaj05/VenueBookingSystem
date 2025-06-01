@@ -984,6 +984,7 @@ def process_booking(request):
                 venue=venue,
                 status='pending',
                 need=organization_name,  # Using need to store organization name
+                organization_name = organization_name,
                 alternate_venue_1=alternate_venue_1,
                 alternate_venue_2=alternate_venue_2,
                 event_details=event_details,
@@ -1795,7 +1796,8 @@ from django.utils.timezone import now
 
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
-    venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
+    # venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
+    venue_incharge_email = venue_obj.venue_admin if venue_obj.venue_admin else None
     print()
     print('---------in send_booking_request_email()------')
     print()
@@ -1822,7 +1824,7 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
     msg['Subject'] = "New Venue Booking Request"
 
     body = f"""
-    Dear {venue_obj.department_incharge.name},
+    Dear ,
 
     A new venue booking request has been submitted.
 
