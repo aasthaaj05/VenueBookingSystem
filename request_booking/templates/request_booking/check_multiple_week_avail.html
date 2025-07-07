@@ -42,6 +42,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+            padding-top: 125px;
         }
 
         /* Header Styles */
@@ -972,6 +973,12 @@
 </head>
 <body>
     <div class="container">
+
+    <!-- Header with included navigation -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
+    </header>
+
         <div class="booking-header">
             <h2>Multi-Week Booking Request</h2>
             <p>Fill out the form below to request availability for your recurring event across multiple weeks</p>

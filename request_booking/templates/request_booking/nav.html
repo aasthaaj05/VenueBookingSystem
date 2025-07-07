@@ -1,6 +1,3 @@
-
-
-
 {% load static %}
 
 <!DOCTYPE html>
@@ -230,32 +227,21 @@
 <body>
     <header id="header" class="header d-flex align-items-center fixed-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center">
-            <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
-                {% comment %} <h1 class="sitename">COEP Tech</h1> {% endcomment %}
-                <h1 class="sitename" style="color: white;">COEP Tech</h1>
-                {% comment %} <h1 class="sitename" style="color: white; background-color: black;">COEP Tech</h1> {% endcomment %}
-
-
+            <a href="{% url 'faculty_advisor:home' %}" class="logo d-flex align-items-center me-auto">
+                <h1 class="sitename">COEP Tech</h1>
             </a>
 
             <nav id="navmenu" class="navmenu">
               <ul>
-                  {% comment %} <li><a href="#hero" class="active">Home</a></li> {% endcomment %}
                   <li><a href="{% url 'faculty_advisor:home' %}">Home</a></li>
-
-
-                  {% comment %} <li><a href="#about">About</a></li> {% endcomment %}
-                  {% comment %} <li><a href="{% url 'faculty_advisor:home' %}#services">Services</a></li> {% endcomment %}
-                  {% comment %} <li><a href="#team">Team</a></li> {% endcomment %}
-                  {% comment %} <li><a href="{% url 'faculty_advisor:home' %}#recent-blog-postst">Venues</a></li> {% endcomment %}
-                  {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
                   <li><a href="{% url 'request_booking:get_buildings' %}" class="btn signup-btn">Book Venue</a></li>
                   <li><a href="{% url 'request_booking:booking_status' %}">Booking Status</a></li>
+                  <li><a href="{% url 'request_booking:request_multiple_week_availability_view' %}">Request Multiple</a></li>
+                  <li><a href="{% url 'request_booking:cumulative_booking_status' %}">Cumulative Booking Status</a></li>
               </ul>
               <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
           </nav>
 
-            {% comment %} <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}">Log Out</a> {% endcomment %}
             <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout'%}#about">Log Out</a>
         </div>
     </header>

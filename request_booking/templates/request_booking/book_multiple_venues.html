@@ -428,7 +428,11 @@
 </head>
 
 <body>
-    {% include 'request_booking/nav.html' %}
+    <!-- Header with included navigation -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
+    </header>
+    <!-- {% include 'request_booking/nav.html' %} -->
 
     <div class="header1">
         Available Venues
