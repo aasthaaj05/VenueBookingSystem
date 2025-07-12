@@ -10,6 +10,6 @@ echo "Importing users..."
 python3 manage.py import_users user_info.xlsx
 
 echo "Importing venues..."
-python3 manage.py import_venues Data1.xlsx
+python3 manage.py import_venues Venues_Data.xlsx
 
 echo "All done!"

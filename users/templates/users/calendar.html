@@ -653,6 +653,7 @@
     </div>
 
     <script>
+
         document.addEventListener('DOMContentLoaded', () => {
             // Calendar elements
             const calendarDays = document.getElementById('calendarDays');
@@ -753,10 +754,28 @@
                     calendarDays.appendChild(dayElement);
                 }
             }
+            function updateCalendarControls() {
+                if (inTimeSelectionMode) {
+                    prevMonthButton.disabled = true;
+                    nextMonthButton.disabled = true;
+                    prevMonthButton.style.opacity = '0.5';
+                    nextMonthButton.style.opacity = '0.5';
+                    prevMonthButton.style.cursor = 'not-allowed';
+                    nextMonthButton.style.cursor = 'not-allowed';
+                } else {
+                    prevMonthButton.disabled = false;
+                    nextMonthButton.disabled = false;
+                    prevMonthButton.style.opacity = '1';
+                    nextMonthButton.style.opacity = '1';
+                    prevMonthButton.style.cursor = 'pointer';
+                    nextMonthButton.style.cursor = 'pointer';
+                }
+            }
 
             // Select a date
             function selectDate(date) {
                 // Remove selected class from previously selected date
+                if (inTimeSelectionMode) return; // Add this line
                 const previouslySelected = document.querySelector('.calendar-day.selected');
                 if (previouslySelected) {
                     previouslySelected.classList.remove('selected');
@@ -876,7 +895,12 @@
         // }
 
         // Show booking time slots
+        let inTimeSelectionMode = false;
             function showBookingTimeSlots() {
+                if (!selectedDate) {
+                    showNotification("Please select a date first", "error");
+                    return;
+                }
                 if (!selectedDate) {
                     showNotification("Please select a date first", "error");
                     return;
@@ -1227,6 +1251,8 @@
             resetSelectionButton.addEventListener('click', resetSelection);
             confirmDateButton.addEventListener('click', showBookingTimeSlots);
             backToCalendarButton.addEventListener('click', () => {
+                inTimeSelectionMode = false;
+                updateCalendarControls();   
                 bookingInfo.style.display = 'none';
             });
             confirmBookingButton.addEventListener('click', confirmBooking);

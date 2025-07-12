@@ -597,17 +597,16 @@
                                 <td>{{ request.event_details }}</td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)"
+                                        <button class="btn btn-sm btn-view view-btn"
                                         data-venue="{{ request.venue.venue_name }}"
                                         data-date="{{ request.date }}"
                                         data-duration="{{ request.duration }}"
-                                        data-start-date = "{{request.time}}"
+                                        data-start-time="{{ request.time }}"
                                         data-status="{{ request.status }}"
                                         data-need="{{ request.event_details }}"
                                         data-requirements="{{ request.additional_info|default:'None' }}"
                                         data-special-requirements="{{ request.special_requirements|default:'None' }}"
                                         data-event-description="{{ request.event_details|default:'Not specified' }}"
-                                        {% comment %} data-special-requirements="{{ req uest.special_requirements }}" {% endcomment %}
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}"
                                         {% if request.status == "rejected" %}
@@ -615,14 +614,14 @@
                                         data-feedback="{{ request.rejection.feedback_from_admin|default:'No feedback' }}"
                                         data-alternate="{{ request.rejection.alternate_venues_suggestion|default:'None suggested' }}"
                                         {% elif request.status == "approved" %}
-                                        data-accept-reason="{{request.booking.reason_for_approval|default:'No reason provided'}}"
-                                        data-accept-feedback="{{request.booking.additional_comments_Venueadmin|default:'No comments provided'}}"
+                                        data-accept-reason="{{ request.booking.reason_for_approval|default:'No reason provided' }}"
+                                        data-accept-feedback="{{ request.booking.additional_comments_Venueadmin|default:'No comments provided' }}"
                                         {% endif %}>
                                         <i class="fas fa-eye"></i> View
                                         </button>
                                         
                                         {% if request.status == 'pending' or request.status == 'approved' %}
-                                            <button class="btn btn-sm btn-cancel" onclick="showCancelModal('{{ request.request_id }}')">
+                                            <button class="btn btn-sm btn-cancel cancel-btn" data-request-id="{{ request.request_id }}">
                                                 <i class="fas fa-times"></i> Cancel
                                             </button>
                                         {% endif %}
@@ -631,7 +630,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5">
+                                <td colspan="6">
                                     <div class="empty-state">
                                         <i class="fas fa-calendar-times"></i>
                                         <p>You don't have any booking requests yet.</p>
@@ -699,33 +698,82 @@
     </div>
 
     <script>
-        // Current request ID for cancellation
-        let currentRequestId = null;
-        
+        // Initialize after DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add event listeners to all view buttons
+            document.querySelectorAll('.view-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    showBookingDetails(this);
+                });
+            });
+
+            // Add event listeners to all cancel buttons
+            document.querySelectorAll('.cancel-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    showCancelModal(this.getAttribute('data-request-id'));
+                });
+            });
+
+            // Close modals when clicking outside
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        closeModal(overlay.id);
+                    }
+                });
+            });
+
+            // Close modals with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal-overlay').forEach(modal => {
+                        if (modal.classList.contains('active')) {
+                            closeModal(modal.id);
+                        }
+                    });
+                }
+            });
+
+            // Handle form submission
+            document.getElementById('cancelForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const reason = document.getElementById('cancelReason').value.trim();
+                
+                if (!reason) {
+                    alert('Please provide a reason for cancellation.');
+                    return;
+                }
+                
+                if (!document.getElementById('cancelRequestId').value) {
+                    alert('Error: No booking selected.');
+                    return;
+                }
+                
+                // Submit the form
+                this.submit();
+            });
+        });
+
         // Show booking details modal
         function showBookingDetails(button) {
-            console.log("View button clicked - preparing to show modal");
-            
             // Get all data attributes from the button
             const data = {
                 venue: button.getAttribute('data-venue'),
                 date: button.getAttribute('data-date'),
                 duration: button.getAttribute('data-duration'),
+                startTime: button.getAttribute('data-start-time'),
                 status: button.getAttribute('data-status'),
                 need: button.getAttribute('data-need'),
-                start_date:button.getAttribute('data-start-date'),
                 requirements: button.getAttribute('data-requirements'),
                 purpose: button.getAttribute('data-purpose'),
-                special_requirements:button.getAttribute('data-special-requirements'),
+                specialRequirements: button.getAttribute('data-special-requirements'),
                 requestId: button.getAttribute('data-request-id'),
                 reason: button.getAttribute('data-reason'),
                 feedback: button.getAttribute('data-feedback') || 'No feedback provided',
                 alternate: button.getAttribute('data-alternate') || 'No alternate venue suggested',
                 acceptReason: button.getAttribute('data-accept-reason') || 'No reason provided',
                 acceptFeedback: button.getAttribute('data-accept-feedback') || 'No comments provided',
-                event_description: button.getAttribute('data-event-description') || 'None',
-    
-
+                eventDescription: button.getAttribute('data-event-description') || 'None'
             };
             
             // Determine status icon
@@ -753,15 +801,11 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Start Time</div>
-                    <div class="detail-value">${data.start_date}:00</div>
+                    <div class="detail-value">${data.startTime}:00</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Duration</div>
                     <div class="detail-value">${data.duration} hours</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.event_description} hours</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
@@ -771,19 +815,20 @@
                 </div>
                 <div class="detail-item full-width">
                     <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.need}</div>
+                    <div class="detail-value">${data.eventDescription}</div>
                 </div>
                 <div class="detail-item full-width">
                     <div class="detail-label">Purpose of Booking</div>
-                    <div class="detail-value">${data.requirements}</div>
+                    <div class="detail-value">${data.purpose}</div>
                 </div>
                 <div class="detail-item full-width">
                     <div class="detail-label">Special Requirements</div>
-                    <div class="detail-value">${data.special_requirements}</div>
+                    <div class="detail-value">${data.specialRequirements}</div>
                 </div>
-                
-                
-                
+                <div class="detail-item full-width">
+                    <div class="detail-label">Additional Information</div>
+                    <div class="detail-value">${data.requirements}</div>
+                </div>
             `;
             
             // Add approval details if status is approved
@@ -824,13 +869,10 @@
             // Show the modal
             const modal = document.getElementById('detailsModal');
             modal.classList.add('active');
-            console.log("Details modal should now be visible");
         }
 
         // Show cancel confirmation modal
         function showCancelModal(requestId) {
-            console.log("Cancel button clicked for request:", requestId);
-            currentRequestId = requestId;
             document.getElementById('cancelRequestId').value = requestId;
             const modal = document.getElementById('cancelModal');
             modal.classList.add('active');
@@ -839,57 +881,14 @@
 
         // Close any modal
         function closeModal(modalId) {
-            console.log("Closing modal:", modalId);
             const modal = document.getElementById(modalId);
             modal.classList.remove('active');
             
             if (modalId === 'cancelModal') {
                 document.getElementById('cancelReason').value = '';
-                currentRequestId = null;
+                document.getElementById('cancelRequestId').value = '';
             }
         }
-
-        // Close modals when clicking outside
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', function(e) {
-                if (e.target === overlay) {
-                    closeModal(overlay.id);
-                }
-            });
-        });
-
-        // Close modals with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay').forEach(modal => {
-                    if (modal.classList.contains('active')) {
-                        closeModal(modal.id);
-                    }
-                });
-            }
-        });
-
-        // Handle form submission
-        document.getElementById('cancelForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const reason = document.getElementById('cancelReason').value.trim();
-            
-            if (!reason) {
-                alert('Please provide a reason for cancellation.');
-                return;
-            }
-            
-            if (!currentRequestId) {
-                alert('Error: No booking selected.');
-                return;
-            }
-            
-            // Submit the form
-            this.submit();
-        });
-
-        // Initialization logging
-        console.log("Modal system initialized successfully");
     </script>
 </body>
 </html>

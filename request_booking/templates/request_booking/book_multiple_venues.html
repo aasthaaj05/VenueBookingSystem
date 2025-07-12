@@ -476,7 +476,7 @@
                         data-end-time="{{ end_time }}"
                         data-num-weeks="{{ num_weeks }}"
                         data-weekdays="{{ weekdays|join:',' }}">
-                    Book Now
+                    Book Now!
                 </button>
             </div>
         </div>
@@ -604,7 +604,7 @@
                 <button type="button" class="button button-secondary" id="cancelBooking">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <form action="{% url 'request_booking:process_booking_multiple' %}" method="POST" style="display: inline;">
+                <form id="confirmBookingForm" action="{% url 'request_booking:process_booking_multiple' %}" method="POST" style="display: inline;">
                     {% csrf_token %}
                     <input type="hidden" name="venue" id="confirm-venue-id" value="">
                     <input type="hidden" name="event_type" value="{{ eventType }}">
@@ -626,10 +626,21 @@
                         <input type="hidden" name="weekdays" value="{{ day }}">
                     {% endfor %}
                     <!-- If you need to pass more hidden fields, add them here -->
-                    <button type="submit" class="button button-primary">
+                    <button type="submit" id="confirmButton" class="button button-primary">
                         <i class="fas fa-check"></i> Confirm Booking
                     </button>
                 </form>
+                <script>
+                    const form = document.getElementById("confirmBookingForm");
+                    const confirmButton = document.getElementById("confirmButton");
+                
+                    form.addEventListener("submit", function (e) {
+                        // Disable the submit button immediately
+                        confirmButton.disabled = true;
+                        confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    });
+                </script>
+                
             </div>
         </div>
     </div>

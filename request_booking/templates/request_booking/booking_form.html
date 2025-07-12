@@ -1052,7 +1052,11 @@
                         field.classList.remove('input-error');
                     }
                 });
-                
+                if (isValid) {
+                    previewButton.disabled = true;
+                    previewButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                }
+            
                 if (!isValid) {
                     alert('Please fill in all required fields before submitting.');
                     return;

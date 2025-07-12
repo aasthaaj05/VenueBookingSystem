@@ -746,11 +746,14 @@
                             <td>{{ cumulative_request.venue.venue_name }}</td>
                             <td>
                                 {% for date in cumulative_request.dates|slice:":3" %}
-                                    {{ date }}<br>
+                                        {% comment %} {% for date in cumulative_request.dates %} {% endcomment %}
+                                        {{ date }}<br>
+                                    {% comment %} {% endfor %} {% endcomment %}
                                 {% endfor %}
                                 {% if cumulative_request.dates|length > 3 %}
                                     +{{ cumulative_request.dates|length|add:"-3" }} more dates
-                                {% endif %}
+                                {% endif %} 
+                                
                             </td>
                             <td>{{ cumulative_request.time }}</td>
                             <td>{{ cumulative_request.duration }} hours</td>
@@ -862,7 +865,7 @@
                 </form>
             </div>
             <div class="dialog-footer">
-                <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('feedbackDialog')">
+                <button type="button" id="cancelConfirmBtn" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('feedbackDialog')">
                     <i class="fas fa-arrow-left"></i> Cancel
                 </button>
                 <button type="button" class="dialog-btn dialog-btn-confirm" onclick="submitFeedback()">
@@ -944,6 +947,7 @@
 
             console.log('special_requirements...',special_requirements)
             console.log('need : ...',need)
+            console.log('date:',date)
             
             const detailsHtml = `
                 <div class="detail-group">
@@ -967,7 +971,7 @@
                     <div class="detail-value">${venue}</div>
                 </div>
                 <div class="detail-group">
-                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Start Date</div>
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Start Week</div>
                     <div class="detail-value">${start_date}</div>
                 </div>
                 <div class="detail-group">
@@ -979,9 +983,14 @@
                     <div class="detail-value">${num_weeks} weeks</div>
                 </div>
                 <div class="detail-group">
-                    <div class="detail-label"><i class="far fa-calendar-alt"></i> Date</div>
-                    <div class="detail-value">${date}</div>
+                    <div class="detail-label"><i class="far fa-clock"></i> Time</div>
+                    {% comment %} <div class="detail-value">${date}</div> {% endcomment %}
+                    <div class="detail-value">${date.map(d => d + '<br>').join('')}</div>
                 </div>
+               
+
+
+
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-clock"></i> Time</div>
                     <div class="detail-value">${time}</div>
@@ -1097,6 +1106,16 @@
             openDialog('confirmDialog');
             // Automatically submit the form after confirming the action (approve/reject)
             document.getElementById('confirmActionBtn').onclick = function() {
+                const confirmBtn = document.getElementById('confirmActionBtn');
+                const cancelBtn = document.getElementById('cancelConfirmBtn');
+
+                // Disable both buttons
+                confirmBtn.disabled = true;
+                cancelBtn.disabled = true;
+
+                // Show spinner in confirm button
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
                 document.getElementById('actionForm').submit();  // Submit the form
             };
         }

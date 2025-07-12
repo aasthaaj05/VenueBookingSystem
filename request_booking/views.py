@@ -1300,11 +1300,11 @@ def cumulative_send_booking_request_email_to_admin(email, full_name, venue_obj, 
         # Compose email
         msg = MIMEMultipart()
         msg['From'] = sender_email
-        msg['To'] = venue_obj.venue_admin
+        msg['To'] = email
         msg['Subject'] = "New Venue Booking Request Initiated"
 
         body = f"""
-Dear {full_name},
+Dear Admin,
 
 A new venue booking request has been initiated and requires your review.
 
@@ -1352,6 +1352,7 @@ def process_booking_multiple(request):
 
         print('---POST yyy process_booking_multiple---\n\n\n')
         
+        
         # Print all keys in POST data and request.body
         print("POST keys:", request.POST.keys())
         print("POST data type:", type(request.POST))
@@ -1394,6 +1395,8 @@ def process_booking_multiple(request):
             print('[[[[[[[[[]]]]]]]]]')
             num_weeks = int(request.POST.get("num_weeks", 1))
             weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
+
+            print('enue.dept_incharge_email : ', venue.dept_incharge_email)
 
             # Print form data and types
             print("Form Data and Types:")
@@ -1552,7 +1555,7 @@ def process_booking_multiple(request):
                 print(f"Failed to send confirmation email to requester: {e}")
 
             try:
-                cumulative_send_booking_request_email_to_admin(email=email,
+                cumulative_send_booking_request_email_to_admin(email=venue.dept_incharge_email,
                     full_name=full_name,
                     venue_obj=venue,
                     event_type=event_type,
@@ -1743,7 +1746,7 @@ def send_forwarded_notification(to_email , request, venue_obj, alt_venue_1, alt_
     body = f"""
     Dear ,
 
-    A new venue booking request has been initiated.
+    Your new venue booking request has been initiated.
 
     Request Details:
     - Requested by: {request.user.name} ({request.user.email})
@@ -1797,7 +1800,7 @@ from django.utils.timezone import now
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
     # venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
-    venue_incharge_email = venue_obj.venue_admin if venue_obj.venue_admin else None
+    venue_incharge_email = venue_obj.dept_incharge_email
     print()
     print('---------in send_booking_request_email()------')
     print()
@@ -1824,7 +1827,7 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
     msg['Subject'] = "New Venue Booking Request"
 
     body = f"""
-    Dear ,
+    Dear Admin,
 
     A new venue booking request has been submitted.
 

@@ -698,7 +698,7 @@ def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedb
     # print(json.dumps(req, indent=4))  # Nicely formatted JSON-style print
 
     # Use email from request row directly
-    requester_email = cumulative_req.venue.venue_admin
+    requester_email = cumulative_req.venue.dept_incharge_email
     print(' requester_email : ', requester_email)
 
     if not requester_email:
@@ -728,6 +728,35 @@ def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedb
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
 
+    #  Process weekdays to show day names and remove duplicates
+    weekday_names = []
+    if hasattr(cumulative_req, 'weekdays') and cumulative_req.weekdays:
+        weekday_map = {
+            0: "Monday",
+            1: "Tuesday",
+            2: "Wednesday",
+            3: "Thursday",
+            4: "Friday",
+            5: "Saturday",
+            6: "Sunday"
+        }
+        
+        # Convert to list if it's not already (assuming it might be a string or other format)
+        weekdays_data = cumulative_req.weekdays
+        if isinstance(weekdays_data, str):
+            # If it's a string like "0,0,2,2,3,3", split and convert to integers
+            weekdays_list = [int(day) for day in weekdays_data.split(',')]
+        elif isinstance(weekdays_data, (list, tuple)):
+            weekdays_list = [int(day) for day in weekdays_data]
+        else:
+            weekdays_list = []
+        
+        # Get unique sorted weekday numbers and map to names
+        unique_weekdays = sorted(set(weekdays_list))
+        weekday_names = [weekday_map.get(day, "Unknown") for day in unique_weekdays]
+    
+    weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
+
     body = f"""
 Dear Venue In-charge,
 
@@ -743,7 +772,7 @@ Here are the details and requirements of the booking:
 - Event Details: {event_details}
 - Purpose: {purpose}
 - Start Date: {start_date}
-- Weekdays: {weekdays}
+- Weekdays: {weekdays_display}
 - Time: {time}:00 hrs
 - Duration: {duration} hour(s)
 - Number of Weeks: {num_weeks}
@@ -819,6 +848,35 @@ def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason,
     venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
     booking_id = req.cumulative_request_id
 
+    #  Process weekdays to show day names and remove duplicates
+    weekday_names = []
+    if hasattr(cumulative_req, 'weekdays') and cumulative_req.weekdays:
+        weekday_map = {
+            0: "Monday",
+            1: "Tuesday",
+            2: "Wednesday",
+            3: "Thursday",
+            4: "Friday",
+            5: "Saturday",
+            6: "Sunday"
+        }
+        
+        # Convert to list if it's not already (assuming it might be a string or other format)
+        weekdays_data = cumulative_req.weekdays
+        if isinstance(weekdays_data, str):
+            # If it's a string like "0,0,2,2,3,3", split and convert to integers
+            weekdays_list = [int(day) for day in weekdays_data.split(',')]
+        elif isinstance(weekdays_data, (list, tuple)):
+            weekdays_list = [int(day) for day in weekdays_data]
+        else:
+            weekdays_list = []
+        
+        # Get unique sorted weekday numbers and map to names
+        unique_weekdays = sorted(set(weekdays_list))
+        weekday_names = [weekday_map.get(day, "Unknown") for day in unique_weekdays]
+    
+    weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
+
     body = f"""
 Dear {full_name if full_name.strip() else 'Requester'},
 
@@ -832,7 +890,7 @@ Your venue booking request has been approved! 🎉
 - Event Details: {event_details}
 - Purpose: {purpose}
 - Start Date: {start_date}
-- Weekdays: {weekdays}
+- Weekdays: {weekdays_display}
 - Time: {time}:00 hrs
 - Duration: {duration} hour(s)
 - Number of Weeks: {num_weeks}

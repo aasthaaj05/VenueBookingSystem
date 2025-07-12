@@ -769,12 +769,12 @@
                             </div>
                         </td>
                     </tr>
-                    <button 
+                    {% comment %} <button 
                         class="open-feedback-btn" 
                         data-request-id="{{ req.request_id }}" 
                         onclick="openFeedbackDialog(this)">
                         Give Feedback
-                    </button>
+                    </button> {% endcomment %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -844,10 +844,10 @@
                     </form>
             </div>
             <div class="dialog-footer">
-                <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('feedbackDialog')">
+                <button type="button" id="cancelFeedbackBtn" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('feedbackDialog')">
                     <i class="fas fa-arrow-left"></i> Cancel
                 </button>
-                <button type="button" class="dialog-btn dialog-btn-confirm" onclick="submitFeedback()">
+                <button type="button" id="submitFeedbackBtn" class="dialog-btn dialog-btn-confirm" onclick="submitFeedback()">
                     <i class="fas fa-paper-plane"></i> Submit Feedback
                 </button>
             </div>
@@ -882,7 +882,7 @@
                   
             </div>
             <div class="dialog-footer">
-                <button type="button" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('confirmDialog')">
+                <button type="button" id="cancelConfirmBtn" class="dialog-btn dialog-btn-cancel" onclick="closeDialog('confirmDialog')">
                     <i class="fas fa-arrow-left"></i> Cancel
                 </button>
                 <form id="actionForm" method="POST">
@@ -900,6 +900,10 @@
     </div>
 
     <script>
+        const cancelBtn = document.getElementById('cancelFeedbackBtn');
+
+        cancelBtn.disabled = true;
+
         function openFeedbackDialog(button) {
             const requestId = button.getAttribute('data-request-id');
             const form = document.getElementById('feedbackForm');
@@ -914,10 +918,7 @@
         function closeDialog(id) {
             document.getElementById(id).style.display = 'none';
         }
-        {% comment %} function submitFeedback() {
-            const form = document.getElementById("feedbackForm");
-            form.submit();  // 🔥 This manually submits the form
-        } {% endcomment %}
+        
         let currentRequestId = null;
         let currentActionType = null;
 
@@ -1033,6 +1034,12 @@
                 alert('Please select a reason');
                 return;
             }
+            // 🔒 Disable buttons immediately after validation
+            const submitBtn = document.getElementById('submitFeedbackBtn');
+            const cancelBtn = document.getElementById('cancelFeedbackBtn');
+            submitBtn.disabled = true;
+            cancelBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
             
             // Prepare confirmation dialog
             const actionText = currentActionType === 'approve' ? 'Approval' : 'Rejection';
@@ -1067,7 +1074,18 @@
             openDialog('confirmDialog');
             // Automatically submit the form after confirming the action (approve/reject)
             document.getElementById('confirmActionBtn').onclick = function() {
-                document.getElementById('actionForm').submit();  // Submit the form
+                const confirmBtn = document.getElementById('confirmActionBtn');
+                const cancelBtn = document.getElementById('cancelConfirmBtn');
+
+                // Disable both buttons
+                confirmBtn.disabled = true;
+                cancelBtn.disabled = true;
+
+                // Show loading state
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+                // Submit the form
+                document.getElementById('actionForm').submit();
             };
         }
 
