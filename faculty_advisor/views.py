@@ -38,7 +38,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt
+# @csrf_exempt
 def get_pending_forward_requests(request):
     print("In get_pending_forward_requests()")
     print("Session:", request.session)
@@ -91,7 +91,7 @@ def get_pending_forward_requests(request):
 
 
 
-@csrf_exempt
+# @csrf_exempt
 def accept_pending_forward_requests(request, req_id):
     print('fac ad : in accept_pending_forward_requests() ')
     if request.method != "POST":

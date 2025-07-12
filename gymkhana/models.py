@@ -52,6 +52,7 @@ class Building(models.Model):
 
 
 # Update the Venue model to use a ForeignKey to Building
+
 class Venue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     venue_name = models.CharField(max_length=255, unique=True)
@@ -60,12 +61,30 @@ class Venue(models.Model):
     capacity = models.IntegerField()
     address = models.TextField()
     facilities = models.JSONField(default=list)  # Store facilities as JSON array
-    department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")  # FK to Users
-    # building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="venues")  # New relation to Building
+    department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")
+    
     building = models.ForeignKey(Building, on_delete=models.CASCADE, related_name="venues", null=True, blank=True)
-
-    floor_number = models.IntegerField(blank=True, null=True)
+    floor_number = models.TextField(blank=True, null=True)
     room_number = models.CharField(max_length=50, blank=True, null=True)
+
+    # New fields from the table
+    class_type = models.CharField(max_length=100, blank=True, null=True, help_text="Class Room / Lab / Seminar Hall")
+    class_number = models.CharField(max_length=100, blank=True, null=True, help_text="Class Room No / Lab No / Seminar Hall No")
+    length = models.FloatField(blank=True, null=True)
+    depth_or_height = models.FloatField(blank=True, null=True, help_text="D/h")
+    area_sqm = models.FloatField(blank=True, null=True)
+    picture_urls = models.TextField(blank=True, null=True)  # If different from photo_url
+    usage_type = models.CharField(max_length=255, blank=True, null=True, help_text="Hands-on session, lecture, lab, etc.")
+    venue_location = models.TextField(blank=True, null=True)
+    
+    dept_incharge_phone = models.CharField(max_length=20, blank=True, null=True)
+    dept_incharge_email = models.EmailField(blank=True, null=True)
+    dept_assistant_name1 = models.CharField(max_length=255, blank=True, null=True)
+    dept_assistant_name2 = models.CharField(max_length=255, blank=True, null=True)
+    
+    campus = models.CharField(max_length=20, choices=[('North', 'North'), ('South', 'South')], blank=True, null=True)
+
+    venue_admin = models.EmailField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -37,13 +37,15 @@ def forgot_password(request):
         send_otp_email(email, otp)
         
         messages.success(request, 'OTP has been sent to your email!')
-        return render(request, 'forgot_password.html', {
+        return render(request, 'auth_otp/forgot_password.html', {
             'show_otp_field': True,
             'email': email,
             'step': 2  # For the progress indicator
         })
+
+
     
-    return render(request, 'forgot_password.html', {'step': 1})
+    return render(request, 'auth_otp/forgot_password.html', {'step': 1})
 
 def verify_otp(request):
     if request.method == 'POST':
@@ -64,14 +66,14 @@ def verify_otp(request):
                 otp_record.save()
                 
                 messages.success(request, 'OTP verified successfully!')
-                return render(request, 'forgot_password.html', {
+                return render(request, 'auth_otp/forgot_password.html', {
                     'show_password_fields': True,
                     'email': email,
                     'step': 3
                 })
             else:
                 messages.error(request, 'Invalid or expired OTP!')
-                return render(request, 'forgot_password.html', {
+                return render(request, 'auth_otp/forgot_password.html', {
                     'show_otp_field': True,
                     'email': email,
                     'step': 2
@@ -79,9 +81,9 @@ def verify_otp(request):
                 
         except PasswordResetOTP.DoesNotExist:
             messages.error(request, 'Invalid request!')
-            return redirect('forgot_password')
+            return redirect('auth_otp:forgot_password')
     
-    return redirect('forgot_password')
+    return redirect('auth_otp:forgot_password')
 
 def reset_password(request):
     if request.method == 'POST':
@@ -92,7 +94,7 @@ def reset_password(request):
         # Validate passwords match
         if password != confirm_password:
             messages.error(request, 'Passwords do not match!')
-            return render(request, 'forgot_password.html', {
+            return render(request, 'auth_otp/forgot_password.html', {
                 'show_password_fields': True,
                 'email': email,
                 'step': 3
@@ -120,11 +122,11 @@ def reset_password(request):
             otp_record.delete()
             
             messages.success(request, 'Password reset successfully! You can now login with your new password.')
-            return redirect('login')
+            return redirect('users:login')
             
         except (PasswordResetOTP.DoesNotExist, CustomUser.DoesNotExist):
             messages.error(request, 'Invalid request or session expired!')
-            return redirect('forgot_password')
+            return redirect('auth_otp:forgot_password')
     
     return redirect('forgot_password')
 

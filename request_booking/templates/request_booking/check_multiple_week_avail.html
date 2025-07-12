@@ -42,6 +42,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
+            padding-top: 125px;
         }
 
         /* Header Styles */
@@ -972,6 +973,12 @@
 </head>
 <body>
     <div class="container">
+
+    <!-- Header with included navigation -->
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
+    </header>
+
         <div class="booking-header">
             <h2>Multi-Week Booking Request</h2>
             <p>Fill out the form below to request availability for your recurring event across multiple weeks</p>
@@ -1009,15 +1016,16 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="fullName">Full Name</label>
-                        <input type="text" name="fullName" class="form-control" placeholder="Your full name" required>
+                        <input type="text" name="fullName" class="form-control" placeholder="Your full name" value="{{ user_data.name }}" required>
                         <i class="fas fa-user form-icon"></i>
                     </div>
-
+                    
                     <div class="form-group">
                         <label for="email">Email Address</label>
-                        <input type="email" name="email" class="form-control" placeholder="your.email@example.com">
+                        <input type="email" name="email" class="form-control" placeholder="your.email@example.com" value="{{ user_data.email }}" required>
                         <i class="fas fa-envelope form-icon"></i>
                     </div>
+                    
 
                     <div class="form-group">
                         <label for="organization_name">Organization Name</label>
@@ -1039,9 +1047,16 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="start_date">Start Date</label>
-                        <input type="date" name="start_date" class="form-control" required>
+                        <input type="date" name="start_date" id="start_date" class="form-control" required>
                         <i class="fas fa-calendar-day form-icon"></i>
                     </div>
+                    
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const today = new Date().toISOString().split('T')[0];
+                            document.getElementById('start_date').setAttribute('min', today);
+                        });
+                    </script>
 
                     <div class="form-group">
                         <label for="num_weeks">Number of Weeks</label>
@@ -1051,7 +1066,7 @@
                 </div>
 
                 <div class="form-grid">
-                    <div class="form-group">
+                    {% comment %} <div class="form-group">
                         <label for="start_time">Start Time</label>
                         <input type="time" name="start_time" class="form-control" required>
                         <i class="fas fa-clock form-icon"></i>
@@ -1061,7 +1076,38 @@
                         <label for="end_time">End Time</label>
                         <input type="time" name="end_time" class="form-control" required>
                         <i class="fas fa-clock form-icon"></i>
+                    </div> {% endcomment %}
+                    <div class="form-group">
+                        <label for="start_time">Start Time</label>
+                        <input type="number" name="start_time" class="form-control" min="0" step="1" placeholder="e.g. 10" required>
+                        <i class="fas fa-clock form-icon"></i>
+                        <small class="form-text text-muted">Enter whole numbers only (e.g. 10, 12, 20)</small>
                     </div>
+                    <div class="form-group">
+                        <label for="end_time">End Time</label>
+                        <input type="number" name="end_time" class="form-control" min="0" step="1" placeholder="e.g. 20" required>
+                        <i class="fas fa-clock form-icon"></i>
+                        <small class="form-text text-muted">Enter whole numbers only (e.g. 10, 12, 20)</small>
+                    </div>
+                    
+                    <script>
+                    // Additional validation to prevent time format input
+                    document.querySelectorAll('input[type="number"]').forEach(input => {
+                        input.addEventListener('input', function(e) {
+                            // Remove any non-digit characters
+                            this.value = this.value.replace(/[^0-9]/g, '');
+                        });
+                        
+                        input.addEventListener('paste', function(e) {
+                            // Prevent pasting time formats like "2:30"
+                            e.preventDefault();
+                            let paste = (e.clipboardData || window.clipboardData).getData('text');
+                            if (/^\d+$/.test(paste)) {
+                                this.value = paste;
+                            }
+                        });
+                    });
+                    </script>
                 </div>
 
                 <div class="form-group">
