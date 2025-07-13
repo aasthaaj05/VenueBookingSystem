@@ -119,6 +119,75 @@
             padding: 0 var(--space-lg);
         }
 
+        /* ====== HEADER ====== */
+        header {
+            background-color: var(--primary-900);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            z-index: 1000;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: var(--space-lg);
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-weight: 500;
+            position: relative;
+            padding: var(--space-sm) 0;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: var(--transition-medium);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
         /* ====== MAIN CONTENT ====== */
         .main-content {
             padding: var(--space-xl) 0;
@@ -539,9 +608,20 @@
     <link href="{% static 'assets/img/coep_tech_black.png' %}" rel="icon">
 </head>
 <body>
-    <!-- Header with included navigation -->
-    <header id="header" class="header d-flex align-items-center fixed-top">
-        {% include 'request_booking/nav.html' %}
+    <!-- Header Section -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Venue Booking System</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{% url 'faculty_advisor:home' %}"><i class="fas fa-tachometer-alt"></i> Home</a></li>
+                {% comment %} <li><a href="#"><i class="fas fa-calendar"></i> Bookings</a></li>
+                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                <li><a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li> {% endcomment %}
+            </ul>
+        </div>
     </header>
 
     <!-- Main Content -->
@@ -551,7 +631,7 @@
             <div class="welcome-card">
                 <i class="fas fa-user-circle"></i>
                 <div class="welcome-text">
-                    <h2 style="color: white;">Welcome back, {{ person_name }}</h2>
+                    <h2>Welcome back, {{ person_name }}</h2>
                     <p>Manage your venue booking requests and upcoming events in one place</p>
                 </div>
             </div>

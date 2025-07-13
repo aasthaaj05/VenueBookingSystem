@@ -1,7 +1,0 @@
-name,email,organization_name,organization_type,role,password
-kaustubh,kaustubh.test@gmail.com,MindSpark,fests,fests,test@123
-arnav,arnav.test@gmail.com,CSI,student_chapter,club,test@123
-khandizod,khandizhod.test@gmail.com,faculty,None,faculty_advisor,test@123
-mane,mane.test@gmail.com,SDS,club,faculty_advisor,test@123
-amit,amit.test@gmail.com,CSI,student_chapter,faculty_advisor,test@123
-idris,idris.test@gmail.com,Impressions,fests,fests,test@123

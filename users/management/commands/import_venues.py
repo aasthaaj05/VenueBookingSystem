@@ -60,18 +60,6 @@ class Command(BaseCommand):
             skipped_count = 0
 
             for _, row in df.iterrows():
-                # Skip rows with empty venue_name (assuming it's a required field)
-                if pd.isna(row.get('venue_name')) or not str(row.get('venue_name')).strip():
-                    continue
-
-                venue_name = str(row.get('venue_name', '')).strip()
-                
-                # Check if venue already exists
-                if venue_name in existing_venue_names:
-                    self.stdout.write(self.style.WARNING(f"Venue '{venue_name}' already exists. Skipping..."))
-                    skipped_count += 1
-                    continue
-
                 # Building
                 building_name = str(row.get('building_name', 'Unknown')).strip()
                 if not building_name:
@@ -102,12 +90,24 @@ class Command(BaseCommand):
                     except (ValueError, TypeError):
                         capacity = 0
 
-                floor_number = 0
+                floor_number = ''
                 if not pd.isna(row.get('floor_number')) and str(row.get('floor_number')).strip():
                     try:
-                        floor_number = int(float(row['floor_number']))
+                        floor_number = row['floor_number']
                     except (ValueError, TypeError):
-                        floor_number = 0
+                        floor_number = ''
+
+                # Skip rows with empty venue_name (assuming it's a required field)
+                if pd.isna(row.get('venue_name')) or not str(row.get('venue_name')).strip():
+                    continue
+
+                venue_name = str(row.get('venue_name', '')).strip() +"(" + building_name +")" + "_"+floor_number
+                
+                # Check if venue already exists
+                if venue_name in existing_venue_names:
+                    self.stdout.write(self.style.WARNING(f"Venue '{venue_name}' already exists. Skipping..."))
+                    skipped_count += 1
+                    continue
 
                 area_sqm = 0.0
                 if not pd.isna(row.get('area_sqm')) and str(row.get('area_sqm')).strip():
