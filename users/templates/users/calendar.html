@@ -1248,8 +1248,15 @@
                 generateCalendar(currentMonth, currentYear);
             });
 
-            resetSelectionButton.addEventListener('click', resetSelection);
-            confirmDateButton.addEventListener('click', showBookingTimeSlots);
+            resetSelectionButton.addEventListener('click', () => {
+                resetSelection();                   // 🧼 Your existing reset logic
+                confirmDateButton.disabled = false; // 🔓 Re-enable the confirm button
+            });
+ 
+            confirmDateButton.addEventListener('click', () => {
+                confirmDateButton.disabled = true;        // 🔒 Disable the button
+                showBookingTimeSlots();                   // 📅 Show the slots
+            });
             backToCalendarButton.addEventListener('click', () => {
                 inTimeSelectionMode = false;
                 updateCalendarControls();   
