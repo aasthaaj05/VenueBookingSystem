@@ -727,11 +727,11 @@
                                         <i class="fas fa-eye"></i> View
                                         </button>
                                         
-                                        {% if request.status == 'pending' or request.status == 'approved' %}
-                                            <button class="btn btn-sm btn-cancel" onclick="showCancelModal('{{ request.request_id }}')">
+                                        {% comment %} {% if request.status == 'pending' or request.status == 'approved' %}
+                                            <button class="btn btn-sm btn-cancel" onclick="showCancelModal('{{ request.cumulative_request_id }}')">
                                                 <i class="fas fa-times"></i> Cancel
                                             </button>
-                                        {% endif %}
+                                        {% endif %} {% endcomment %}
                                     </div>
                                 </td>
                             </tr>
@@ -774,7 +774,7 @@
         </div>
     </div>
 
-    <!-- Cancel Confirmation Modal -->
+    {% comment %} <!-- Cancel Confirmation Modal -->
     <div class="modal-overlay" id="cancelModal">
         <div class="modal">
             <div class="modal-header">
@@ -802,7 +802,7 @@
                 </div>
             </form>
         </div>
-    </div>
+    </div> {% endcomment %}
 
     <script>
         // Current request ID for cancellation

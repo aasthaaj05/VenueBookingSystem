@@ -1555,7 +1555,7 @@ def process_booking_multiple(request):
                 print(f"Failed to send confirmation email to requester: {e}")
 
             try:
-                cumulative_send_booking_request_email_to_admin(email=venue.dept_incharge_email,
+                cumulative_send_booking_request_email_to_admin(email=venue.venue_admin,
                     full_name=full_name,
                     venue_obj=venue,
                     event_type=event_type,
@@ -1800,7 +1800,7 @@ from django.utils.timezone import now
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
     # venue_incharge_email = venue_obj.department_incharge.email if venue_obj.department_incharge else None
-    venue_incharge_email = venue_obj.dept_incharge_email
+    venue_incharge_email = venue_obj.venue_admin
     print()
     print('---------in send_booking_request_email()------')
     print()
