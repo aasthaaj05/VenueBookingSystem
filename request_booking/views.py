@@ -195,6 +195,10 @@ def cumulative_booking_status(request):
     return render(request, 'request_booking/cumulative_booking_status.html', context)
 
 
+def time_str_to_decimal(time_str):
+    hour, minute = map(int, time_str.split(":"))
+    return hour + (minute / 60)
+
 
 # @csrf_exempt  # Disable CSRF protection for testing (remove in production)
 def get_available_slots(request):
@@ -226,8 +230,10 @@ def get_available_slots(request):
             
 
             # Convert 12-hour format to 24-hour format
-            start_hour = int(datetime.strptime(start_time_str, "%I:%M %p").strftime("%H"))
-            end_hour = int(datetime.strptime(end_time_str, "%I:%M %p").strftime("%H"))
+            # start_hour = int(datetime.strptime(start_time_str, "%I:%M %p").strftime("%H"))
+            # end_hour = int(datetime.strptime(end_time_str, "%I:%M %p").strftime("%H"))
+            start_hour = time_str_to_decimal(start_time_str)
+            end_hour = time_str_to_decimal(end_time_str)
 
             print()
             print()
@@ -261,8 +267,10 @@ def get_available_slots(request):
 
             # Convert string times to datetime objects
             time_format = "%I:%M %p"  # Format for "6:00 PM"
-            start_time = datetime.strptime(start_time_str, time_format)
-            end_time = datetime.strptime(end_time_str, time_format)
+            # start_time = datetime.strptime(start_time_str, time_format)
+            # end_time = datetime.strptime(end_time_str, time_format)
+            start_time=start_hour
+            end_time=end_hour
 
             print()
             print()
@@ -271,7 +279,9 @@ def get_available_slots(request):
             # Calculate duration in hours
             # duration = int((end_time - start_time).total_seconds() // 3600)  # Convert seconds to hours
 
-            duration = int((int(end_hour) - int(start_hour))) 
+            # duration = int((int(end_hour) - int(start_hour))) 
+            duration = end_hour - start_hour
+            request.session["booking_duration"] = duration
 
             print('in get_available_slots func duration : ' , duration)
 
@@ -567,7 +577,10 @@ def get_user_requests(request):
         return JsonResponse({'error': str(e)}, status=400)
 
 
-
+def float_to_time_str(t):
+    hours = int(t)
+    minutes = int((t - hours) * 60)
+    return f"{hours:02d}:{minutes:02d}"
     
 
 
@@ -629,8 +642,10 @@ def book_venue(request):
             "email": request.session.get("email"),
             "organization_name": request.session.get("organization_name"),
             "date": request.session.get("start_date"),  # Extracting start date
-            "start_time": f"{request.session.get('start_time'):02d}:00",  # Convert to HH:MM format
-            "end_time": f"{request.session.get('end_time'):02d}:00",  # Convert to HH:MM format
+            # "start_time": f"{request.session.get('start_time'):02d}:00",  # Convert to HH:MM format
+            # "end_time": f"{request.session.get('end_time'):02d}:00",  # Convert to HH:MM format
+            "start_time": float_to_time_str(request.session.get("start_time")),
+            "end_time": float_to_time_str(request.session.get("end_time")),
     }
 
         print('user data : ' , user_data)
@@ -871,6 +886,14 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from .models import Request, Venue
 
+def time_str_to_float(time_str):
+    """Convert 'HH:MM' string to float hours, e.g. '14:30' -> 14.5"""
+    if ":" in time_str:
+        hour, minute = map(int, time_str.split(":"))
+        return hour + (minute / 60) 
+    else:
+        return float(time_str)
+        
 
 
 @login_required
@@ -916,12 +939,17 @@ def process_booking(request):
             # start_time_obj = datetime.strptime(start_time, "%H:%M").time()
             # end_time_obj = datetime.strptime(end_time, "%H:%M").time()
             # Convert string time to datetime.time object
-            start_time_obj = datetime.strptime(start_time, "%H:%M").time()
-            end_time_obj = datetime.strptime(end_time, "%H:%M").time()
+            # start_time_obj = datetime.strptime(start_time, "%H:%M").time()
+            # end_time_obj = datetime.strptime(end_time, "%H:%M").time()
 
             # Extract only the hour as an integer
-            start_time = start_time_obj.hour
-            end_time = end_time_obj.hour
+            # start_time = start_time_obj.hour
+            # end_time = end_time_obj.hour
+            # start_time = float(start_time)
+            # end_time = float(end_time_obj)
+
+            start_time = time_str_to_float(start_time)
+            end_time = time_str_to_float(end_time)
 
             print('start , end time : ',start_time, end_time)  # Example Output: 11, 22
             date_obj = datetime.strptime(date, "%Y-%m-%d").date()
@@ -931,7 +959,7 @@ def process_booking(request):
 
             # Calculate duration in minutes
             # duration = (datetime.combine(date_obj, end_time_obj) - datetime.combine(date_obj, start_time_obj)).seconds // 60
-            print(f"Parsed Date: {date_obj}, Start Time: {start_time_obj}, End Time: {end_time_obj}, Duration: {duration} minutes")
+            # print(f"Parsed Date: {date_obj}, Start Time: {start_time_obj}, End Time: {end_time_obj}, Duration: {duration} minutes")
 
             # Fetch venue instances
             venue = Venue.objects.get(venue_name=venue_id)
@@ -1010,6 +1038,7 @@ def process_booking(request):
     return redirect("faculty_advisor:booking_status")
 
 def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays, time, duration):
+    print('in check_venue_availability_mul_weeks()')
     # Ensure start_date is a date object, not datetime
     if isinstance(start_date, datetime):
         start_date = start_date.date()
@@ -1032,14 +1061,17 @@ def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays, t
             )
             if (existing_bookings.exists()):
                 for booking in existing_bookings:
-                    booking_start = booking.time
-                    booking_end = booking.time + booking.duration
-                    request_start = time
-                    request_end = time + duration
+                    booking_start = float(booking.time)
+                    booking_end = float(booking.time) + float(booking.duration)
+                    request_start = float(time)
+                    request_end = float(time) + float(duration)
 
                     # Check for overlap
-                    if ((request_end >= booking_start and request_start <= booking_end) or (request_start <= booking_end and request_end >= booking_start)):
-                        print("detected a conflict")
+                    # if ((request_end >= booking_start and request_start <= booking_end) or (request_start <= booking_end and request_end >= booking_start)):
+                    #     print("detected a conflict")
+                    #     return False
+                    if request_start < booking_end and request_end > booking_start:
+                        print("❌ Conflict detected with booking:", booking)
                         return False
     return True
 
@@ -1433,10 +1465,16 @@ def process_booking_multiple(request):
             # Time parsing
             # start_time = datetime.strptime(start_time_str, "%H:%M").time().hour
             # end_time = datetime.strptime(end_time_str, "%H:%M").time().hour
-            start_time = int(start_time_str)
-            end_time = int(end_time_str)
+            # start_time = int(start_time_str)
+            # end_time = int(end_time_str)
+            start_time = time_str_to_float(start_time_str)
+            print('start_time',start_time)
+            end_time = time_str_to_float(end_time_str)
+            print('end_time',end_time)
             duration = end_time - start_time
+            print('duration',duration)
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            print('start_date',start_date)
             # start_date = int(start_date_str)
             # end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
@@ -2237,12 +2275,12 @@ def arnav_check_multiple_week_availability_view(request):
         special_requirements = request.POST.get("specialRequirements", "")
         print("7")
         # start_hour = datetime.strptime(start_time_str, "%H:%M").time().hour
-        start_hour = int(start_time_str)
+        start_hour = float(start_time_str)
         print("8")
         # end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
-        end_hour = int(end_time_str)
+        end_hour = float(end_time_str)
         print("9")
-        duration = int((int(end_hour) - int(start_hour)))
+        duration = float(end_hour - start_hour)
         print("10")
         # Debugging output
         print(f"Start Date: {start_date}")

@@ -14,7 +14,7 @@ import datetime
 
 SLOT_NUM = 12
 SLOT_START = 9
-SLOT_DURATION = 1
+SLOT_DURATION = 0.5
 
 # date in YYYY-MM-DD format
 # every day has 12 slots of 1 hr each starting from 8 am
@@ -26,38 +26,89 @@ def checkDate(date: str):
     except ValueError:
         return False
 
+# def getAvailableSlots(venue_id, start_date, end_date):
+#     if not checkDate(start_date) or not checkDate(end_date):
+#         raise ValueError("Invalid dates")  # raises error to the callee
+
+#     # get from database
+#     slots_booked = db.getBookedSlotsFromDB(venue_id, start_date, end_date)  # ✅ Fetch as dict
+#     json_array = []
+#     booking_dict = {}
+#     start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+#     end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+#     iterator_date = start_date
+
+#     while iterator_date <= end_date:
+#         booking_dict[iterator_date] = [True for _ in range(SLOT_NUM)]
+#         iterator_date += datetime.timedelta(days=1)
+
+#     for row in slots_booked:
+#         for i in range(float(row['duration'])): 
+#             print("DATE: ",row['date'])
+#             print("time:", row['time']) # ✅ Use dict keys instead of tuple indexing
+#             booking_dict[row['date']][row['time'] + i - SLOT_START] = False
+
+#     # convert dictionary to array which can be handled by a template
+#     for key, value in booking_dict.items():
+#         json_array.append(
+#             {
+#                 'date': key.strftime("%d-%m-%Y"),
+#                 # **{f"{i + SLOT_START}": value[i] for i in range(SLOT_NUM)}
+#                 **{str(SLOT_START + i * SLOT_DURATION): value[i] for i in range(SLOT_NUM)}
+
+#             }
+#         )
+
+#     return json_array
+
+
+import datetime
+
+# Constants (make sure they match your real config)
+SLOT_START = 8          # 8 AM
+SLOT_NUM = 20           # Total slots per day
+SLOT_DURATION = 0.5     # Each slot is 30 minutes
+
 def getAvailableSlots(venue_id, start_date, end_date):
     if not checkDate(start_date) or not checkDate(end_date):
-        raise ValueError("Invalid dates")  # raises error to the callee
+        raise ValueError("Invalid dates")
 
-    # get from database
-    slots_booked = db.getBookedSlotsFromDB(venue_id, start_date, end_date)  # ✅ Fetch as dict
-    json_array = []
+    slots_booked = db.getBookedSlotsFromDB(venue_id, start_date, end_date)
+    json_array = {}
     booking_dict = {}
-    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
-    iterator_date = start_date
 
-    while iterator_date <= end_date:
+    start_date_obj = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_date_obj = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+    iterator_date = start_date_obj
+
+    # Initialize availability: True = available
+    while iterator_date <= end_date_obj:
         booking_dict[iterator_date] = [True for _ in range(SLOT_NUM)]
         iterator_date += datetime.timedelta(days=1)
 
+    # Mark booked slots
     for row in slots_booked:
-        for i in range(row['duration']): 
-            print("DATE: ",row['date'])
-            print("time:", row['time']) # ✅ Use dict keys instead of tuple indexing
-            booking_dict[row['date']][row['time'] + i - SLOT_START] = False
+        duration = float(row['duration'])  # e.g., 1.5 hours
+        start_time = float(row['time'])    # e.g., 9.5 for 9:30 AM
+        booking_date = row['date']         # assumed to be a datetime.date object
 
-    # convert dictionary to array which can be handled by a template
+        # Convert fractional time to slot index
+        start_slot_index = int(round((start_time - SLOT_START) / SLOT_DURATION))
+        slots_count = int(duration / SLOT_DURATION)
+
+        for i in range(slots_count):
+            slot_index = start_slot_index + i
+            if 0 <= slot_index < SLOT_NUM:
+                booking_dict[booking_date][slot_index] = False
+
+    # Prepare final output
     for key, value in booking_dict.items():
-        json_array.append(
-            {
-                'date': key.strftime("%d-%m-%Y"),
-                **{f"{i + SLOT_START}": value[i] for i in range(SLOT_NUM)}
-            }
-        )
+        json_array[key.strftime("%d-%m-%Y")] = {
+            str(SLOT_START + i * SLOT_DURATION): value[i] for i in range(SLOT_NUM)
+        }
 
     return json_array
+
 
 
 
@@ -193,17 +244,38 @@ def declineForwardRequest(req_id, user_id):
     
     return True
 
+# def getUnavailableSlots(venue_name, date):
+#     try:
+#         print("DATE:", date)
+#         res = db.getBookedSlotsFromDB1(venue_name, date)
+#         json_array=[]
+#         for row in res:
+#             print("row from data base:" ,row)
+#             for i in range(row['duration']):
+#                 json_array.append(str(row['time']+i)+":00")
+
+#     except Exception as e:
+#         raise e
+    
+#     return json_array
+
 def getUnavailableSlots(venue_name, date):
     try:
         print("DATE:", date)
         res = db.getBookedSlotsFromDB1(venue_name, date)
-        json_array=[]
+        json_array = []
+
         for row in res:
-            print("row from data base:" ,row)
-            for i in range(row['duration']):
-                json_array.append(str(row['time']+i)+":00")
+            print("row from data base:", row)
+            start_time = float(row['time'])
+            duration = float(row['duration'])
+
+            slots = int(duration * 2)  # multiply by 2 for half-hour steps
+            for i in range(slots):
+                json_array.append(round(start_time + i * 0.5, 2))  # round to avoid floating-point issues
 
     except Exception as e:
         raise e
-    
+
     return json_array
+

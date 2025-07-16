@@ -900,6 +900,22 @@
     </div>
 
     <script>
+        
+            function formatTimeFromString(str) {
+                const time = parseFloat(str);
+                const hours = Math.floor(time);
+                const minutes = Math.round((time - hours) * 60);
+                return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+            }
+        
+            function formatDurationFromString(str) {
+                const duration = parseFloat(str);
+                const hours = Math.floor(duration);
+                const minutes = Math.round((duration - hours) * 60);
+                return `${hours} hours${minutes > 0 ? ' ' + minutes + 'minutes' : ''}`;
+            }
+        
+       
         const cancelBtn = document.getElementById('cancelFeedbackBtn');
 
         cancelBtn.disabled = true;
@@ -955,11 +971,11 @@
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-clock"></i> Time</div>
-                    <div class="detail-value">${time}</div>
+                    <div class="detail-value">${formatTimeFromString(time)}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-hourglass-half"></i> Duration</div>
-                    <div class="detail-value">${duration} hours</div>
+                    <div class="detail-value">${formatDurationFromString(duration)}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-calendar-week"></i> Event Type</div>

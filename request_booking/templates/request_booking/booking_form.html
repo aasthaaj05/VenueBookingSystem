@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COEPVenueBookingSystem</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <style>
         :root {
             /* Primary Blue Theme */
@@ -751,6 +754,7 @@
           }
           
     </style>
+    
 </head>
 <body>
     <header id="header" class="header d-flex align-items-center fixed-top" >
@@ -795,6 +799,7 @@
                         <label for="eventType">Event Type <span class="required">*</span></label>
                         <select id="eventType" name="eventType" required>
                             <option value="" disabled selected>Select event type</option>
+                            <option value="Lecture">Lecture</option>
                             <option value="seminar">Seminar</option>
                             <option value="workshop">Workshop</option>
                             <option value="guest_lecture">Guest Lecture</option>
@@ -893,7 +898,7 @@
                     </div>
                     
                     <div class="form-group">
-                        <label for="alternateVenue2">Secondary Alternate Venue</label>
+                        <label for="alternateVenue2">Secondary Alternate Venue <span class="required">*</span> </label>
                         <select id="alternateVenue2" name="alternateVenue2">
                             <option value="" disabled selected>Select an alternate venue</option>
                             {% for venue in venues %}
@@ -913,7 +918,7 @@
                           <span class="checkbox-custom"></span>
                           I'm flexible with alternate Venues if Venue isn't available
                         </label>
-                      </div>
+                      </div> 
                     
                 </div>  
                 
@@ -978,10 +983,39 @@
                     <i class="fas fa-check-circle"></i> Confirm & Submit
                 </button>
             </div>
+            
         </div>
     </div>
+
+    <!-- Include jQuery and Select2 JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!-- Initialize Select2 -->
+    <script>
+        $(document).ready(function() {
+            $('.venue-select').select2({
+                placeholder: "Select an alternate venue",
+                allowClear: true
+            });
+        });
+    </script>
     
     <script>
+
+        
+        
+            document.getElementById("btnConfirm").addEventListener("click", function (e) {
+                const btn = this;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                console.log("spininngin");
+        
+                // Simulate form submission or call your actual submit logic here
+                // Example:
+                // document.getElementById("yourFormId").submit();
+            });
+        
         document.addEventListener('DOMContentLoaded', function() {
             // Add animation to form elements when they come into view
             const formGroups = document.querySelectorAll('.form-group');
@@ -1028,12 +1062,13 @@
             
             // Map event types to display names
             const eventTypeMap = {
-                'seminar': 'Seminar',
+                'Lecture': 'Lecture',
                 'workshop': 'Workshop',
                 'guest_lecture': 'Guest Lecture',
                 'cultural_event': 'Cultural Event',
                 'sports_event': 'Sports Event',
-                'other': 'Other'
+                'seminar': 'Seminar',
+                'other': 'Other',
             };
             
             // Handle preview button click
@@ -1052,10 +1087,7 @@
                         field.classList.remove('input-error');
                     }
                 });
-                if (isValid) {
-                    previewButton.disabled = true;
-                    previewButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-                }
+                
             
                 if (!isValid) {
                     alert('Please fill in all required fields before submitting.');

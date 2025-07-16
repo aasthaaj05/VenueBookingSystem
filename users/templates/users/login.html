@@ -65,7 +65,8 @@
                 <h3>Don't have an account? <a href="{% url 'users:register' %}">Register</a></h3>
             </div> {% endcomment %}
             <div class="text">
-                <h3><a href="{% url 'auth_otp:forgot_password' %}">Forgot Password?</a></h3>
+                {% comment %} <h3><a href="{% url 'auth_otp:forgot_password' %}">Forgot Password?</a></h3> {% endcomment %}
+                <h3><a href="{% url 'users:clear_and_forgot' %}">Forgot Password?</a></h3>
             </div>
         </form>
     </div>

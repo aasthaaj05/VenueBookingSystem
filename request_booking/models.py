@@ -45,8 +45,8 @@ class Request(models.Model):
     additional_info = models.TextField(blank=True, null=True)  # Additional details
 
     date = models.DateField()
-    time = models.IntegerField()  # Changed from IntegerField to TimeField
-    duration = models.IntegerField()  # Duration in minutes/hours
+    time = models.CharField(max_length=255)  # Changed from IntegerField to TimeField
+    duration = models.CharField(max_length=255)  # Duration in minutes/hours
 
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="venue_requests")  # Requested Venue
     need = models.TextField(blank=True, null=True)  # Description of the need
@@ -91,7 +91,7 @@ class CumulativeRequest(models.Model):
         ('rejected', 'Rejected'),
         ('cancelled', 'Cancelled'),
         ('forwarded', 'Forwarded'),
-        ('user-cancelled', 'User-Cancelled')
+        ('user-cancelled', 'User-Cancelled'),
     ] 
 
     cumulative_request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -116,8 +116,8 @@ class CumulativeRequest(models.Model):
     weekdays = models.CharField(max_length=100, blank=True, null=True)
 
 
-    time = models.IntegerField()  # Keeping same as your Request model
-    duration = models.IntegerField()
+    time = models.CharField(max_length=255)  # Keeping same as your Request model
+    duration = models.CharField(max_length=255)
     num_weeks = models.IntegerField()  # Keeping same as your Request model
 
     # venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name="cumulative_venue_requests")

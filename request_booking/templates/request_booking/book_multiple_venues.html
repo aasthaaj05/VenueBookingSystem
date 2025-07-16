@@ -166,7 +166,7 @@
         .carousel {
             display: flex;
             width: 1200px;
-            animation: sliding 12s infinite;
+            {% comment %} animation: sliding 12s infinite; {% endcomment %}
         }
 
         .carousel div {
@@ -424,6 +424,12 @@
             from { opacity: 0; }
             to { opacity: 1; }
         }
+        /* Disable all image animations globally */
+        img {
+            animation: none !important;
+            transform: none !important;
+        }
+
     </style>
 </head>
 
@@ -432,6 +438,13 @@
     <header id="header" class="header d-flex align-items-center fixed-top">
         {% include 'request_booking/nav.html' %}
     </header>
+    <style>
+        img {
+            animation: none !important;
+            transform: none !important;
+        }
+
+    </style>
     <!-- {% include 'request_booking/nav.html' %} -->
 
     <div class="header1">
@@ -446,11 +459,12 @@
             <div class="carousel-wrapper">
                 <div class="carousel-container">
                     <div class="carousel">
-                        {% for image in venue.images %}
-                        <div>
-                            <img src="{{ image }}" alt="{{ venue.name }} view">
-                        </div>
-                        {% endfor %}
+                        {% if venue.images %}
+                            <div>
+                                <img src="{{ venue.images }}" alt="{{ venue.name }} view">
+                            </div>
+                        {% endif %}
+                        
                     </div>
                 </div>
                 <div class="venue-info">
@@ -468,7 +482,7 @@
                 </div>
                 <button type="button" class="book-button" 
                         data-venue-id="{{ venue.id }}" 
-                        data-venue-name="{{ venue.name }}"
+                        data-venue-name="{{ venue.name.0 }}"
                         data-venue-capacity="{{ venue.capacity }}"
                         data-venue-facilities="{{ venue.facilities|join:', ' }}"
                         data-start-date="{{ start_date }}"
@@ -506,6 +520,7 @@
                     <span class="preview-label">Venue Name:</span>
                     <span class="preview-value" id="preview-venue-name"></span>
                 </div>
+                
                 <div class="preview-row">
                     <span class="preview-label">Capacity:</span>
                     <span class="preview-value" id="preview-venue-capacity"></span>

@@ -17,6 +17,15 @@ smtp_port = settings.EMAIL_PORT
 
 def forgot_password(request):
     if request.method == 'POST':
+        # Clear old messages in POST
+        storage = messages.get_messages(request)
+        list(storage)
+
+        storage = messages.get_messages(request)
+        for _ in storage:
+            pass  # iterate through to clear them
+
+
         email = request.POST.get('email')
         
         # Check if user exists
@@ -49,6 +58,10 @@ def forgot_password(request):
 
 def verify_otp(request):
     if request.method == 'POST':
+        # Clear old messages in POST
+        storage = messages.get_messages(request)
+        list(storage)
+
         email = request.POST.get('email')
         otp = request.POST.get('otp')
         user_entered_otp = otp
@@ -87,6 +100,11 @@ def verify_otp(request):
 
 def reset_password(request):
     if request.method == 'POST':
+        # Clear old messages in POST
+        storage = messages.get_messages(request)
+        list(storage)
+
+
         email = request.POST.get('email')
         password = request.POST.get('new_password')
         confirm_password = request.POST.get('confirm_password')

@@ -807,6 +807,21 @@
     
 
             };
+
+            // Format duration and start_date
+            if (data.duration) {
+                data.duration = parseFloat(data.duration).toFixed(1); // "10.5"
+            }
+            
+            if (data.start_date) {
+                const startFloat = parseFloat(data.start_date);
+                const hours = Math.floor(startFloat);
+                const minutes = Math.round((startFloat - hours) * 60);
+                const paddedHours = hours.toString().padStart(2, '0');
+                const paddedMinutes = minutes.toString().padStart(2, '0');
+                data.start_date = `${paddedHours}:${paddedMinutes}`; // e.g. "07:30"
+            }
+  
             
             // Determine status icon
             const statusIcons = {
@@ -866,6 +881,8 @@
                 
             `;
             
+            
+
             // Add approval details if status is approved
             if (data.status === 'approved') {
                 html += `

@@ -114,8 +114,8 @@ class Booking(models.Model):
     request = models.OneToOneField(Request, on_delete=models.CASCADE, related_name="booking")  # Link to the original request
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="bookings")  # Who made the booking
     date = models.DateField()
-    time = models.IntegerField()
-    duration = models.IntegerField()
+    time = models.CharField(max_length=100)
+    duration = models.CharField(max_length=100)
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="booked_venue")  # Final booked venue
     event_details = models.TextField()  # Description of the event
     msg = models.TextField(blank=True, null=True)  # Additional messages
@@ -153,8 +153,8 @@ class RejectedBooking(models.Model):
         related_name="rejected_requests"  # ✅ Unique related_name
     )  
     date = models.DateField()
-    time = models.IntegerField()
-    duration = models.IntegerField()
+    time = models.CharField(max_length=100)
+    duration = models.CharField(max_length=100)
     
     venue = models.ForeignKey(
         Venue, 

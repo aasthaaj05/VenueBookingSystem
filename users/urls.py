@@ -10,5 +10,7 @@ urlpatterns = [
     path('home/', views.home, name='home'),  # Get all users
     path('calendar/', views.calendar_view, name='calendar'),
     # path('submit_booking/', views.submit_booking, name='submit_booking'),
+    path('clear-and-forgot/', views.clear_flash_and_redirect, name='clear_and_forgot'),
+
 ]
 

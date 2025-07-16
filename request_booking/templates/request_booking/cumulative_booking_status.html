@@ -712,7 +712,7 @@
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}"
                                         {% if request.status == "rejected" %}
-                                        data-reason="{{ request.reasons|default:'No reason provided' }}"
+                                        data-reason="{{ request.reason_to_reject|default:'No reason provided' }}"
                                         data-feedback="{{ request.rejection.feedback_from_admin|default:'No feedback' }}"
                                         data-alternate="{{ request.rejection.alternate_venues_suggestion|default:'None suggested' }}"
                                         data-additional-comments = "{{request.additional_comments }}"

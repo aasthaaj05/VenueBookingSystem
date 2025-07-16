@@ -922,9 +922,9 @@
                 startTimeContainer.innerHTML = "";
                 endTimeContainer.innerHTML = "";
 
-                const startHour = 9; // 9 AM
-                const endHour = 21; // 9 PM
-                const interval = 1; // 1 hour intervals
+                const startHour = 7; // 9 AM
+                const endHour = 22; // 9 PM
+                const interval = 0.5; // 1 hour intervals
 
                 const formattedDate = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
 
@@ -952,21 +952,21 @@
                             const timeSlotElement = document.createElement("div");
                             timeSlotElement.classList.add("time-slot");
 
-                            const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                            const amPm = hour < 12 ? "AM" : "PM";
-                            const timeString = `${formattedHour}:00 ${amPm}`;
+                            const isHalfHour = hour % 1 !== 0;
+                            const hourPart = Math.floor(hour);
+                            const minutePart = isHalfHour ? "30" : "00";
+                            const displayTime = `${hourPart}:${minutePart}`; // Always HH:MM format
 
-                            timeSlotElement.textContent = timeString;
+                            timeSlotElement.textContent = displayTime;
                             timeSlotElement.dataset.hour = hour;
 
-                            // Check if this time slot is unavailable
-                            const militaryFormat = `${hour}:00`;
-                            if (unavailableTimeSlots.includes(militaryFormat)) {
+                            const timeFloat = hourPart + (minutePart === '30' ? 0.5 : 0.0);
+                            if (unavailableTimeSlots.includes(timeFloat)) {
+
                                 timeSlotElement.classList.add("unavailable");
                             } else {
-                                // Add click event for available time slots
                                 timeSlotElement.addEventListener("click", () =>
-                                    selectStartTime(timeSlotElement, timeString, hour, unavailableTimeSlots)
+                                    selectStartTime(timeSlotElement, displayTime, hour, unavailableTimeSlots)
                                 );
                             }
 
@@ -1041,36 +1041,46 @@
                         function updateEndTimeSlots(startHour, unavailableTimeSlots) {
                             endTimeContainer.innerHTML = '';
                             selectedEndTime = null;
-
-                            const endHour = 21; // 9 PM
-                            const interval = 1; // 1-hour intervals
-
-                            // Find the nearest unavailable slot after the selected start time
-                            let nearestUnavailableHour = endHour; // Default to the latest possible time
-                            for (let time of unavailableTimeSlots) {
-                                let unavailableHour = parseInt(time.split(':')[0]); // Extract the hour part
-                                if (unavailableHour > startHour) {
-                                    nearestUnavailableHour = Math.min(nearestUnavailableHour, unavailableHour);
+                        
+                            const endHour = 22;
+                            const interval = 0.5;
+                        
+                            // Convert all unavailable to float for safety
+                            const unavailableSet = new Set(unavailableTimeSlots.map(parseFloat));
+                        
+                            for (let endTime = startHour + interval; endTime <= endHour; endTime += interval) {
+                                let isRangeAvailable = true;
+                        
+                                for (let t = startHour; t < endTime; t += interval) {
+                                    if (unavailableSet.has(parseFloat(t.toFixed(2)))) {
+                                        isRangeAvailable = false;
+                                        break;
+                                    }
                                 }
-                            }
-
-                            // Populate end time slots only before the nearest unavailable slot
-                            for (let hour = startHour + 1; hour < nearestUnavailableHour; hour += interval) {
+                        
+                                if (!isRangeAvailable) break; // stop at first conflict
+                        
                                 const timeSlotElement = document.createElement('div');
                                 timeSlotElement.classList.add('time-slot');
-
-                                const formattedHour = hour % 12 === 0 ? 12 : hour % 12;
-                                const amPm = hour < 12 ? 'AM' : 'PM';
-                                const timeString = `${formattedHour}:00 ${amPm}`;
-
+                        
+                                const isHalfHour = endTime % 1 !== 0;
+                                const hourPart = Math.floor(endTime);
+                                const minutePart = isHalfHour ? '30' : '00';
+                                const timeString = `${hourPart}:${minutePart}`;
+                        
                                 timeSlotElement.textContent = timeString;
-
-                                // Enable selection of valid time slots
                                 timeSlotElement.addEventListener('click', () => selectEndTime(timeSlotElement, timeString));
-
                                 endTimeContainer.appendChild(timeSlotElement);
                             }
+                        
+                            if (endTimeContainer.children.length === 0) {
+                                const message = document.createElement('p');
+                                message.textContent = "No available end times.";
+                                message.style.color = "#888";
+                                endTimeContainer.appendChild(message);
+                            }
                         }
+                        
 
 
 
