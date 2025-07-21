@@ -2600,3 +2600,409 @@ def approved_bookings_view(request):
 
     return render(request, 'venue_admin/approved_bookings.html', context)
 
+
+
+
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .forms import VenueSelectForm, VenueEditForm
+from gymkhana.models import Venue,Building
+
+
+def venue_edit_start(request):
+    if request.method == 'POST':
+        venue_id = request.POST.get('venue')
+        if venue_id:
+            return redirect('venue_admin:venue_edit_form', venue_id=venue_id)
+        else:
+            messages.error(request, "Please select a venue")
+    
+    venues = Venue.objects.all().order_by('venue_name')
+    return render(request, 'venue_admin/venue_edit.html', {
+        'venues': venues,
+        'venue': None
+    })
+
+# def venue_edit_form(request, venue_id):
+#     try:
+#         venue = Venue.objects.get(id=venue_id)
+#     except Venue.DoesNotExist:
+#         messages.error(request, "Venue not found")
+#         return redirect('venue_edit_start')
+    
+#     if request.method == 'POST':
+#         # Get building name for venue name generation
+#         building_id = request.POST.get('building')
+#         building_name = ""
+#         if building_id:
+#             try:
+#                 building = Building.objects.get(id=building_id)
+#                 building_name = building.name
+#             except Building.DoesNotExist:
+#                 pass
+        
+#         # Generate new venue name according to the formula
+#         class_number = request.POST.get('class_number', '').strip()
+#         floor_number = request.POST.get('floor_number', '').strip()
+#         new_venue_name = f"{class_number}({building_name})_{floor_number}"
+        
+#         # Create a dictionary of updated values
+#         updated_data = {
+#             'venue_name': new_venue_name,
+#             'description': request.POST.get('description'),
+#             'photo_url': request.POST.get('photo_url'),
+#             'capacity': request.POST.get('capacity'),
+#             'class_type': request.POST.get('class_type'),
+#             'class_number': class_number,
+#             'length': request.POST.get('length'),
+#             'depth_or_height': request.POST.get('depth_or_height'),
+#             'area_sqm': request.POST.get('area_sqm'),
+#             'building_id': building_id,
+#             'floor_number': floor_number,
+#             'room_number': request.POST.get('room_number'),
+#             'campus': request.POST.get('campus'),
+#             'address': request.POST.get('address'),
+#             'venue_location': request.POST.get('venue_location'),
+#             'facilities': request.POST.get('facilities'),
+#             'usage_type': request.POST.get('usage_type'),
+#             'department_incharge_id': request.POST.get('department_incharge'),
+#             'dept_incharge_phone': request.POST.get('dept_incharge_phone'),
+#             'dept_incharge_email': request.POST.get('dept_incharge_email'),
+#             'dept_assistant_name1': request.POST.get('dept_assistant_name1'),
+#             'dept_assistant_name2': request.POST.get('dept_assistant_name2'),
+#             'venue_admin': request.POST.get('venue_admin'),
+#             'picture_urls': request.POST.get('picture_urls'),
+#         }
+        
+#         # Update the venue object
+#         for field, value in updated_data.items():
+#             if value is not None:
+#                 setattr(venue, field, value)
+        
+#         try:
+#             venue.save()
+#             messages.success(request, "Venue updated successfully!")
+#             return redirect('venue_edit_form', venue_id=venue_id)
+#         except Exception as e:
+#             messages.error(request, f"Error updating venue: {str(e)}")
+    
+#     # Prepare context for rendering
+#     buildings = Building.objects.all()
+#     users = CustomUser.objects.filter(is_active=True)
+    
+#     return render(request, 'venue_admin/venue_edit.html', {
+#         'venue': venue,
+#         'buildings': buildings,
+#         'users': users,
+#         'form': {  # Simulate form object for template
+#             'description': {'value': venue.description},
+#             'photo_url': {'value': venue.photo_url},
+#             'capacity': {'value': venue.capacity},
+#             'class_type': {'value': venue.class_type},
+#             'class_number': {'value': venue.class_number},
+#             'length': {'value': venue.length},
+#             'depth_or_height': {'value': venue.depth_or_height},
+#             'area_sqm': {'value': venue.area_sqm},
+#             'building': {'value': venue.building_id},
+#             'floor_number': {'value': venue.floor_number},
+#             'room_number': {'value': venue.room_number},
+#             'campus': {'value': venue.campus},
+#             'address': {'value': venue.address},
+#             'venue_location': {'value': venue.venue_location},
+#             'facilities': {'value': venue.facilities},
+#             'usage_type': {'value': venue.usage_type},
+#             'department_incharge': {'value': venue.department_incharge_id},
+#             'dept_incharge_phone': {'value': venue.dept_incharge_phone},
+#             'dept_incharge_email': {'value': venue.dept_incharge_email},
+#             'dept_assistant_name1': {'value': venue.dept_assistant_name1},
+#             'dept_assistant_name2': {'value': venue.dept_assistant_name2},
+#             'venue_admin': {'value': venue.venue_admin},
+#             'picture_urls': {'value': venue.picture_urls},
+#         }
+#     })
+
+
+
+def venue_edit_form(request, venue_id):
+    try:
+        venue = Venue.objects.get(id=venue_id)
+    except Venue.DoesNotExist:
+        messages.error(request, "Venue not found")
+        return redirect('venue_edit_start')
+
+    if request.method == 'POST':
+        # Get building name for venue name generation
+        building_id = request.POST.get('building')
+        building_name = ""
+        if building_id:
+            try:
+                building = Building.objects.get(id=building_id)
+                building_name = building.name
+            except Building.DoesNotExist:
+                pass
+
+        def get_post_value(field_name, strip=False):
+            if field_name in request.POST:
+                value = request.POST.get(field_name)
+                return value.strip() if strip and value else value
+            return None
+
+        # Only generate a new venue name if all required parts exist
+        class_number = get_post_value('class_number', strip=True)
+        floor_number = get_post_value('floor_number', strip=True)
+        if 'class_number' in request.POST and 'floor_number' in request.POST and 'building' in request.POST:
+            new_venue_name = f"{class_number}({building_name})_{floor_number}"
+            venue.venue_name = new_venue_name
+
+        # List of fields we want to update if present
+        fields_to_update = [
+            'description', 'photo_url', 'capacity', 'class_type', 'class_number',
+            'length', 'depth_or_height', 'area_sqm', 'building', 'floor_number',
+            'room_number', 'campus', 'address', 'venue_location', 'facilities',
+            'usage_type', 'department_incharge', 'dept_incharge_phone',
+            'dept_incharge_email', 'dept_assistant_name1', 'dept_assistant_name2',
+            'venue_admin', 'picture_urls'
+        ]
+
+        # Update only the fields that exist in request.POST
+        for field in fields_to_update:
+            if field in request.POST:
+                value = request.POST.get(field)
+                if field == 'building':
+                    setattr(venue, 'building_id', value)
+                elif field == 'department_incharge':
+                    setattr(venue, 'department_incharge_id', value)
+                else:
+                    setattr(venue, field, value)
+
+        try:
+            venue.save()
+            messages.success(request, "Venue updated successfully!")
+            return redirect('venue_admin:venue_edit_form', venue_id=venue_id)
+        except Exception as e:
+            messages.error(request, f"Error updating venue: {str(e)}")
+
+    # Prepare context for rendering
+    buildings = Building.objects.all()
+    users = CustomUser.objects.filter(is_active=True)
+
+    return render(request, 'venue_admin/venue_edit.html', {
+        'venue': venue,
+        'buildings': buildings,
+        'users': users,
+        'form': {
+            'description': {'value': venue.description},
+            'photo_url': {'value': venue.photo_url},
+            'capacity': {'value': venue.capacity},
+            'class_type': {'value': venue.class_type},
+            'class_number': {'value': venue.class_number},
+            'length': {'value': venue.length},
+            'depth_or_height': {'value': venue.depth_or_height},
+            'area_sqm': {'value': venue.area_sqm},
+            'building': {'value': venue.building_id},
+            'floor_number': {'value': venue.floor_number},
+            'room_number': {'value': venue.room_number},
+            'campus': {'value': venue.campus},
+            'address': {'value': venue.address},
+            'venue_location': {'value': venue.venue_location},
+            'facilities': {'value': venue.facilities},
+            'usage_type': {'value': venue.usage_type},
+            'department_incharge': {'value': venue.department_incharge_id},
+            'dept_incharge_phone': {'value': venue.dept_incharge_phone},
+            'dept_incharge_email': {'value': venue.dept_incharge_email},
+            'dept_assistant_name1': {'value': venue.dept_assistant_name1},
+            'dept_assistant_name2': {'value': venue.dept_assistant_name2},
+            'venue_admin': {'value': venue.venue_admin},
+            'picture_urls': {'value': venue.picture_urls},
+        }
+    })
+
+
+
+
+
+
+
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.hashers import make_password
+
+def user_list(request):
+    users = CustomUser.objects.all().order_by('-created_at')
+    return render(request, 'venue_admin/user_list.html', {'users': users})
+
+def user_detail(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    return render(request, 'venue_admin/user_detail.html', {'user': user})
+
+def add_user(request):
+    if request.method == 'POST':
+        try:
+            # Create new user
+            user = CustomUser(
+                name=request.POST.get('name'),
+                email=request.POST.get('email'),
+                organization_name=request.POST.get('organization_name'),
+                organization_type=request.POST.get('organization_type'),
+                role=request.POST.get('role'),
+                password=make_password(request.POST.get('password'))
+            )
+            user.save()
+            messages.success(request, 'User added successfully!')
+            return redirect('venue_admin:user_list')
+        except Exception as e:
+            messages.error(request, f'Error adding user: {str(e)}')
+    return render(request, 'venue_admin/add_user.html')
+
+def delete_user(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(CustomUser, id=user_id)
+        user.delete()
+        messages.success(request, 'User deleted successfully!')
+    return redirect('venue_admin:user_list')
+
+
+
+
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+import uuid
+
+def venue_create(request):
+    buildings = Building.objects.all()
+    
+    if request.method == 'POST':
+        print('inside venue_create()')
+        # Manually extract all form data
+        building_id = request.POST.get('building')
+        floor_number = request.POST.get('floor_number')
+        room_number = request.POST.get('room_number')
+        class_number = request.POST.get('class_number')
+        class_type = request.POST.get('class_type')
+        
+        try:
+            # Create venue instance directly
+            venue = Venue(
+                id=uuid.uuid4(),
+                building_id=building_id,
+                floor_number=floor_number,
+                room_number=room_number,
+                class_number=class_number,
+                class_type=class_type,
+                capacity=request.POST.get('capacity'),
+                description=request.POST.get('description'),
+                photo_url=request.POST.get('photo_url'),
+                address=request.POST.get('address'),
+                # length=request.POST.get('length'),
+                # depth_or_height=request.POST.get('depth_or_height'),
+                # area_sqm=request.POST.get('area_sqm'),
+                picture_urls=request.POST.get('picture_urls'),
+                usage_type=request.POST.get('usage_type'),
+                venue_location=request.POST.get('venue_location'),
+                dept_incharge_phone=request.POST.get('dept_incharge_phone'),
+                dept_incharge_email=request.POST.get('dept_incharge_email'),
+                dept_assistant_name1=request.POST.get('dept_assistant_name1'),
+                dept_assistant_name2=request.POST.get('dept_assistant_name2'),
+                campus=request.POST.get('campus'),
+                venue_admin=request.POST.get('venue_admin'),
+                department_incharge_id=request.POST.get('department_incharge'),
+                # Generate venue name
+                venue_name=f"{class_number or room_number}({Building.objects.get(id=building_id).name})_{floor_number}"
+            )
+            
+            # Save to database
+            venue.save()
+            
+            messages.success(request, 'Venue created successfully!')
+            return redirect('venue_admin:venue_edit_start')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating venue: {str(e)}')
+            # Return form with previously entered values
+            context = {
+                'buildings': buildings,
+                'form_data': request.POST,
+                'error': str(e)
+            }
+            return render(request, 'venue_admin/venue_create.html', context)
+    
+    # GET request - show empty form
+    context = {
+        'buildings': buildings
+    }
+    return render(request, 'venue_admin/venue_create.html', context)
+
+
+
+def send_venue_deleted_email(venue, deleted_by_user, deleted_by_user_email):
+    print('\n\n--------start : send_venue_deleted_email-----------')
+
+    admin_email = venue.venue_admin
+    if not admin_email:
+        print("Admin email not available.")
+        return
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = admin_email
+    msg['Subject'] = "Venue Deleted Notification ❌"
+
+    body = f"""
+Dear Venue Admin,
+
+This is to inform you that the following venue has been deleted from the system:
+
+Venue Details:
+- Name: {venue.venue_name}
+
+Deleted By:
+- Name: {deleted_by_user}
+- Email: {deleted_by_user_email}
+
+If this action was not authorized, please contact the system administrator immediately.
+
+Regards,  
+COEP Venue Booking System
+"""
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls(context=context)
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, admin_email, msg.as_string())
+            print(f"Venue deletion email sent to {admin_email}")
+    except Exception as e:
+        print(f"Failed to send venue deletion email: {e}")
+
+    print('-----end send_venue_deleted_email--------')
+
+
+
+
+
+def venue_delete(request, pk):
+    venue = get_object_or_404(Venue, pk=pk)
+    if request.method == 'POST':
+        try:
+            user_name = request.session.get('name', 'Unknown User')
+            user_email = request.session.get('email', 'no-reply@example.com')
+            send_venue_deleted_email(venue, user_name, user_email)
+        except Exception as e:
+            print(f"Error sending venue deletion email: {e}")
+            
+        venue.delete()
+        messages.success(request, f'Venue {venue.venue_name} has been deleted successfully.')
+        return redirect('venue_admin:venue_edit_start')
+    return redirect('venue_admin:venue_edit', venue_id=pk)  

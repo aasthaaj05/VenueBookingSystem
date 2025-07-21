@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Venue Booking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-900: #0d47a1;
+            --primary-800: #1565c0;
+            --primary-100: #d1e4ff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: var(--primary-900);
+        }
+        .btn-primary {
+            background-color: var(--primary-800);
+            border-color: var(--primary-800);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-900);
+            border-color: var(--primary-900);
+        }
+        .card-header {
+            background-color: var(--primary-100);
+            font-weight: 600;
+        }
+        .venue-photo {
+            max-height: 200px;
+            object-fit: cover;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .section-divider {
+            border-top: 2px solid var(--primary-100);
+            margin: 2rem 0;
+            padding-top: 1rem;
+        }
+        .venue-name-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-900);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background-color: #f0f7ff;
+            border-radius: 4px;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+        .delete-btn:hover {
+            background-color: #bb2d3b;
+            border-color: #bb2d3b;
+        }
+    </style>
+</head>
+<body>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'venue_admin/nav.html' %}
+    </header>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    
+
+    <div class="container mb-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% if not venue and not create_new %}
+        <!-- Venue Selection Form -->
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        Venue Management
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="id_venue" class="form-label">Select a venue to edit</label>
+                                <select name="venue" class="form-control" id="id_venue">
+                                    <option value="">---------</option>
+                                    {% for v in venues %}
+                                        <option value="{{ v.id }}">{{ v.venue_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="action-buttons">
+                                <button type="submit" class="btn btn-primary">Select Venue</button>
+                                {% comment %} <a href="?create_new=1" class="btn btn-success">Create New Venue</a> {% endcomment %}
+                                <a href="{% url 'venue_admin:venue_create' %}" class="btn btn-success">Create New Venue</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <!-- Venue Edit/Create Form -->
+        <div class="form-container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2>{% if create_new %}Create New Venue{% else %}Edit Venue{% endif %}</h2>
+                    {% if not create_new %}
+                    <div class="venue-name-display" id="venueNameDisplay">
+                        Current Name: {{ venue.venue_name }}
+                    </div>
+                    {% endif %}
+                    <a href="{% url 'venue_admin:venue_edit_start' %}" class="btn btn-outline-secondary">Back to Venue Selection</a>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="venueEditForm">
+                {% csrf_token %}
+                
+                <input type="hidden" name="venue_name" id="id_venue_name" value="{% if venue %}{{ venue.venue_name }}{% endif %}">
+                {% if create_new %}<input type="hidden" name="create_new" value="1">{% endif %}
+                
+                <!-- Basic Information Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Basic Information
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                {% if not create_new %}
+                                <div class="mb-3">
+                                    <label class="form-label">Venue Name</label>
+                                    <div class="form-control-plaintext">{{ venue.venue_name }}</div>
+                                    <small class="form-text text-muted">Name is automatically generated</small>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="id_capacity" class="form-label required-field">Capacity</label>
+                                    <input type="number" name="capacity" value="{% if form.capacity.value %}{{ form.capacity.value }}{% endif %}" class="form-control" required id="id_capacity">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                {% if venue.photo_url %}
+                                <div class="mb-3 text-center">
+                                    <img src="{{ venue.photo_url }}" alt="Venue photo" class="img-thumbnail venue-photo mb-2">
+                                    <div class="form-text">Current venue photo</div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="id_photo_url" class="form-label">Photo URL</label>
+                                    <input type="url" name="photo_url" value="{% if form.photo_url.value %}{{ form.photo_url.value }}{% endif %}" class="form-control" id="id_photo_url">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Location Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Location Details
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_building" class="form-label required-field">Building</label>
+                                    <select name="building" class="form-control" required id="id_building">
+                                        <option value="">---------</option>
+                                        {% for building in buildings %}
+                                            <option value="{{ building.id }}" {% if form.building.value == building.id %}selected{% endif %} data-building-name="{{ building.name }}">
+                                                {{ building.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_floor_number" class="form-label required-field">Floor Number</label>
+                                    <input type="text" name="floor_number" value="{% if form.floor_number.value %}{{ form.floor_number.value }}{% endif %}" class="form-control" required id="id_floor_number">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_class_number" class="form-label required-field">Class Number</label>
+                                    <input type="text" name="class_number" value="{% if form.class_number.value %}{{ form.class_number.value }}{% endif %}" class="form-control" required id="id_class_number">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_class_type" class="form-label">Class Type</label>
+                                    <input type="text" name="class_type" value="{% if form.class_type.value %}{{ form.class_type.value }}{% endif %}" class="form-control" id="id_class_type">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_campus" class="form-label">Campus</label>
+                                    <select name="campus" class="form-control" id="id_campus">
+                                        <option value="">---------</option>
+                                        <option value="North" {% if form.campus.value == "North" %}selected{% endif %}>North</option>
+                                        <option value="South" {% if form.campus.value == "South" %}selected{% endif %}>South</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dimensions Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Physical Dimensions
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_length" class="form-label">Length (m)</label>
+                                    <input type="number" step="0.01" name="length" value="{% if form.length.value %}{{ form.length.value }}{% endif %}" class="form-control" id="id_length">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_depth_or_height" class="form-label">Depth/Height (m)</label>
+                                    <input type="number" step="0.01" name="depth_or_height" value="{% if form.depth_or_height.value %}{{ form.depth_or_height.value }}{% endif %}" class="form-control" id="id_depth_or_height">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_area_sqm" class="form-label">Area (sqm)</label>
+                                    <input type="number" step="0.01" name="area_sqm" value="{% if form.area_sqm.value %}{{ form.area_sqm.value }}{% endif %}" class="form-control" id="id_area_sqm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Management Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Management
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_dept_incharge_email" class="form-label">Email</label>
+                                    <input type="email" name="dept_incharge_email" value="{% if form.dept_incharge_email.value %}{{ form.dept_incharge_email.value }}{% endif %}" class="form-control" id="id_dept_incharge_email">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_venue_admin" class="form-label">Venue Admin Email</label>
+                                    <input type="email" name="venue_admin" value="{% if form.venue_admin.value %}{{ form.venue_admin.value }}{% endif %}" class="form-control" id="id_venue_admin">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="submit" class="btn btn-primary">{% if create_new %}Create Venue{% else %}Save Changes{% endif %}</button>
+                    {% if not create_new %}
+                    <button type="button" class="btn delete-btn" id="deleteVenueBtn">Delete Venue</button>
+                    {% endif %}
+                    <a href="{% url 'venue_admin:venue_edit_start' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {% comment %} <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this venue? This action cannot be undone.</p>
+                    <p>All associated data will be permanently removed.</p>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDeleteCheckbox">
+                        <label class="form-check-label" for="confirmDeleteCheckbox">
+                            I understand this action is irreversible
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{% url 'venue_admin:venue_delete' venue.id %}" id="deleteVenueForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete Venue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div> {% endcomment %}
+    {% if venue %}
+    <div class="modal fade" id="deleteConfirmationModal" tabindex="-1" aria-labelledby="deleteConfirmationModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteConfirmationModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete the venue "{{ venue.venue_name }}"? This action cannot be undone.</p>
+                    <p>All associated data will be permanently removed.</p>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="confirmDeleteCheckbox">
+                        <label class="form-check-label" for="confirmDeleteCheckbox">
+                            I understand this action is irreversible
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form method="post" action="{% url 'venue_admin:venue_delete' venue.id %}" id="deleteVenueForm">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" id="confirmDeleteBtn" disabled>Delete Venue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %} 
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to generate venue name
+            function generateVenueName() {
+                const classNumber = document.getElementById('id_class_number').value.trim();
+                const buildingSelect = document.getElementById('id_building');
+                const buildingName = buildingSelect.options[buildingSelect.selectedIndex]?.dataset.buildingName || '';
+                const floorNumber = document.getElementById('id_floor_number').value.trim();
+                
+                // Construct the venue name according to the formula
+                let venueName = '';
+                if (classNumber) venueName += classNumber;
+                if (buildingName) venueName += `(${buildingName})`;
+                if (floorNumber) venueName += `_${floorNumber}`;
+                
+                return venueName;
+            }
+
+            // Update venue name display when relevant fields change
+            function updateVenueNameDisplay() {
+                const venueName = generateVenueName();
+                const displayElement = document.getElementById('venueNameDisplay');
+                
+                if (venueName) {
+                    if (displayElement) {
+                        displayElement.textContent = `New Name: ${venueName}`;
+                    }
+                    document.getElementById('id_venue_name').value = venueName;
+                }
+            }
+
+            // Add event listeners to fields that affect venue name
+            const nameRelatedFields = ['id_class_number', 'id_building', 'id_floor_number'];
+            nameRelatedFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('change', updateVenueNameDisplay);
+                    field.addEventListener('input', updateVenueNameDisplay);
+                }
+            });
+
+            // Form validation
+            const form = document.getElementById('venueEditForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let valid = true;
+                    document.querySelectorAll('[required]').forEach(input => {
+                        if (!input.value.trim()) {
+                            valid = false;
+                            input.classList.add('is-invalid');
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    // Ensure venue name is generated
+                    const venueName = generateVenueName();
+                    if (!venueName) {
+                        valid = false;
+                        alert('Please fill in all required fields for venue name generation (Class Number, Building, Floor Number)');
+                    } else {
+                        document.getElementById('id_venue_name').value = venueName;
+                    }
+                    
+                    if (!valid) {
+                        e.preventDefault();
+                    }
+                });
+            }
+
+            // Delete venue functionality
+            const deleteVenueBtn = document.getElementById('deleteVenueBtn');
+            if (deleteVenueBtn) {
+                deleteVenueBtn.addEventListener('click', function() {
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmationModal'));
+                    deleteModal.show();
+                });
+            }
+
+            // Enable/disable delete button based on checkbox
+            const confirmDeleteCheckbox = document.getElementById('confirmDeleteCheckbox');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            if (confirmDeleteCheckbox && confirmDeleteBtn) {
+                confirmDeleteCheckbox.addEventListener('change', function() {
+                    confirmDeleteBtn.disabled = !this.checked;
+                });
+            }
+        });
+    </script>
+</body>
+</html>

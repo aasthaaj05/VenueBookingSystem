@@ -58,8 +58,8 @@ class Venue(models.Model):
     venue_name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True, null=True)
     photo_url = models.TextField(blank=True, null=True)  # Store image URLs
-    capacity = models.IntegerField()
-    address = models.TextField()
+    capacity = models.IntegerField(null=True)
+    address = models.TextField(null=True)
     facilities = models.JSONField(default=list)  # Store facilities as JSON array
     department_incharge = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name="managed_venues")
     

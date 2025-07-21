@@ -31,7 +31,7 @@ def forgot_password(request):
         # Check if user exists
         if not CustomUser.objects.filter(email=email).exists():
             messages.error(request, 'No account found with this email address.')
-            return render(request, 'forgot_password.html')
+            return render(request, 'auth_otp/forgot_password.html')
         
         # Generate 6-digit OTP
         otp = str(random.randint(100000, 999999))

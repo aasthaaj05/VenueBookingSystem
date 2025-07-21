@@ -29,5 +29,18 @@ urlpatterns = [
         name='reject_cumulative_request'
     ),
 
+    path('venues/edit/', views.venue_edit_start, name='venue_edit_start'),
+    path('venues/edit/<uuid:venue_id>/', views.venue_edit_form, name='venue_edit_form'),
+
+    path('users/', views.user_list, name='user_list'),
+    path('users/<uuid:user_id>/', views.user_detail, name='user_detail'),
+    path('users/add/', views.add_user, name='add_user'),
+    path('users/delete/<uuid:user_id>/', views.delete_user, name='delete_user'),
+
+    path('venues/create/', views.venue_create, name='venue_create'),
+
+    path('venue/delete/<uuid:pk>/', views.venue_delete, name='venue_delete'),
+
+
 ]
 

@@ -12,5 +12,6 @@ urlpatterns = [
     # path('submit_booking/', views.submit_booking, name='submit_booking'),
     path('clear-and-forgot/', views.clear_flash_and_redirect, name='clear_and_forgot'),
 
+
 ]
 

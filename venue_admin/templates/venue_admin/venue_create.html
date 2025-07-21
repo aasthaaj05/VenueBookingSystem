@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create New Venue | College Venue Booking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-900: #0d47a1;
+            --primary-800: #1565c0;
+            --primary-100: #d1e4ff;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: var(--primary-900);
+        }
+        .btn-primary {
+            background-color: var(--primary-800);
+            border-color: var(--primary-800);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-900);
+            border-color: var(--primary-900);
+        }
+        .card-header {
+            background-color: var(--primary-100);
+            font-weight: 600;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .form-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .section-divider {
+            border-top: 2px solid var(--primary-100);
+            margin: 2rem 0;
+            padding-top: 1rem;
+        }
+        .venue-name-preview {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-900);
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: #f0f7ff;
+            border-radius: 4px;
+            border-left: 4px solid var(--primary-800);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .creation-header {
+            color: var(--primary-900);
+            border-bottom: 2px solid var(--primary-100);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'venue_admin/nav.html' %}
+    </header>
+
+    <br><br><br><br><br><br>
+
+    <div class="container mb-5">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="form-container">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2 class="creation-header">Create New Venue</h2>
+                    <div class="venue-name-preview" id="venueNamePreview">
+                        Venue name will be generated automatically
+                    </div>
+                    <a href="{% url 'venue_admin:venue_edit_start' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Venue Selection
+                    </a>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" id="venueCreateForm">
+                {% csrf_token %}
+                <input type="hidden" name="create_new" value="1">
+                <input type="hidden" name="venue_name" id="id_venue_name">
+                
+                <!-- Basic Information Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Basic Information
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_capacity" class="form-label required-field">Capacity</label>
+                                    <input type="number" name="capacity" class="form-control" required id="id_capacity">
+                                    <small class="form-text text-muted">Maximum number of people the venue can accommodate</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_class_type" class="form-label required-field">Venue Type</label>
+                                    <input type="text" name="class_type" class="form-control" required id="id_class_type" placeholder="e.g., Lecture Hall, Lab, Auditorium">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_photo_url" class="form-label required-field">Photo URL</label>
+                                    <input type="url" name="photo_url" class="form-control" required id="id_photo_url" placeholder="https://example.com/venue-photo.jpg">
+                                    <small class="form-text text-muted">Link to an image of the venue</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Location Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Location Details
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_building" class="form-label required-field">Building</label>
+                                    <select name="building" class="form-control" required id="id_building">
+                                        <option value="">Select a building...</option>
+                                        {% for building in buildings %}
+                                            <option value="{{ building.id }}" data-building-name="{{ building.name }}">
+                                                {{ building.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_floor_number" class="form-label required-field">Floor Number</label>
+                                    <input type="text" name="floor_number" class="form-control" required id="id_floor_number" placeholder="e.g., G, 1, 2, B1">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_class_number" class="form-label required-field">Room Number</label>
+                                    <input type="text" name="class_number" class="form-control" required id="id_class_number" placeholder="e.g., 101, A12, LT1">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_campus" class="form-label required-field">Campus</label>
+                                    <select name="campus" class="form-control" required id="id_campus">
+                                        <option value="">Select campus...</option>
+                                        <option value="North">North Campus</option>
+                                        <option value="South">South Campus</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dimensions Section -->
+                {% comment %} <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Physical Dimensions (Optional)
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_length" class="form-label">Length (meters)</label>
+                                    <input type="number" step="0.01" name="length" class="form-control" id="id_length">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_depth_or_height" class="form-label">Depth/Height (meters)</label>
+                                    <input type="number" step="0.01" name="depth_or_height" class="form-control" id="id_depth_or_height">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="id_area_sqm" class="form-label">Area (square meters)</label>
+                                    <input type="number" step="0.01" name="area_sqm" class="form-control" id="id_area_sqm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> {% endcomment %}
+                
+                <!-- Management Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Management Information
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_dept_incharge_email" class="form-label">Department In-Charge Email</label>
+                                    <input type="email" name="dept_incharge_email" class="form-control" id="id_dept_incharge_email" placeholder="department@example.com">
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_venue_admin" class="form-label required-field">Venue Admin Email</label>
+                                    <input type="email" name="venue_admin" class="form-control" required id="id_venue_admin" placeholder="admin@example.com">
+                                    <small class="form-text text-muted">Primary contact for this venue</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Features Section -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        Venue Features
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Available Equipment</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_projector" id="id_has_projector">
+                                        <label class="form-check-label" for="id_has_projector">Projector</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_microphone" id="id_has_microphone">
+                                        <label class="form-check-label" for="id_has_microphone">Microphone</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_speakers" id="id_has_speakers">
+                                        <label class="form-check-label" for="id_has_speakers">Speakers</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Other Features</label>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_whiteboard" id="id_has_whiteboard">
+                                        <label class="form-check-label" for="id_has_whiteboard">Whiteboard</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="has_disabled_access" id="id_has_disabled_access">
+                                        <label class="form-check-label" for="id_has_disabled_access">Disabled Access</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <button type="reset" class="btn btn-outline-danger me-md-2">Reset Form</button>
+                    <button type="submit" class="btn btn-primary">Create Venue</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to generate venue name
+            function generateVenueName() {
+                const classNumber = document.getElementById('id_class_number').value.trim();
+                const buildingSelect = document.getElementById('id_building');
+                const buildingName = buildingSelect.options[buildingSelect.selectedIndex]?.dataset.buildingName || '';
+                const floorNumber = document.getElementById('id_floor_number').value.trim();
+                
+                // Construct the venue name according to the formula
+                let venueName = '';
+                if (classNumber) venueName += classNumber;
+                if (buildingName) venueName += `(${buildingName})`;
+                if (floorNumber) venueName += `_${floorNumber}`;
+                
+                return venueName;
+            }
+
+            // Update venue name preview when relevant fields change
+            function updateVenueNamePreview() {
+                const venueName = generateVenueName();
+                const previewElement = document.getElementById('venueNamePreview');
+                
+                if (venueName) {
+                    previewElement.textContent = `Venue Name: ${venueName}`;
+                    document.getElementById('id_venue_name').value = venueName;
+                } else {
+                    previewElement.textContent = 'Venue name will be generated automatically';
+                    document.getElementById('id_venue_name').value = '';
+                }
+            }
+
+            // Add event listeners to fields that affect venue name
+            const nameRelatedFields = ['id_class_number', 'id_building', 'id_floor_number'];
+            nameRelatedFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    field.addEventListener('change', updateVenueNamePreview);
+                    field.addEventListener('input', updateVenueNamePreview);
+                }
+            });
+
+            // Form validation
+            const form = document.getElementById('venueCreateForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    let valid = true;
+                    const requiredFields = form.querySelectorAll('[required]');
+                    
+                    requiredFields.forEach(input => {
+                        if (!input.value.trim()) {
+                            valid = false;
+                            input.classList.add('is-invalid');
+                        } else {
+                            input.classList.remove('is-invalid');
+                        }
+                    });
+                    
+                    // Ensure venue name is generated
+                    const venueName = generateVenueName();
+                    if (!venueName) {
+                        valid = false;
+                        alert('Please fill in all required fields for venue name generation (Room Number, Building, Floor Number)');
+                    } else {
+                        document.getElementById('id_venue_name').value = venueName;
+                    }
+                    
+                    if (!valid) {
+                        e.preventDefault();
+                        // Scroll to first invalid field
+                        const firstInvalid = form.querySelector('.is-invalid');
+                        if (firstInvalid) {
+                            firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

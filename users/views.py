@@ -426,3 +426,8 @@ def clear_flash_and_redirect(request):
     # Access all messages to ensure they are consumed (thus cleared)
     list(messages.get_messages(request))  # This clears flash messages
     return redirect('auth_otp:forgot_password')
+
+
+
+
+
