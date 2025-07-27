@@ -16,6 +16,14 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('reject_request/<uuid:request_id>', views.reject_request, name='reject_request'),
     path("approved-bookings/", views.approved_bookings_view, name="approved_bookings"),
+
+    
+    path("cumulative-approved-bookings/", views.approved_cumulative_bookings_view, name="approved_cumulative_bookings_view"),
+
+    path('cancel-cumulative-booking/<uuid:cumulative_request_id>/', views.cumulative_cancel_booking, name='cumulative_cancel_booking'),
+
+
+
     path('approve_request/<uuid:request_id>', views.approve_request, name="approve_request"),
     
     path(
@@ -40,6 +48,10 @@ urlpatterns = [
     path('venues/create/', views.venue_create, name='venue_create'),
 
     path('venue/delete/<uuid:pk>/', views.venue_delete, name='venue_delete'),
+
+    path('venue-schedule/', views.VenueListView.as_view(), name='venue_schedule'),
+    # path('api/bookings/', views.BookingScheduleAPI.as_view(), name='booking_schedule_api'),
+    path('bookings/schedule/', views.BookingScheduleAPI.as_view(), name='booking-schedule-api'),
 
 
 ]

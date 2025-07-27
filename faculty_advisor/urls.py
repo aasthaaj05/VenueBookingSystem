@@ -16,5 +16,9 @@ urlpatterns = [
 
     path("faculty_advisor_dashboard/", views.faculty_advisor_dashboard, name="faculty_advisor_dashboard"),
     path('home/', views.index, name='home'),
+
+    path('venue-schedule/', views.VenueListView.as_view(), name='venue_schedule'),
+    # path('api/bookings/', views.BookingScheduleAPI.as_view(), name='booking_schedule_api'),
+    path('bookings/schedule/', views.BookingScheduleAPI.as_view(), name='booking-schedule-api'),
 ]
 

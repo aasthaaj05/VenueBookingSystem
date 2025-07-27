@@ -691,12 +691,15 @@
                                         data-venue="{{ request.venue.venue_name }}"
                                         {% comment %} data-date="{{ request.date }}" {% endcomment %}
 
-                                        data-date = "{% for date in request.dates|slice:":3" %}
+                                        {% comment %} data-date = "{% for date in request.dates|slice:":3" %}
                                             {{ date }}<br>
                                         {% endfor %}
                                         {% if request.dates|length > 3 %}
                                             +{{ request.dates|length|add:"-3" }} more dates
-                                        {% endif %}"
+                                        {% endif %}" {% endcomment %}
+                                        data-date="{% for date in request.dates %}
+                                            {{ date }}{% if not forloop.last %}<br>{% endif %}
+                                        {% endfor %}"
 
                                         data-duration="{{ request.duration }}"
                                         data-start-time = "{{request.time}}"
@@ -727,11 +730,11 @@
                                         <i class="fas fa-eye"></i> View
                                         </button>
                                         
-                                        {% comment %} {% if request.status == 'pending' or request.status == 'approved' %}
+                                        {% if request.status == 'pending' or request.status == 'approved' or request.status == 'waiting_for_approval' %}
                                             <button class="btn btn-sm btn-cancel" onclick="showCancelModal('{{ request.cumulative_request_id }}')">
                                                 <i class="fas fa-times"></i> Cancel
                                             </button>
-                                        {% endif %} {% endcomment %}
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -774,7 +777,7 @@
         </div>
     </div>
 
-    {% comment %} <!-- Cancel Confirmation Modal -->
+    <!-- Cancel Confirmation Modal -->
     <div class="modal-overlay" id="cancelModal">
         <div class="modal">
             <div class="modal-header">
@@ -802,7 +805,7 @@
                 </div>
             </form>
         </div>
-    </div> {% endcomment %}
+    </div>
 
     <script>
         // Current request ID for cancellation
@@ -964,10 +967,14 @@
         // Show cancel confirmation modal
         function showCancelModal(requestId) {
             console.log("Cancel button clicked for request:", requestId);
+            console.log('1');
             currentRequestId = requestId;
+            console.log('12');
             document.getElementById('cancelRequestId').value = requestId;
+            console.log('2');
             const modal = document.getElementById('cancelModal');
             modal.classList.add('active');
+            console.log('3');
             document.getElementById('cancelReason').focus();
         }
 

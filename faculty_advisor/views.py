@@ -143,3 +143,161 @@ def decline_pending_forward_requests(request, req_id):
     
 
 
+
+
+
+
+from django.http import JsonResponse
+from django.views import View
+from django.core.serializers import serialize
+from django.utils import timezone
+from datetime import datetime, timedelta
+import json
+
+
+
+
+
+# class VenueListView(View):
+    # def get(self, request):
+    #     venues = Venue.objects.all().order_by('venue_name')
+    #     print('inside GET VenueListView')
+    #     print('venues->',venues)
+    #     return render(request, 'users/venue_schedule.html', {'venues': venues})
+
+from django.forms.models import model_to_dict
+
+
+
+class VenueListView(View):
+    def get(self, request):
+        venues = Venue.objects.all()
+        print('venues->', venues)
+        
+        # Manually create the dictionary instead of using model_to_dict
+        venue_data = [{
+            'id': str(venue.id),  # Convert UUID to string
+            'venue_name': venue.venue_name
+        } for venue in venues]
+        
+        print('venue_data->', venue_data)
+        return render(request, 'faculty_advisor/venue_schedule.html', {'venue_data': venue_data})
+
+
+class BookingScheduleAPI(View):
+
+    def get(self, request):
+        print('inside BookingScheduleAPI GET')
+        venue_id = request.GET.get('venue_id')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        print('venue_id->',venue_id)
+        print('type(venue_id)->',type(venue_id))
+        print('start_date->',start_date)
+        print('end_date->',end_date)
+        
+        if not venue_id or not start_date or not end_date:
+            return JsonResponse({'error': 'Missing required parameters'}, status=400)
+        
+        try:
+            # Parse dates
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            print('start_date_obj->',start_date_obj)
+            print('end_date_obj->',end_date_obj)
+            
+            # Validate date range (max 30 days)
+            if (end_date_obj - start_date_obj).days > 30:
+                return JsonResponse({'error': 'Date range cannot exceed 30 days'}, status=400)
+
+            print('after if condition')
+
+            try:
+                if not venue_id:  # Check if empty
+                    print('in try block ---> not venue_id')
+                    return JsonResponse({'error': 'venue_id cannot be empty'}, status=400)
+                    
+                print('venue_id before conversion->', venue_id, type(venue_id))
+                # venue_uuid = uuid.UUID(str(venue_id).strip())  # Ensure it's string and remove whitespace
+                venue_id_cleaned = str(venue_id).strip().replace('-', '')
+                print('venue_id_cleaned->',venue_id_cleaned)
+                venue_uuid = uuid.UUID(venue_id_cleaned)
+                # venue_uuid = uuid.UUID(hex=venue_id_cleaned)
+
+                print('venue_uuid->', venue_uuid)
+            except ValueError as e:
+                print(f'Conversion error: {str(e)}')
+                return JsonResponse({'error': 'Invalid venue_id format - must be a valid UUID'}, status=400)
+            
+
+            
+            # Get bookings for the venue and date range
+            bookings = Booking.objects.filter(
+                venue_id=venue_uuid,
+                date__gte=start_date_obj,
+                date__lte=end_date_obj
+            ).select_related('user', 'venue')
+
+            print('bookings->',bookings)
+            
+            # Prepare response data
+            bookings_data = []
+            for booking in bookings:
+                bookings_data.append({
+                    'id': str(booking.booking_id),
+                    'date': booking.date.isoformat(),
+                    'time': decimal_to_time_str(booking.time),  # Using the conversion function
+                    'duration': booking.duration,
+                    'event_details': booking.event_details,
+                    'user_name': f"{booking.user.name}",
+                    'status': booking.get_status_display(),
+                    'venue_name': booking.venue.venue_name,
+                    'email': booking.user.email,
+                })
+            print('bookings_data->',bookings_data)
+
+
+            # Booking statistics
+            status_counts = bookings.values('status').annotate(count=Count('venue_id'))
+            print("\n\n\n")
+            print('status_counts->',status_counts)
+            print("\n\n\n")
+            stats = {
+                'total_bookings': bookings.count(),
+                'active': 0,
+                'cancelled': 0,
+                'user_cancelled': 0,
+            }
+
+            for entry in status_counts:
+                status = entry['status']
+                count = entry['count']
+                if status == 'active':
+                    stats['active'] = count
+                elif status == 'cancelled':
+                    stats['cancelled'] = count
+                elif status == 'user-cancelled':
+                    stats['user_cancelled'] = count
+
+
+            
+            return JsonResponse({
+                'bookings': bookings_data,
+                'venue_id': venue_id,
+                'start_date': start_date,
+                'end_date': end_date,
+                'booking_statistics': stats,
+            })
+            
+        except ValueError as e:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            print(f"Type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+
+

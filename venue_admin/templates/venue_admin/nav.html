@@ -238,9 +238,9 @@
 <body>
     <header id="header" class="header d-flex align-items-center fixed-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center">
-            <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
+            {% comment %} <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
                 <h1 class="sitename">COEP Tech</h1>
-            </a>
+            </a> {% endcomment %}
 
             <nav id="navmenu" class="navmenu">
                 <ul>
@@ -261,6 +261,11 @@
                     
                   {%comment%}<li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>{%endcomment%}
                   <li><a href="{% url 'venue_admin:approved_bookings' %}">Bookings</a></li>
+
+                  <li><a href="{% url 'venue_admin:approved_cumulative_bookings_view' %}">Cumulative Bookings</a></li>
+
+                  <li><a href="{% url 'venue_admin:venue_schedule' %}"> Bookings Calendar</a></li>
+
                   <li><a href="{% url 'venue_admin:venue_edit_start' %}">Edit Venue</a></li>
                   <li><a href="{% url 'venue_admin:user_list' %}">Edit Users</a></li>
         

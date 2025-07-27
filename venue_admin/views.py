@@ -1179,7 +1179,7 @@ def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
     print('\n--------start : send_cumulative_booking_rejected_email-----------')
     print('\n--------start : send_cumulative_booking_rejected_email-----------')
 
-    requester_email = req.email  # From CumulativeRequest model
+    requester_email = cumulative_req.email or req.email  # fallback  # From CumulativeRequest model
 
     if not requester_email:
         print("Requester email not found.")
@@ -1211,22 +1211,22 @@ def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
     # suggest_alternate_venues = cumulative_req.suggest_alternate_venues or "N/A"
 
     # Handle missing data with defaults
-    full_name = req.full_name or "User"
+    full_name = req.full_name or cumulative_req.full_name or "User"
     print("Full Name:", full_name)
 
-    organization = req.organization_name or "N/A"
+    organization = req.organization_name or cumulative_req.organization_name or "N/A"
     print("Organization:", organization)
 
-    event_type = req.event_type or "N/A"
+    event_type = req.event_type or cumulative_req.event_type or "N/A"
     print("Event Type:", event_type)
 
-    guest_count = req.guest_count or "N/A"
+    guest_count = req.guest_count or cumulative_req.guest_count or "N/A"
     print("Guest Count:", guest_count)
 
-    event_details = req.event_details or "N/A"
+    event_details = req.event_details or cumulative_req.event_details or "N/A"
     print("Event Details:", event_details)
 
-    purpose = req.purpose or "N/A"
+    purpose = req.purpose or cumulative_req.purpose or "N/A"
     print("Purpose:", purpose)
 
     start_date = cumulative_req.start_date or "N/A"
@@ -2569,26 +2569,15 @@ def approved_bookings_view(request):
     # ✅ Fetch all approved bookings
     approved_bookings = Booking.objects.filter(
         venue__in=managed_venues,
-        status='active'
+        status='active',
+        request__cumulative_request_id__isnull=True  # <-- this line filters out cumulative requests
     ).select_related('user', 'venue', 'request')
 
-    # ✅ Filter to only one booking per cumulative_request_id (or all if not part of cumulative)
-    seen_cumulative_ids = set()
-    filtered_bookings_with_requests = []
-
-    for booking in approved_bookings:
-        req = booking.request
-        cum_id = req.cumulative_request_id
-
-        if cum_id:
-            if cum_id in seen_cumulative_ids:
-                continue  # Skip duplicates
-            seen_cumulative_ids.add(cum_id)
-
-        filtered_bookings_with_requests.append({
-            'booking': booking,
-            'request': req
-        })
+    # Prepare the list to pass to template
+    filtered_bookings_with_requests = [{
+        'booking': booking,
+        'request': booking.request
+    } for booking in approved_bookings]
 
     print('filtered_bookings_with_requests:', filtered_bookings_with_requests)
 
@@ -2599,6 +2588,82 @@ def approved_bookings_view(request):
     }
 
     return render(request, 'venue_admin/approved_bookings.html', context)
+
+
+
+
+
+def approved_cumulative_bookings_view(request):
+    print('in approved_cumulative_bookings_view()')
+    user = request.user
+
+    if not user.is_authenticated:
+        print('user is not authenticated')
+        return render(request, 'venue_admin/cumulative_approved_bookings.html', {
+            'user': None,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
+    user_role = user.role.strip().lower()
+    if user_role == 'venue_admin':
+        managed_venues = Venue.objects.all()
+    else:
+        managed_venues = Venue.objects.filter(venue_admin=user.email)
+
+    if not managed_venues.exists():
+        return render(request, 'venue_admin/approved_bookings.html', {
+            'user': user,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
+    # ✅ Fetch only cumulative approved bookings
+    # Step 1: Filter only cumulative request bookings
+    approved_bookings = Booking.objects.filter(
+        venue__in=managed_venues,
+        status='active',
+        request__cumulative_request_id__isnull=False  # <-- only cumulative requests
+    ).select_related('user', 'venue', 'request')
+
+    
+
+    # Step 2: Deduplicate based on cumulative_request_id
+    seen_cumulative_ids = set()
+    unique_bookings = []
+
+    for booking in approved_bookings:
+        cumulative_id = booking.request.cumulative_request_id
+        if cumulative_id and cumulative_id not in seen_cumulative_ids:
+            seen_cumulative_ids.add(cumulative_id)
+            unique_bookings.append({
+                'booking': booking,
+                'request': booking.request
+            })
+
+    print('unique_cumulative_bookings:', unique_bookings)
+
+    print("\n==== Final Values Sent to Template ====")
+    for item in unique_bookings:
+        req = item['request']
+        print(f"User Name: {req.user.name}")
+        print(f"Organization Name: {req.organization_name}")
+        print(f"Cumualative Request ID: {req.cumulative_request_id}")
+        print(f"Venue: {req.venue.venue_name}")
+        print(f"Date: {req.date}")
+        print(f"Time: {req.time}")
+        print(f"Duration: {req.duration}")
+        print(f"Event Details (truncated): {req.event_details[:50] + '...' if len(req.event_details) > 50 else req.event_details}")
+        print("----------------------------------------")
+
+
+    context = {
+        'user': user,
+        'managed_venues': managed_venues,
+        'approved_bookings': unique_bookings
+    }
+
+    return render(request, 'venue_admin/cumulative_approved_bookings.html', context)
 
 
 
@@ -2861,10 +2926,45 @@ def add_user(request):
             messages.error(request, f'Error adding user: {str(e)}')
     return render(request, 'venue_admin/add_user.html')
 
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_user_deletion_notification(user_name, user_email,deleter_action_name,deleter_action_email):
+    """
+    Sends an email to the sender's own email ID notifying that a user was deleted.
+    """
+    subject = "User Deletion Notification"
+    message = f"The user '{user_name}' with email '{user_email}' has been deleted from the system by the user {deleter_action_email}"
+
+    send_mail(
+        subject=subject,
+        message=message,
+        from_email=sender_email,
+        recipient_list=[sender_email],
+        fail_silently=False,
+    )
+
+
+
+
 def delete_user(request, user_id):
     if request.method == 'POST':
         user = get_object_or_404(CustomUser, id=user_id)
+
+        user_email = user.email
+        user_name = user.name
         user.delete()
+
+        # Try sending notification email
+        try:
+            deleter_action_name = request.session.get('name', 'Unknown User')
+            deleter_action_email = request.session.get('email', 'no-reply@example.com')
+            send_user_deletion_notification(user_name, user_email,deleter_action_name,deleter_action_email)
+        except Exception as e:
+            print(f"Failed to send deletion email: {e}")  # Optional: log this
+            messages.warning(request, 'User deleted, but failed to send notification email.')
+
         messages.success(request, 'User deleted successfully!')
     return redirect('venue_admin:user_list')
 
@@ -3006,3 +3106,294 @@ def venue_delete(request, pk):
         messages.success(request, f'Venue {venue.venue_name} has been deleted successfully.')
         return redirect('venue_admin:venue_edit_start')
     return redirect('venue_admin:venue_edit', venue_id=pk)  
+
+
+
+
+
+
+
+import traceback
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+
+
+@csrf_exempt  # Only if you're calling via JS without CSRF token; remove if not needed
+def cumulative_cancel_booking(request, cumulative_request_id):
+    if request.method == "POST":
+        try:
+            print('inside POST cumulative_cancel_booking()\n\n')
+
+            print('cumulative_request_id->',cumulative_request_id)
+
+            data = json.loads(request.body)
+            reason = data.get('reason', '').strip()
+
+            if not reason:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Cancellation reason is required.'
+                }, status=400)
+
+            cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+
+            if cumulative_req.status != 'approved':
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Only approved cumulative bookings can be cancelled.'
+                }, status=400)
+
+            individual_requests = Request.objects.filter(
+                cumulative_request_id=cumulative_request_id,
+                status='approved'
+            )
+
+            print('individual_requests->',individual_requests)
+
+            if not individual_requests.exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'No approved individual requests found to cancel.'
+                }, status=404)
+
+            with transaction.atomic():
+                # Cancel each individual request
+                for req in individual_requests:
+                    req.status = 'user-cancelled'
+                    req.reasons = reason
+                    req.save(update_fields=["status", "reasons"])
+
+                    # Cancel associated booking
+                    try:
+                        booking = req.booking
+                        booking.status = 'user-cancelled'
+                        booking.save(update_fields=["status"])
+                    except Booking.DoesNotExist:
+                        pass  # Safe to ignore if no booking was created
+
+                # Cancel cumulative request
+                cumulative_req.status = 'user-cancelled'
+                cumulative_req.reasons = reason
+                cumulative_req.accept = 0
+                cumulative_req.reason_to_reject = reason
+                cumulative_req.additional_comments = "Cancelled after approval"
+                cumulative_req.save()
+
+                print("\n\n\n\n")
+
+                # print("individual_requests count:", individual_requests.count())
+                # first_request = individual_requests.first()
+                # print("First request:", first_request)
+
+                print("individual_requests count:", len(individual_requests))
+                first_request = individual_requests[0] if individual_requests else None
+                print("First request:", first_request)
+
+
+                print("\n\n\n\n")
+
+                # Send email (same function used in rejection — adjust wording inside it if needed)
+                send_cumulative_booking_rejected_email(
+                    first_request, cumulative_req, None
+                )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Cumulative booking cancelled successfully.'
+            })
+
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid request data.'
+            }, status=400)
+        except Exception as e:
+            print("Exception occurred in cumulative_cancel_booking:")
+            traceback.print_exc()  # This prints the full traceback to the console or logs
+
+            return JsonResponse({
+                'success': False,
+                'message': f'An unexpected error occurred: {str(e)}'
+            }, status=500)
+
+    return JsonResponse({
+        'success': False,
+        'message': 'Only POST method is allowed.'
+    }, status=405)
+
+
+
+
+
+
+
+
+
+
+
+from django.http import JsonResponse
+from django.views import View
+from django.core.serializers import serialize
+from django.utils import timezone
+from datetime import datetime, timedelta
+import json
+
+
+
+
+
+# class VenueListView(View):
+    # def get(self, request):
+    #     venues = Venue.objects.all().order_by('venue_name')
+    #     print('inside GET VenueListView')
+    #     print('venues->',venues)
+    #     return render(request, 'users/venue_schedule.html', {'venues': venues})
+
+from django.forms.models import model_to_dict
+
+
+
+class VenueListView(View):
+    def get(self, request):
+        venues = Venue.objects.all()
+        print('venues->', venues)
+        
+        # Manually create the dictionary instead of using model_to_dict
+        venue_data = [{
+            'id': str(venue.id),  # Convert UUID to string
+            'venue_name': venue.venue_name
+        } for venue in venues]
+        
+        print('venue_data->', venue_data)
+        return render(request, 'venue_admin/venue_schedule.html', {'venue_data': venue_data})
+
+
+class BookingScheduleAPI(View):
+
+    def get(self, request):
+        print('venue_admin : inside BookingScheduleAPI GET')
+        print('venue_admin : inside BookingScheduleAPI GET')
+        print('venue_admin : inside BookingScheduleAPI GET')
+        print('venue_admin : inside BookingScheduleAPI GET')
+        print('venue_admin : inside BookingScheduleAPI GET')
+
+        venue_id = request.GET.get('venue_id')
+        start_date = request.GET.get('start_date')
+        end_date = request.GET.get('end_date')
+
+        print('venue_id->',venue_id)
+        print('type(venue_id)->',type(venue_id))
+        print('start_date->',start_date)
+        print('end_date->',end_date)
+        
+        if not venue_id or not start_date or not end_date:
+            return JsonResponse({'error': 'Missing required parameters'}, status=400)
+        
+        try:
+            # Parse dates
+            start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            print('start_date_obj->',start_date_obj)
+            print('end_date_obj->',end_date_obj)
+            
+            # Validate date range (max 30 days)
+            if (end_date_obj - start_date_obj).days > 30:
+                return JsonResponse({'error': 'Date range cannot exceed 30 days'}, status=400)
+
+            print('after if condition')
+
+            try:
+                if not venue_id:  # Check if empty
+                    print('in try block ---> not venue_id')
+                    return JsonResponse({'error': 'venue_id cannot be empty'}, status=400)
+                    
+                print('venue_id before conversion->', venue_id, type(venue_id))
+                # venue_uuid = uuid.UUID(str(venue_id).strip())  # Ensure it's string and remove whitespace
+                venue_id_cleaned = str(venue_id).strip().replace('-', '')
+                print('venue_id_cleaned->',venue_id_cleaned)
+                venue_uuid = uuid.UUID(venue_id_cleaned)
+                # venue_uuid = uuid.UUID(hex=venue_id_cleaned)
+
+                print('venue_uuid->', venue_uuid)
+            except ValueError as e:
+                print(f'Conversion error: {str(e)}')
+                return JsonResponse({'error': 'Invalid venue_id format - must be a valid UUID'}, status=400)
+            
+
+            
+            # Get bookings for the venue and date range
+            bookings = Booking.objects.filter(
+                venue_id=venue_uuid,
+                date__gte=start_date_obj,
+                date__lte=end_date_obj,
+                status='active'  # <-- Assuming 'active' is the approved status
+            ).select_related('user', 'venue')
+
+            print('bookings->',bookings)
+
+            # For display (only approved)
+            bookings = all_bookings.filter(status='active')
+            
+            # Prepare response data
+            bookings_data = []
+            for booking in bookings:
+                bookings_data.append({
+                    'id': str(booking.booking_id),
+                    'date': booking.date.isoformat(),
+                    'time': decimal_to_time_str(booking.time),  # Using the conversion function
+                    'duration': booking.duration,
+                    'event_details': booking.event_details,
+                    'user_name': f"{booking.user.name}",
+                    'status': booking.get_status_display(),
+                    'venue_name': booking.venue.venue_name,
+                    'email': booking.user.email,
+                })
+            print('bookings_data->',bookings_data)
+
+
+            # Booking statistics
+            status_counts = bookings.values('status').annotate(count=Count('venue_id'))
+            print("\n\n\n")
+            print('status_counts->',status_counts)
+            print("\n\n\n")
+            stats = {
+                'total_bookings': bookings.count(),
+                'active': 0,
+                'cancelled': 0,
+                'user_cancelled': 0,
+            }
+
+            for entry in status_counts:
+                status = entry['status']
+                count = entry['count']
+                if status == 'active':
+                    stats['active'] = count
+                elif status == 'cancelled':
+                    stats['cancelled'] = count
+                elif status == 'user-cancelled':
+                    stats['user_cancelled'] = count
+
+
+            
+            return JsonResponse({
+                'bookings': bookings_data,
+                'venue_id': venue_id,
+                'start_date': start_date,
+                'end_date': end_date,
+                'booking_statistics': stats,
+            })
+            
+        except ValueError as e:
+            return JsonResponse({'error': 'Invalid date format'}, status=400)
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")
+            print(f"Type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'error': str(e)}, status=500)
+
+

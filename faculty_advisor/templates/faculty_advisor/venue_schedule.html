@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Venue Booking System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        :root {
+            --primary-color: rgba(26, 115, 232, 0.8);
+            --primary-color-solid: rgb(26, 115, 232);
+            --primary-color-light: rgba(26, 115, 232, 0.2);
+            --primary-color-dark: rgba(15, 85, 202, 0.8);
+            --secondary-color: #4a5568;
+            --light-gray: #f7fafc;
+            --medium-gray: #e2e8f0;
+            --dark-gray: #2d3748;
+            --text-color: #2d3748;
+            --text-light: #718096;
+            --success-color: #38a169;
+            --warning-color: #dd6b20;
+            --danger-color: #e53e3e;
+            --info-color: #3182ce;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f7fa;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary-color-dark), var(--primary-color-solid));
+            color: white;
+            padding: 20px 0;
+            border-radius: var(--border-radius);
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuIiB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHBhdHRlcm5UcmFuc2Zvcm09InJvdGF0ZSg0NSkiPjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuKSIvPjwvc3ZnPg==');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            font-size: 32px;
+            color: white;
+        }
+
+        .logo-text h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .logo-text p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color-solid);
+            font-weight: bold;
+        }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: flex-end;
+        }
+
+        .form-group {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-size: 15px;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color-solid);
+            box-shadow: 0 0 0 3px var(--primary-color-light);
+        }
+
+        .select-wrapper {
+            position: relative;
+        }
+
+        .select-wrapper::after {
+            content: '\f078';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+            pointer-events: none;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color-solid);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-color-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            border: 1px solid var(--medium-gray);
+            color: var(--text-color);
+        }
+
+        .btn-outline:hover {
+            background-color: var(--light-gray);
+        }
+
+        /* Stats Cards */
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            border-top: 4px solid transparent;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card.total {
+            border-top-color: var(--primary-color-solid);
+        }
+
+        .stat-card.active {
+            border-top-color: var(--success-color);
+        }
+
+        .stat-card.pending {
+            border-top-color: var(--warning-color);
+        }
+
+        .stat-card.cancelled {
+            border-top-color: var(--danger-color);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-icon.total {
+            background-color: var(--primary-color-light);
+            color: var(--primary-color-solid);
+        }
+
+        .stat-icon.active {
+            background-color: rgba(56, 161, 105, 0.1);
+            color: var(--success-color);
+        }
+
+        .stat-icon.pending {
+            background-color: rgba(221, 107, 32, 0.1);
+            color: var(--warning-color);
+        }
+
+        .stat-icon.cancelled {
+            background-color: rgba(229, 62, 62, 0.1);
+            color: var(--danger-color);
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+
+        .stat-change.negative {
+            color: var(--danger-color);
+        }
+
+        /* Schedule Container */
+        .schedule-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .schedule-header {
+            background: var(--secondary-color);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .schedule-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .schedule-info {
+            font-size: 14px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .schedule-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            position: relative;
+        }
+
+        .time-header {
+            background: var(--medium-gray);
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--medium-gray);
+            font-size: 14px;
+            color: var(--secondary-color);
+        }
+
+        .day-header {
+            background: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid var(--dark-gray);
+            min-width: 120px;
+        }
+
+        .time-slot {
+            background: var(--light-gray);
+            font-size: 12px;
+            text-align: center;
+            padding: 8px 5px;
+            border-right: 1px solid var(--medium-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            width: 70px;
+            font-weight: 500;
+            color: var(--secondary-color);
+        }
+
+        .schedule-cell {
+            border-right: 1px solid var(--medium-gray);
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 0;
+            position: relative;
+            height: 40px;
+            background: #fff;
+        }
+
+        .event {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600; /* Make text bolder */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1.2;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Darker shadow for better contrast */
+            border: 1px solid rgba(255,255,255,0.2); /* Light border for definition */
+        }
+        
+        .event:hover {
+            transform: scale(1.02);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* More prominent shadow on hover */
+            filter: brightness(1.1); /* Slight brightening on hover */
+        }
+        
+        /* Updated gradient colors for better visibility */
+        .event.active { 
+            background: linear-gradient(135deg, #38a169 0%, #48bb78 100%); 
+            border-color: rgba(56, 161, 105, 0.3);
+        }
+        .event.pending { 
+            background: linear-gradient(135deg, #d69e2e 0%, #ed8936 100%);
+            border-color: rgba(214, 158, 46, 0.3);
+        }
+        .event.cancelled { 
+            background: linear-gradient(135deg, #e53e3e 0%, #f56565 100%);
+            border-color: rgba(229, 62, 62, 0.3);
+        }
+        .event.user-cancelled { 
+            background: linear-gradient(135deg, #9f7aea 0%, #b794f4 100%);
+            border-color: rgba(159, 122, 234, 0.3);
+        }
+        .event.default { 
+            background: linear-gradient(135deg, var(--primary-color-solid) 0%, var(--primary-color-dark) 100%);
+            border-color: rgba(26, 115, 232, 0.3);
+        }
+
+        .schedule-cell.occupied {
+            background: transparent;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--primary-color-light);
+            border-top-color: var(--primary-color-solid);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+        }
+
+        .empty-icon {
+            font-size: 50px;
+            color: var(--medium-gray);
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-light);
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            color: var(--danger-color);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--medium-gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .header-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .user-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-group {
+                min-width: 100%;
+            }
+            
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .day-header {
+                font-size: 12px;
+                min-width: 80px;
+            }
+            
+            .time-slot {
+                font-size: 10px;
+                width: 50px;
+            }
+            
+            .event {
+                font-size: 9px;
+                padding: 2px 4px;
+            }
+            
+            .schedule-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .schedule-actions {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .modal {
+                width: 95%;
+            }
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-muted {
+            color: var(--text-light);
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        .w-100 {
+            width: 100%;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--light-gray);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color-solid);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color-dark);
+        }
+
+        .navbar {
+            margin-left: auto;
+        }
+        
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Venue Booking System</h1>
+                        <p>Manage and schedule venue bookings efficiently</p>
+                    </div>
+                </div>
+
+                <nav class="navbar">
+                    <ul class="nav-links">
+                        <a href="{% url 'faculty_advisor:home' %}">Home</a>
+                    </ul>
+                </nav>
+
+                {% comment %} <div class="user-controls">
+                    <div class="user-profile">
+                        <div class="user-avatar">AD</div>
+                        <span class="user-name">Admin User</span>
+                    </div>
+                </div> {% endcomment %}
+            </div>
+        </header>
+
+        
+
+        <div class="control-panel">
+            <div class="form-group">
+                <label for="venue-select">Select Venue</label>
+                <div class="select-wrapper">
+                    <select id="venue-select" class="form-control">
+                        <option value="">Loading venues...</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="date-picker">Select Date</label>
+                <input type="text" id="date-picker" class="form-control" placeholder="Select a date">
+            </div>
+            
+            <button id="load-schedule-btn" class="btn btn-primary">
+                <i class="fas fa-sync-alt"></i> Load Schedule
+            </button>
+        </div>
+
+        <div class="stats-container" id="stats-container">
+            <div class="stat-card total">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">Total Bookings</div>
+                        <div class="stat-value" id="total-bookings">0</div>
+                    </div>
+                    <div class="stat-icon total">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i> <span>0% from last week</span>
+                </div>
+            </div>
+            
+            <div class="stat-card active">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">Active Bookings</div>
+                        <div class="stat-value" id="active-bookings">0</div>
+                    </div>
+                    <div class="stat-icon active">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i> <span>0% from last week</span>
+                </div>
+            </div>
+            
+            <div class="stat-card pending">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">Pending Approvals</div>
+                        <div class="stat-value" id="pending-bookings">0</div>
+                    </div>
+                    <div class="stat-icon pending">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-change negative">
+                    <i class="fas fa-arrow-down"></i> <span>0% from last week</span>
+                </div>
+            </div>
+            
+            <div class="stat-card cancelled">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">Cancelled Bookings</div>
+                        <div class="stat-value" id="cancelled-bookings">0</div>
+                    </div>
+                    <div class="stat-icon cancelled">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-change positive">
+                    <i class="fas fa-arrow-down"></i> <span>0% from last week</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="schedule-container">
+            <div class="schedule-header">
+                <div>
+                    <h2 class="schedule-title" id="venue-title">No Venue Selected</h2>
+                    <div class="schedule-info">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="week-info">Please select a venue and date to view schedule</span>
+                    </div>
+                </div>
+                <div class="schedule-actions">
+                    <button class="btn btn-outline" id="prev-week-btn" style="color: white;">
+                        <i class="fas fa-chevron-left"></i> Previous Week
+                    </button>
+                    <button class="btn btn-outline" id="next-week-btn" style="color: white;">
+                        Next Week <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <div>Loading schedule data...</div>
+            </div>
+            
+            <div class="empty-state" id="empty-state">
+                <div class="empty-icon">
+                    <i class="far fa-calendar-alt"></i>
+                </div>
+                <h3 class="empty-text">No Schedule Data Available</h3>
+                <p class="text-muted">Select a venue and date to view booking schedule</p>
+            </div>
+            
+            <table class="schedule-table" id="schedule-table">
+                <thead id="table-header">
+                    <!-- Headers will be generated dynamically -->
+                </thead>
+                <tbody id="table-body">
+                    <!-- Schedule content will be generated dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Booking Details Modal -->
+    <div class="modal-overlay" id="booking-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Booking Details</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Content will be filled dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="close-modal-btn">Close</button>
+                <button class="btn btn-primary" id="approve-booking-btn">Approve</button>
+            </div>
+        </div>
+    </div>
+
+    {{ venue_data|json_script:"venue-data" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    
+
+    <script>
+
+        
+        
+
+
+        class VenueSchedule {
+            constructor() {
+                this.schedule = null;
+                this.timeSlots = [];
+                this.days = [];
+                this.events = [];
+                this.currentDate = new Date();
+                this.selectedVenue = null;
+                this.venues = [];
+                
+                // Initialize UI components
+                this.initDatePicker();
+                this.initEventListeners();
+                
+                // Load venues from backend
+                this.loadVenues();
+            }
+            // Add this new method to get color definitions
+            getEventColors(type) {
+                switch(type) {
+                    case 'active':
+                        return {
+                            background: 'linear-gradient(135deg, #38a169 0%, #48bb78 100%)',
+                            border: 'rgba(56, 161, 105, 0.3)',
+                            text: 'white'
+                        };
+                    case 'pending':
+                        return {
+                            background: 'linear-gradient(135deg, #d69e2e 0%, #ed8936 100%)',
+                            border: 'rgba(214, 158, 46, 0.3)',
+                            text: 'white'
+                        };
+                    case 'cancelled':
+                        return {
+                            background: 'linear-gradient(135deg, #e53e3e 0%, #f56565 100%)',
+                            border: 'rgba(229, 62, 62, 0.3)',
+                            text: 'white'
+                        };
+                    case 'user-cancelled':
+                        return {
+                            background: 'linear-gradient(135deg, #9f7aea 0%, #b794f4 100%)',
+                            border: 'rgba(159, 122, 234, 0.3)',
+                            text: 'white'
+                        };
+                    default:
+                        return {
+                            background: 'linear-gradient(135deg, #1a73e8 0%, #0f55ca 100%)',
+                            border: 'rgba(26, 115, 232, 0.3)',
+                            text: 'white'
+                        };
+                }
+            }
+
+            initDatePicker() {
+                this.datePicker = flatpickr("#date-picker", {
+                    dateFormat: "Y-m-d",
+                    defaultDate: this.currentDate,
+                    onChange: (selectedDates) => {
+                        if (selectedDates.length > 0) {
+                            this.currentDate = selectedDates[0];
+                            if (this.selectedVenue) {
+                                this.loadSchedule();
+                            }
+                        }
+                    }
+                });
+            }
+
+            initEventListeners() {
+                document.getElementById('load-schedule-btn').addEventListener('click', () => this.loadSchedule());
+                document.getElementById('prev-week-btn').addEventListener('click', () => this.navigateWeek(-1));
+                document.getElementById('next-week-btn').addEventListener('click', () => this.navigateWeek(1));
+                document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
+                document.getElementById('close-modal-btn').addEventListener('click', () => this.closeModal());
+                
+                document.getElementById('venue-select').addEventListener('change', (e) => {
+                    this.selectedVenue = e.target.value;
+                    if (this.selectedVenue) {
+                        this.loadSchedule();
+                    }
+                });
+            }
+
+            navigateWeek(direction) {
+                const newDate = new Date(this.currentDate);
+                newDate.setDate(newDate.getDate() + (direction * 7));
+                this.currentDate = newDate;
+                this.datePicker.setDate(newDate);
+                this.loadSchedule();
+            }
+
+            async loadVenues() {
+                
+                try {   
+                    
+                    const data = JSON.parse(document.getElementById('venue-data').textContent);
+                    
+                    this.venues = data;
+                    
+                    this.populateVenueSelect();
+                } catch (error) {
+                    console.error('Failed to load venues:', error);
+                    alert('Could not load venues from backend.');
+                }
+            }
+            
+
+            populateVenueSelect() {
+                const select = document.getElementById('venue-select');
+                select.innerHTML = '<option value="">Select a venue</option>';
+
+                console.log('this.venues',this.venues);
+
+                
+                this.venues.forEach(venue => {
+                    const option = document.createElement('option');
+                    option.value = venue.id;
+                    option.textContent = venue.venue_name;
+                    select.appendChild(option);
+                });
+            }
+
+            async loadSchedule() {
+                if (!this.selectedVenue) return;
+                
+                this.showLoading();
+                
+                try {
+                    console.log("inside loadSchedule() ")
+                    // Calculate start and end dates for the week
+                    const startDate = this.getWeekStartDate(this.currentDate);
+                    const endDate = this.getWeekEndDate(this.currentDate);
+                    console.log('startDate->',startDate)
+                    console.log('endDate->',endDate)
+                    
+                    // Simulate API call to get schedule
+                    // In a real app, this would be fetch(`/api/bookings?venue_id=${this.selectedVenue}&start_date=${startDate}&end_date=${endDate}`)
+                    const response = await this.getScheduleFromBackend(this.selectedVenue, startDate, endDate);
+
+                    console.log('response->',response)
+                    
+                    // Update UI with new data
+                    this.updateStats(response.booking_statistics);
+                    this.displaySchedule(response);
+                } catch (error) {
+                    console.error('Failed to load schedule:', error);
+                    this.showEmptyState();
+                }
+            }
+            async getScheduleFromBackend(venueId, startDate, endDate) {
+                const params = new URLSearchParams({
+                    venue_id: venueId,
+                    start_date: startDate.toISOString().split('T')[0],
+                    end_date: endDate.toISOString().split('T')[0]
+                });
+
+                console.log('params.toString()->',params.toString());
+                const response = await fetch(`/users/bookings/schedule/?${params.toString()}`);
+                console.log('done!');
+                
+                if (!response.ok) {
+                    console.log('in if cond');
+                    console.log('response.ok',response.ok);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                console.log('waiting..');
+                
+                return await response.json();
+            }
+
+            getWeekStartDate(date) {
+                const d = new Date(date);
+                const day = d.getDay();
+                const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust for Sunday
+                return new Date(d.setDate(diff));
+            }
+
+            getWeekEndDate(date) {
+                const startDate = this.getWeekStartDate(date);
+                const endDate = new Date(startDate);
+                endDate.setDate(startDate.getDate() + 6);
+                return endDate;
+            }
+
+            updateStats(stats) {
+                document.getElementById('total-bookings').textContent = stats.total_bookings;
+                document.getElementById('active-bookings').textContent = stats.active;
+                document.getElementById('pending-bookings').textContent = stats.pending;
+                document.getElementById('cancelled-bookings').textContent = stats.cancelled + stats.user_cancelled;
+            }
+
+            displaySchedule(data) {
+                // Update title and info
+                const venue = this.venues.find(v => v.id === this.selectedVenue);
+                document.getElementById('venue-title').textContent = `${venue.venue_name} Schedule`;
+                
+                const startDate = new Date(data.start_date);
+                const endDate = new Date(data.end_date);
+                document.getElementById('week-info').textContent = 
+                    `Showing schedule for ${startDate.toDateString()} to ${endDate.toDateString()}`;
+                
+                this.timeSlots = [];
+                for (let hour = 6; hour <= 23; hour++) {
+                    const suffix = hour < 12 ? 'AM' : 'PM';
+                    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+                        
+                    this.timeSlots.push(`${hour12}:00 ${suffix}`);
+                    this.timeSlots.push(`${hour12}:30 ${suffix}`);
+                }
+                    
+                
+                // Generate days of the week
+                this.days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                
+                // Process bookings into events
+                this.events = data.bookings.map(booking => {
+                    const date = new Date(booking.date);
+                    //const dayName = this.days[date.getDay()];
+                    const jsDay = date.getDay(); // 0 = Sunday ... 6 = Saturday
+                    const adjustedIndex = (jsDay + 6) % 7; // Make Monday = 0, Sunday = 6
+                    const dayName = this.days[adjustedIndex];
+                    
+                    return {
+                        id: booking.id,
+                        day: dayName,
+                        startTime: booking.time,
+                        endTime: this.addDuration(booking.time, booking.duration),
+                        title: booking.event_details || 'Booking',
+                        type: booking.status || 'default',
+                        details: booking
+                    };
+                });
+                
+                // Generate and display the table
+                this.generateTable();
+                this.renderEvents();
+                
+                // Hide loading and empty states, show table
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('empty-state').classList.add('d-none');
+                document.getElementById('schedule-table').classList.remove('d-none');
+            }
+
+            addDuration(time, durationHours) {
+                const [timePart, period] = time.split(' ');
+                let [hours, minutes] = timePart.split(':').map(Number);
+                
+                if (period === 'PM' && hours < 12) hours += 12;
+                if (period === 'AM' && hours === 12) hours = 0;
+            
+                // Convert durationHours to minutes
+                const totalDurationMinutes = Math.round(durationHours * 60);
+            
+                const date = new Date();
+                date.setHours(hours, minutes + totalDurationMinutes, 0, 0);
+            
+                let newHours = date.getHours();
+                const newMinutes = date.getMinutes();
+                const newPeriod = newHours >= 12 ? 'PM' : 'AM';
+            
+                if (newHours > 12) newHours -= 12;
+                if (newHours === 0) newHours = 12;
+            
+                return `${newHours}:${newMinutes.toString().padStart(2, '0')} ${newPeriod}`;
+            }
+            
+
+            generateTable() {
+                const headerRow = document.getElementById('table-header');
+                const tableBody = document.getElementById('table-body');
+                
+                // Clear existing content
+                headerRow.innerHTML = '';
+                tableBody.innerHTML = '';
+
+                // Create header
+                const headerRowElement = document.createElement('tr');
+                
+                // Time header
+                const timeHeaderCell = document.createElement('th');
+                timeHeaderCell.className = 'time-header';
+                timeHeaderCell.textContent = 'Time';
+                headerRowElement.appendChild(timeHeaderCell);
+
+                // Day headers
+                this.days.forEach(day => {
+                    const dayHeaderCell = document.createElement('th');
+                    dayHeaderCell.className = 'day-header';
+                    dayHeaderCell.textContent = day.substring(0, 3);
+                    dayHeaderCell.title = day;
+                    headerRowElement.appendChild(dayHeaderCell);
+                });
+
+                headerRow.appendChild(headerRowElement);
+
+                // Create time slot rows
+                this.timeSlots.forEach((timeSlot, index) => {
+                    const row = document.createElement('tr');
+                    
+                    // Time cell
+                    const timeCell = document.createElement('td');
+                    timeCell.className = 'time-slot';
+                    timeCell.textContent = timeSlot;
+                    row.appendChild(timeCell);
+
+                    // Day cells
+                    this.days.forEach(day => {
+                        const cell = document.createElement('td');
+                        cell.className = 'schedule-cell';
+                        cell.dataset.day = day;
+                        cell.dataset.timeIndex = index;
+                        cell.dataset.time = timeSlot;
+                        row.appendChild(cell);
+                    });
+
+                    tableBody.appendChild(row);
+                });
+            }
+
+            renderEvents() {
+                this.events.forEach(event => {
+                    this.renderEvent(event);
+                });
+            }
+
+            renderEvent(event) {
+                const { day, startTime, endTime, title, type, id } = event;
+
+                console.log('startTime->',startTime);
+                console.log('endTime->',endTime);
+
+                console.log('Available timeSlots:', this.timeSlots);
+
+                
+                const startIndex = this.timeSlots.indexOf(startTime);
+                const endIndex = this.timeSlots.indexOf(endTime);
+
+                console.log('startIndex->',startIndex)
+                console.log('endIndex->',endIndex)
+                
+                if (startIndex === -1 || endIndex === -1) {
+                    console.warn(`Invalid time slots for event: ${title}`);
+                    return;
+                }
+
+                const slotsSpanned = endIndex - startIndex;
+                if (slotsSpanned <= 0) {
+                    console.warn(`Invalid time range for event: ${title}`);
+                    return;
+                }
+
+                const startCell = document.querySelector(
+                    `[data-day="${day}"][data-time-index="${startIndex}"]`
+                );
+
+                if (!startCell) {
+                    console.warn(`Could not find cell for event: ${title}`);
+                    return;
+                }
+
+                const eventElement = document.createElement('div');
+                eventElement.className = `event ${type}`;
+                eventElement.textContent = title;
+
+                // Set inline styles based on event type
+                const colors = this.getEventColors(type);   
+                eventElement.style.background = colors.background;
+                eventElement.style.borderColor = colors.border;
+                eventElement.style.color = colors.text;
+                
+                eventElement.dataset.bookingId = id;
+                eventElement.dataset.startTime = startTime;
+                eventElement.dataset.endTime = endTime;
+                eventElement.dataset.day = day;
+                eventElement.dataset.type = type;
+
+                const cellHeight = 40; // Height of each cell
+                const borderAdjustment = slotsSpanned - 1; // Account for borders between cells
+                const eventHeight = (cellHeight * slotsSpanned) + borderAdjustment - 4; // -4 for margins
+                eventElement.style.height = `${eventHeight}px`;
+                eventElement.style.zIndex = '5';
+
+                eventElement.addEventListener('click', () => {
+                    this.showEventDetails(event);
+                });
+
+                for (let i = 0; i < slotsSpanned; i++) {
+                    const cellToMark = document.querySelector(
+                        `[data-day="${day}"][data-time-index="${startIndex + i}"]`
+                    );
+                    if (cellToMark) {
+                        cellToMark.classList.add('occupied');
+                        if (i < slotsSpanned - 1) {
+                            cellToMark.style.borderBottom = 'none';
+                        }
+                        if (i > 0) {
+                            cellToMark.style.borderTop = 'none';
+                        }
+                    }
+                }
+
+                startCell.appendChild(eventElement);
+            }
+
+            // Update the showEventDetails method to use the actual data structure from backend
+            showEventDetails(event) {
+                const modalBody = document.getElementById('modal-body');
+                const details = event.details;
+                
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 10px; color: var(--secondary-color);">${details.event_details || 'Booking'}</h4>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="fas fa-map-marker-alt" style="width: 20px;"></i> 
+                            ${details.venue_name}
+                        </p>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="far fa-calendar-alt" style="width: 20px;"></i> 
+                            ${event.day}, ${details.date}
+                        </p>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="far fa-clock" style="width: 20px;"></i> 
+                            ${event.startTime} - ${event.endTime} (${details.duration} hours)
+                        </p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: var(--secondary-color);">Booking Details</h5>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="fas fa-user" style="width: 20px;"></i> 
+                            ${details.user_name}
+                        </p>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="fas fa-envelope" style="width: 20px;"></i> 
+                            ${details.email}
+                        </p>
+                        <p style="color: var(--text-light); margin-bottom: 5px;">
+                            <i class="fas fa-info-circle" style="width: 20px;"></i> 
+                            Status: <span class="badge" style="background-color: ${this.getStatusColor(details.status)}; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">
+                                ${details.status}
+                            </span>
+                        </p>
+                    </div>
+                    
+                    ${details.msg ? `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: var(--secondary-color);">Additional Message</h5>
+                        <p style="color: var(--text-light);">${details.msg}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${details.additional_comments_Venueadmin ? `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: var(--secondary-color);">Venue Admin Comments</h5>
+                        <p style="color: var(--text-light);">${details.additional_comments_Venueadmin}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${details.reason_for_approval ? `
+                    <div style="margin-bottom: 20px;">
+                        <h5 style="margin-bottom: 10px; color: var(--secondary-color);">Reason for Approval</h5>
+                        <p style="color: var(--text-light);">${details.reason_for_approval}</p>
+                    </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('booking-modal').classList.add('active');
+            }
+
+            getStatusColor(status) {
+                switch (status) {
+                    case 'active': return '#2ecc71'; // brighter green
+                    case 'pending': return '#f1c40f'; // bright yellow
+                    case 'cancelled': return '#e74c3c'; // vivid red
+                    case 'user-cancelled': return '#9b59b6'; // bright purple
+                    default: return '#3498db'; // fallback blue
+                }
+            }
+            
+        
+
+            closeModal() {
+                document.getElementById('booking-modal').classList.remove('active');
+            }
+
+            showLoading() {
+                document.getElementById('loading').classList.remove('d-none');
+                document.getElementById('empty-state').classList.add('d-none');
+                document.getElementById('schedule-table').classList.add('d-none');
+            }
+
+            showEmptyState() {
+                document.getElementById('loading').classList.add('d-none');
+                document.getElementById('empty-state').classList.remove('d-none');
+                document.getElementById('schedule-table').classList.add('d-none');
+            }
+
+            
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const venueSchedule = new VenueSchedule();
+        });
+    </script>
+</body>
+</html>

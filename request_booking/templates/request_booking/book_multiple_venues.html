@@ -539,7 +539,7 @@
                 </div>
                 <div class="preview-row">
                     <span class="preview-label">Time:</span>
-                    <span class="preview-value">{{ start_time }} - {{ end_time }}</span>
+                    <span class="preview-value" id="preview-time" >{{ start_time }} - {{ end_time }}</span>
                 </div>
                 <div class="preview-row">
                     <span class="preview-label">Requested by:</span>
@@ -647,13 +647,47 @@
                         confirmButton.disabled = true;
                         confirmButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     });
+
+                    // Format time float values like 12-15.5 → 12:00 - 15:30
+                    function formatTimeFloatToHHMM(timeFloat) {
+                        const hours = Math.floor(timeFloat);
+                        const minutes = Math.round((timeFloat - hours) * 60);
+                        const paddedMinutes = minutes.toString().padStart(2, '0');
+                        return `${hours}:${paddedMinutes}`;
+                    }
+                    console.log('1234');
+
+                    document.addEventListener('DOMContentLoaded', function () {
+                        console.log('2');
+                        const previewValue = document.getElementById('preview-time');
+                        if (previewValue) {
+                            const rawText = previewValue.textContent.trim();  // e.g., "12-15.5"
+                            const [start, end] = rawText.split('-').map(t => parseFloat(t.trim()));
+                            if (!isNaN(start) && !isNaN(end)) {
+                                const formattedStart = formatTimeFloatToHHMM(start);
+                                const formattedEnd = formatTimeFloatToHHMM(end);
+                                previewValue.textContent = `${formattedStart} - ${formattedEnd}`;
+                            }
+                        }
+                    });
                 </script>
+
+                
+                
                 
             </div>
         </div>
     </div>
     
     <script>
+
+        function formatTimeFloatToHHMM(timeFloat) {
+            const hours = Math.floor(timeFloat);
+            const minutes = Math.round((timeFloat - hours) * 60);
+            const paddedMinutes = minutes.toString().padStart(2, '0');
+            return `${hours}:${paddedMinutes}`;
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const bookButtons = document.querySelectorAll('.book-button');
             const previewDialog = document.getElementById('previewDialog');
@@ -682,7 +716,19 @@
                 numWeeks: "{{ num_weeks|escapejs }}",
                 weekdays: [{% for day in weekdays %}"{{ day|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}]
             };
-            
+            document.addEventListener('DOMContentLoaded', function () {
+            const previewValue = document.querySelector('.preview-value');
+            if (previewValue) {
+                const rawText = previewValue.textContent.trim();  // e.g. "12-15.5"
+                const [start, end] = rawText.split('-').map(t => parseFloat(t.trim()));
+                if (!isNaN(start) && !isNaN(end)) {
+                    const formattedStart = formatTimeFloatToHHMM(start);
+                    const formattedEnd = formatTimeFloatToHHMM(end);
+                    previewValue.textContent = `${formattedStart} - ${formattedEnd}`;
+                }
+            }
+        });
+
             // Format capacity with commas
             function formatNumber(num) {
                 return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");

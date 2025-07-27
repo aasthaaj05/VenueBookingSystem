@@ -110,7 +110,9 @@ def cumulative_booking_status(request):
         ).select_related('venue', 'user')
         
         # Format dates for display
-        dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+        # dates = [req.date.strftime('%Y-%m-%d') for req in individual_requests]
+        dates = sorted([req.date.strftime('%Y-%m-%d') for req in individual_requests])
+
 
         # unique_weekdays_list = list(dict.fromkeys(cr.weekdays))  # Preserves order
         # weekdays_string = ','.join(map(str, unique_weekdays_list))
@@ -1071,7 +1073,13 @@ def check_venue_availability_mul_weeks(venue, start_date, num_weeks, weekdays, t
                     #     print("detected a conflict")
                     #     return False
                     if request_start < booking_end and request_end > booking_start:
+                        
                         print("❌ Conflict detected with booking:", booking)
+                        print('booking.time->',booking.time)
+                        print('booking_start->',booking_start)
+                        print('booking_end->',booking_end)
+                        print('request_start->',request_start)
+                        print('request_end->',request_end)
                         return False
     return True
 
@@ -1270,14 +1278,13 @@ def cumulative_send_confirmation_email_to_requester(email, full_name, venue_obj,
     Request Details:
     - Venue: {venue_obj.venue_name}
     - Date: {start_date}
-    - Time: {start_time}
-    - Duration: {booking_duration} hours
+    - Time: {format_time_float_to_string(start_time)}
+    - Duration: {format_duration_float_to_string(booking_duration)}
     - Number of Weeks : {num_week}
     - Weekdays : {weekdays}
     - Purpose: {purpose}
     - Event Type: {event_type}
     - Status: Initiated
-    - Requested At: {formatted_time}
 
     We will notify you once your request is reviewed by the venue admin.
 
@@ -1343,14 +1350,13 @@ A new venue booking request has been initiated and requires your review.
 Request Details:
 - Venue: {venue_obj.venue_name}
 - Date: {start_date}
-- Time: {start_time}
-- Duration: {booking_duration} hours
+- Time: {format_time_float_to_string(start_time)}
+- Duration: {format_duration_float_to_string(booking_duration)}
 - Number of Weeks: {num_week}
 - Weekdays: {weekdays}
 - Purpose: {purpose}
 - Event Type: {event_type}
 - Status: Pending
-- Requested At: {formatted_time}
 
 Please review the request and take the necessary action.
 
@@ -1749,6 +1755,24 @@ CSI COEP Tech
 
 
 
+# def format_time_float_to_string(time_float):
+#     """Converts float time (e.g., 8.5) to 'HH:MM' format (e.g., '08:30')"""
+#     hours = int(time_float)
+#     minutes = int(round((time_float - hours) * 60))
+#     return f"{hours:02d}:{minutes:02d}"
+
+def format_time_float_to_string(time_input):
+    """Converts float or string time (e.g., 8.5 or '8.5') to 'HH:MM' format (e.g., '08:30')"""
+    try:
+        time_float = float(time_input)
+        hours = int(time_float)
+        minutes = int(round((time_float - hours) * 60))
+        return f"{hours:02d}:{minutes:02d}"
+    except (ValueError, TypeError):
+        return "Invalid time"
+
+
+
 
 
 
@@ -1790,14 +1814,13 @@ def send_forwarded_notification(to_email , request, venue_obj, alt_venue_1, alt_
     - Requested by: {request.user.name} ({request.user.email})
     - Venue: {venue_obj.venue_name}
     - Date: {start_date}
-    - Time: {start_time}
-    - Duration: {booking_duration} hours
+    - Time: {format_time_float_to_string(start_time)}
+    - Duration: {format_duration_float_to_string(booking_duration)}
     - Purpose: {purpose}
     - Event Type: {event_type}
     - Alternate Venue 1: {alt_venue_1.venue_name if alt_venue_1 else 'None'}
     - Alternate Venue 2: {alt_venue_2.venue_name if alt_venue_2 else 'None'}
     - Status: Pending
-    - Requested At: {formatted_time}
 
 
     Regards,  
@@ -1834,6 +1857,18 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from django.utils.timezone import now
+
+def format_duration_float_to_string(duration_float):
+    """Converts float duration (e.g., 6.5) to 'X hours Y mins'"""
+    hours = int(duration_float)
+    minutes = int(round((duration_float - hours) * 60))
+    if minutes == 0:
+        return f"{hours} hours"
+    else:
+        return f"{hours} hours {minutes} mins"
+
+
+
 
 def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, event_type,purpose , formatted_time):
     # Get venue in-charge email
@@ -1873,14 +1908,13 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
     - Requested by: {request.user.name} ({request.user.email})
     - Venue: {venue_obj.venue_name}
     - Date: {start_date}
-    - Time: {start_time}
-    - Duration: {booking_duration} hours
+    - Time: {format_time_float_to_string(start_time)}
+    - Duration: {format_duration_float_to_string(booking_duration)}
     - Purpose: {purpose}
     - Event Type: {event_type}
     - Alternate Venue 1: {alt_venue_1.venue_name if alt_venue_1 else 'None'}
     - Alternate Venue 2: {alt_venue_2.venue_name if alt_venue_2 else 'None'}
     - Status: Pending
-    - Requested At: {formatted_time}
 
     Please review the request and take the necessary action.
 
@@ -1915,7 +1949,14 @@ def send_booking_request_email(request, venue_obj, alt_venue_1, alt_venue_2, eve
 
 
 
-
+def format_duration(duration_float):
+    try:
+        duration_float = float(duration_float)  # 👈 convert to float first
+        hours = int(duration_float)
+        minutes = int(round((duration_float - hours) * 60))
+        return f"{hours:02d} hours {minutes:02d} mins"
+    except (ValueError, TypeError):
+        return "Invalid"
 
 
 
@@ -1966,13 +2007,11 @@ def booking_status(request):
 
     person_name = request.session.get('name')
 
-    print('in booking status function')
-    print()
-    print()
-    print('requests : ', requests)
-    print('preseon name : ' , person_name)
-    print()
-    print()
+    print('\n\nin booking status function\n\n')
+    
+
+    for req in requests:
+        req.formatted_duration = format_duration(req.duration)
     
 
     return render(request, "request_booking/booking_status.html", {"requests": requests , "person_name": person_name})
@@ -2060,7 +2099,7 @@ def send_cancellation_email_to_user(user_email, user_name, venue_name, event_dat
     Cancellation Details:
     - Venue: {venue_name}
     - Date: {event_date}
-    - Time: {event_time}:00 hrs
+    - Time: {format_time_float_to_string(event_time)}
     - Reason: {cancel_reason}
 
     If this cancellation was not intended or if you have any questions, please contact the admin team.
@@ -2084,6 +2123,51 @@ def send_cancellation_email_to_user(user_email, user_name, venue_name, event_dat
 
 
 
+
+def send_cumulative_req_cancellation_email_to_user(cumulative_req,cancel_msg):
+    user_email = cumulative_req.user.email
+    if not cumulative_req.user.email:
+        print("User email not found. Skipping email.")
+        return
+
+    print('inside send_cumulative_req_cancellation_email_to_user()')
+
+    print('cumulative_req.time->',cumulative_req.time)
+    print('type(cumulative_req.time)->',type(cumulative_req.time))
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = cumulative_req.user.email
+    msg['Subject'] = "Booking Cancellation Confirmation"
+
+    body = f"""
+    Dear {cumulative_req.user.name},
+
+    You have cancelled your booking for the following event.
+
+    Cancellation Details:
+    - Venue: {cumulative_req.venue.venue_name}
+    - Date: {cumulative_req.start_date}
+    - Duration: {cumulative_req.duration}
+    - Time: {format_time_float_to_string(cumulative_req.time)}
+    - Reason: {cancel_msg}
+
+    If this cancellation was not intended or if you have any questions, please contact the admin team.
+
+    Regards,  
+    COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+
+        print(f"Cancellation email sent to {cumulative_req.user.email}")
+    except Exception as e:
+        print(f"Failed to send cancellation email: {e}")
 
 
 
@@ -2292,6 +2376,7 @@ def arnav_check_multiple_week_availability_view(request):
         print(f"Event Details: {event_details}")
         print(f"Purpose: {purpose}")
         print(f"Special Requirements: {special_requirements}")
+        print(f"Duration: {duration}")
         
         for venue in venues:
             # Call the check function
@@ -2300,7 +2385,7 @@ def arnav_check_multiple_week_availability_view(request):
                 start_date=start_date,
                 num_weeks=num_weeks,
                 weekdays=weekdays,
-                time=int(start_hour),
+                time=start_hour,
                 duration=duration,
             )
             if is_available:
@@ -2480,3 +2565,97 @@ class RequestMultipleWeekAvailabilityView(View):
         # Return a simple response (in production, you'd process the data and return appropriate response)
         return HttpResponse("Form data received and printed in console. Check your server logs for details.", 
                           content_type="text/plain")
+
+
+
+
+
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.db import transaction
+from request_booking.models import CumulativeRequest, Request
+
+import logging
+import traceback
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.db import transaction
+from request_booking.models import CumulativeRequest, Request
+
+logger = logging.getLogger(__name__)
+
+def cancel_cumulative_request(request):
+    if request.method == "POST":
+        try:
+            print('inside POST cancel_cumulative_request')
+            cumulative_request_id = request.POST.get("request_id")
+            cancel_reason = request.POST.get("cancel_reason", "No reason provided")
+
+            try:
+                print('cumulative_request_id->',cumulative_request_id)
+                print('cancel_reason->',cancel_reason)
+                cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+            except Exception as e:
+                logger.error(f"Failed to retrieve CumulativeRequest: {e}\n{traceback.format_exc()}")
+                messages.error(request, "Failed to retrieve booking information.")
+                return redirect('user_dashboard')
+
+            if cumulative_req.user != request.user:
+                messages.error(request, "You are not authorized to cancel this booking.")
+                return redirect('user_dashboard')
+
+            try:
+                individual_requests = Request.objects.filter(
+                    cumulative_request_id=cumulative_request_id,
+                    status__in=['pending', 'approved']
+                )
+
+                if not individual_requests.exists():
+                    messages.error(request, "No active or pending requests to cancel.")
+                    return redirect('user_dashboard')
+            except Exception as e:
+                logger.error(f"Failed to retrieve individual requests: {e}\n{traceback.format_exc()}")
+                messages.error(request, "An error occurred while retrieving individual requests.")
+                return redirect('user_dashboard')
+
+            try:
+                with transaction.atomic():
+                    for req in individual_requests:
+                        req.status = 'user-cancelled'
+                        req.reasons = cancel_reason
+                        req.save(update_fields=["status", "reasons"])
+
+                        try:
+                            booking = req.booking
+                            booking.status = 'user-cancelled'
+                            booking.save(update_fields=["status"])
+                        except Booking.DoesNotExist:
+                            pass
+
+                    cumulative_req.status = 'user-cancelled'
+                    cumulative_req.reasons = cancel_reason
+                    cumulative_req.save(update_fields=["status", "reasons"])
+
+                    send_cumulative_req_cancellation_email_to_user(cumulative_req, cancel_reason)
+
+                    # send_cumulative_booking_cancelled_by_user_email(cumulative_req)
+
+                    messages.success(request, "Your booking request has been cancelled successfully.")
+            except Exception as e:
+                logger.error(f"Failed to cancel requests: {e}\n{traceback.format_exc()}")
+                messages.error(request, "An error occurred while cancelling your request.")
+                return redirect('request_bookinguser_dashboard')
+
+            # return redirect('request_booking:user_dashboard')
+            return redirect('faculty_advisor:home')
+
+        except Exception as e:
+            logger.error(f"Unexpected error in cancel_cumulative_request: {e}\n{traceback.format_exc()}")
+            messages.error(request, "An unexpected error occurred.")
+            # return redirect('user_dashboard')
+            return redirect('faculty_advisor:home')
+
+    # return redirect('request_booking:user_dashboard')
+    return redirect('faculty_advisor:home')

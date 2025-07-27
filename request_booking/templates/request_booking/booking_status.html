@@ -659,7 +659,7 @@
                             <tr data-request-id="{{ request.request_id }}">
                                 <td>{{ request.venue.venue_name }}</td>
                                 <td>{{ request.date }}</td>
-                                <td>{{ request.duration }}</td>
+                                <td>{{ request.formatted_duration }}</td>
                                 <td>
                                     <span class="status-badge status-{{ request.status }}">
                                         {% if request.status == 'pending' %}
@@ -779,6 +779,32 @@
     </div>
 
     <script>
+
+        function formatTo12Hour(floatTime) {
+            const hours = Math.floor(floatTime);
+            const minutes = Math.round((floatTime - hours) * 60);
+            const date = new Date();
+            date.setHours(hours);
+            date.setMinutes(minutes);
+        
+            const options = {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            };
+        
+            return date.toLocaleTimeString([], options); // e.g. "8:00 AM"
+        }
+
+        // Helper function: Convert float hours to "HH:MM" duration format
+        function formatDuration(floatTime) {
+            const hours = Math.floor(floatTime);
+            const minutes = Math.round((floatTime - hours) * 60);
+            const paddedHours = hours.toString().padStart(2, '0');
+            const paddedMinutes = minutes.toString().padStart(2, '0');
+            return `${paddedHours} hours ${paddedMinutes} mins`; // e.g. "10:30"
+        }
+
         // Current request ID for cancellation
         let currentRequestId = null;
         
@@ -809,17 +835,16 @@
             };
 
             // Format duration and start_date
+            // Format values
+            // Apply formatting
             if (data.duration) {
-                data.duration = parseFloat(data.duration).toFixed(1); // "10.5"
+                const durationFloat = parseFloat(data.duration);
+                data.duration = formatDuration(durationFloat); // e.g. "10:30"
             }
-            
+
             if (data.start_date) {
                 const startFloat = parseFloat(data.start_date);
-                const hours = Math.floor(startFloat);
-                const minutes = Math.round((startFloat - hours) * 60);
-                const paddedHours = hours.toString().padStart(2, '0');
-                const paddedMinutes = minutes.toString().padStart(2, '0');
-                data.start_date = `${paddedHours}:${paddedMinutes}`; // e.g. "07:30"
+                data.start_date = formatTo12Hour(startFloat); // e.g. "7:30 AM"
             }
   
             
@@ -848,15 +873,15 @@
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Start Time</div>
-                    <div class="detail-value">${data.start_date}:00</div>
+                    <div class="detail-value">${data.start_date}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Duration</div>
-                    <div class="detail-value">${data.duration} hours</div>
+                    <div class="detail-value">${data.duration}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.event_description} hours</div>
+                    <div class="detail-value">${data.event_description}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
