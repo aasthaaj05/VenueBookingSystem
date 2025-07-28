@@ -506,6 +506,12 @@ def float_to_time_str(t):
     return f"{hours}:{minutes:02d}"
 
 
+# def clean_multiline(text):
+#     return text.replace('\n', '\\n').replace('\r', '').strip() if text else 'N/A'
+
+def clean_multiline(text):
+    return text.replace('\n', ' ').replace('\r', '').strip() if text else 'N/A'
+
 
 
 def cumulative_request_booking(request): 
@@ -583,13 +589,13 @@ def cumulative_request_booking(request):
                 'organization_name': cr.user.organization_name if cr.user else 'Unknown'
             },
             'guest_count': cr.guest_count,
-            'event_details': cr.event_details if cr.event_details else 'N/A',
+            'event_details': clean_multiline(cr.event_details) if cr.event_details else 'N/A',
             'status': cr.status,
             'reasons': cr.reasons if cr.status == 'rejected' else None,
-            'purpose': cr.purpose if cr.purpose else 'N/A',
+            'purpose': clean_multiline(cr.purpose) if cr.purpose else 'N/A',
             # 'additional_info': cr.additional_info,
-            'additional_info': individual_requests.first().additional_info if individual_requests.exists() else 'N/A',
-            'special_requirements': cr.special_requirements,
+            'additional_info': clean_multiline(individual_requests.first().additional_info) if individual_requests.exists() else 'N/A',
+            'special_requirements': clean_multiline(cr.special_requirements),
             'individual_request_count': individual_requests.count(),  # How many individual requests
             'individual_requests': [str(req.request_id) for req in individual_requests]  # List of request IDs
         })
@@ -2645,7 +2651,16 @@ def approved_cumulative_bookings_view(request):
 
     print("\n==== Final Values Sent to Template ====")
     for item in unique_bookings:
+
+        
+
         req = item['request']
+
+        # Clean the event_details field in-place
+        req.event_details = clean_multiline(req.event_details)
+        req.additional_info = clean_multiline(req.additional_info)
+
+
         print(f"User Name: {req.user.name}")
         print(f"Organization Name: {req.organization_name}")
         print(f"Cumualative Request ID: {req.cumulative_request_id}")
@@ -2653,7 +2668,10 @@ def approved_cumulative_bookings_view(request):
         print(f"Date: {req.date}")
         print(f"Time: {req.time}")
         print(f"Duration: {req.duration}")
-        print(f"Event Details (truncated): {req.event_details[:50] + '...' if len(req.event_details) > 50 else req.event_details}")
+        # print(f"Event Details (truncated): {req.event_details[:50] + '...' if len(req.event_details) > 50 else req.event_details}")
+        # print(f"Event Details: {req.event_details.replace('\n', ' ').replace('\r', ' ')}")
+        print(f"Event Details: {req.event_details}")
+
         print("----------------------------------------")
 
 

@@ -639,7 +639,7 @@
                 <button type="button" class="btn" onclick="closeDialog('cancelDialog')" style="background-color: var(--medium-gray);">
                     <i class="fas fa-times"></i> Cancel
                 </button>
-                <button type="button" class="btn cancel-btn" onclick="submitCancellation()">
+                <button type="button" class="btn cancel-btn" onclick="submitCancellation(this)">
                     <i class="fas fa-check"></i> Confirm Cancellation
                 </button>
             </div>
@@ -726,13 +726,16 @@
             openDialog('cancelDialog');
         }
 
-        function submitCancellation() {
+        function submitCancellation(buttonElement) {
             const reason = document.getElementById('cancelReason').value.trim();
             
             if (!reason) {
                 alert('Please provide a reason for cancellation.');
                 return;
             }
+
+            // Disable the button to prevent double submission
+            buttonElement.disabled = true;
             
             // Get CSRF token (required if you remove @csrf_exempt)
             const csrftoken = getCookie('csrftoken');
