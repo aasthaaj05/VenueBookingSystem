@@ -171,7 +171,10 @@ from django.forms.models import model_to_dict
 
 class VenueListView(View):
     def get(self, request):
-        venues = Venue.objects.all()
+        # venues = Venue.objects.all()
+        
+        # Order venues by venue_name
+        venues = Venue.objects.all().order_by('venue_name')
         print('venues->', venues)
         
         # Manually create the dictionary instead of using model_to_dict
