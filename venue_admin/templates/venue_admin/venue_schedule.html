@@ -781,6 +781,8 @@
                     <i class="fas fa-arrow-up"></i> <span>0% from last week</span>
                 </div>
             </div>
+
+            
             
             <div class="stat-card active">
                 <div class="stat-header">
@@ -796,6 +798,23 @@
                     <i class="fas fa-arrow-up"></i> <span>0% from last week</span>
                 </div>
             </div>
+
+            <div class="stat-card total">
+                <div class="stat-header">
+                    <div>
+                        <div class="stat-title">Venue Capacity</div>
+                        <div class="stat-value" id="venue-capacity">0</div>
+                    </div>
+                    {% comment %} <div class="stat-icon total">
+                        <i class="fas fa-calendar-check"></i>
+                    </div> {% endcomment %}
+                </div>
+                {% comment %} <div class="stat-change positive">
+                    <i class="fas fa-arrow-up"></i> <span>0% from last week</span>
+                </div> {% endcomment %}
+            </div>
+
+            
             
             <div class="stat-card pending">
                 <div class="stat-header">
@@ -1089,6 +1108,7 @@
                 document.getElementById('active-bookings').textContent = stats.active;
                 document.getElementById('pending-bookings').textContent = stats.pending;
                 document.getElementById('cancelled-bookings').textContent = stats.cancelled + stats.user_cancelled;
+                document.getElementById('venue-capacity').textContent = stats.venue_capacity;
             }
 
             displaySchedule(data) {
@@ -1102,7 +1122,7 @@
                     `Showing schedule for ${startDate.toDateString()} to ${endDate.toDateString()}`;
                 
                 this.timeSlots = [];
-                for (let hour = 6; hour <= 23; hour++) {
+                for (let hour = 8; hour <= 20; hour++) {
                     const suffix = hour < 12 ? 'AM' : 'PM';
                     const hour12 = hour % 12 === 0 ? 12 : hour % 12;
                         

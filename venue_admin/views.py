@@ -3344,6 +3344,16 @@ class BookingScheduleAPI(View):
             except ValueError as e:
                 print(f'Conversion error: {str(e)}')
                 return JsonResponse({'error': 'Invalid venue_id format - must be a valid UUID'}, status=400)
+
+            
+            # Fetch the venue and its capacity
+            try:
+                venue = Venue.objects.get(id=venue_uuid)
+                venue_capacity = venue.capacity
+                print('venue_capacity->',venue_capacity)
+            except Venue.DoesNotExist:
+                print('in except block')
+                return JsonResponse({'error': 'Venue not found'}, status=404)
             
 
             
@@ -3356,6 +3366,9 @@ class BookingScheduleAPI(View):
             ).select_related('user', 'venue')
 
             print('bookings->',bookings)
+            print("\n\n\n")
+            print('venue_capacity-->',venue_capacity)
+            print("\n\n\n")
 
             # For display (only approved)
             bookings = all_bookings.filter(status='active')
@@ -3387,6 +3400,7 @@ class BookingScheduleAPI(View):
                 'active': 0,
                 'cancelled': 0,
                 'user_cancelled': 0,
+                'venue_capacity':venue_capacity,
             }
 
             for entry in status_counts:

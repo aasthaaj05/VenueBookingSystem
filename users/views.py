@@ -530,7 +530,13 @@ class VenueListView(View):
 class BookingScheduleAPI(View):
 
     def get(self, request):
-        print('inside BookingScheduleAPI GET')
+        print('Users : inside BookingScheduleAPI GET')
+        print('Users : inside BookingScheduleAPI GET')
+        print('Users : inside BookingScheduleAPI GET')
+        print('Users : inside BookingScheduleAPI GET')
+        print('Users : inside BookingScheduleAPI GET')
+
+
         venue_id = request.GET.get('venue_id')
         start_date = request.GET.get('start_date')
         end_date = request.GET.get('end_date')
@@ -573,6 +579,15 @@ class BookingScheduleAPI(View):
             except ValueError as e:
                 print(f'Conversion error: {str(e)}')
                 return JsonResponse({'error': 'Invalid venue_id format - must be a valid UUID'}, status=400)
+
+
+            # Fetch the venue and its capacity
+            try:
+                venue = Venue.objects.get(id=venue_uuid)
+                venue_capacity = venue.capacity
+                print('venue_capacity->',venue_capacity)
+            except Venue.DoesNotExist:
+                return JsonResponse({'error': 'Venue not found'}, status=404)
             
 
             
@@ -615,6 +630,7 @@ class BookingScheduleAPI(View):
                 'active': 0,
                 'cancelled': 0,
                 'user_cancelled': 0,
+                'venue_capacity':venue_capacity,
             }
 
             for entry in status_counts:
