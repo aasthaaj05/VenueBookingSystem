@@ -117,7 +117,8 @@ class Booking(models.Model):
     time = models.CharField(max_length=100)
     duration = models.CharField(max_length=100)
     venue = models.ForeignKey(Venue, on_delete=models.CASCADE, related_name="booked_venue")  # Final booked venue
-    event_details = models.TextField()  # Description of the event
+    # event_details = models.TextField(null=True, default="Details not Provided")  # Description of the event
+    event_details = models.TextField(null=True, blank=True)
     msg = models.TextField(blank=True, null=True)  # Additional messages
     status = models.CharField(max_length=100, choices=STATUS_CHOICES, default="active")  # Booking status
     created_at = models.DateTimeField(auto_now_add=True)

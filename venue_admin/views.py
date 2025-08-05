@@ -2627,7 +2627,6 @@ def approved_cumulative_bookings_view(request):
     # ✅ Fetch only cumulative approved bookings
     # Step 1: Filter only cumulative request bookings
     approved_bookings = Booking.objects.filter(
-        venue__in=managed_venues,
         status='active',
         request__cumulative_request_id__isnull=False  # <-- only cumulative requests
     ).select_related('user', 'venue', 'request')
