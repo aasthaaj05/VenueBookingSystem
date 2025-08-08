@@ -138,19 +138,19 @@ def cumulative_booking_status(request):
         weekday_str = ', '.join(weekday_names)
 
         # Print result
-        print('clean_weekdays :', clean_weekdays)
-        print('weekday_names :', weekday_names)
-        print('weekday_str :', weekday_str)
+        # print('clean_weekdays :', clean_weekdays)
+        # print('weekday_names :', weekday_names)
+        # print('weekday_str :', weekday_str)
 
 
 
-        print("----- Debug Info for CR (Cumulative Request) -----")
-        print("Accept:", cr.accept)
-        print("Reason to Approve:", cr.reason_to_approve)
-        print("Reason to Reject:", cr.reason_to_reject)
-        print("Additional Comments:", cr.additional_comments)
-        print("Suggest Alternate Venues:", cr.suggest_alternate_venues)
-        print("--------------------------------------------------------")
+        # print("----- Debug Info for CR (Cumulative Request) -----")
+        # print("Accept:", cr.accept)
+        # print("Reason to Approve:", cr.reason_to_approve)
+        # print("Reason to Reject:", cr.reason_to_reject)
+        # print("Additional Comments:", cr.additional_comments)
+        # print("Suggest Alternate Venues:", cr.suggest_alternate_venues)
+        # print("--------------------------------------------------------")
 
         
         pending_cumulative_requests.append({
@@ -187,11 +187,12 @@ def cumulative_booking_status(request):
             'additional_comments':cr.additional_comments,
             'suggest_alternate_venues':cr.suggest_alternate_venues
         })
-        print('pending_cumulative_requests : ', pending_cumulative_requests)
+        # print('pending_cumulative_requests : ', pending_cumulative_requests)
 
     context = {
         'pending_requests': pending_cumulative_requests,
-        'person_name': user_obj.name  # Add person_name to context
+        'person_name': user_obj.name,  # Add person_name to context
+        'weekdays': ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
     }
 
     return render(request, 'request_booking/cumulative_booking_status.html', context)
@@ -2324,6 +2325,395 @@ def cancel_booking(request):
     return redirect('/request_booking/booking_status')
 
 
+
+
+# def cumulative_cancel_booking(request):
+#     print('inside cumulative_cancel_booking')
+#     if request.method == 'POST':
+#         print('inside POST cumulative_cancel_booking')
+#         request_id = request.POST.get('request_id')
+#         cancel_reason = request.POST.get('cancel_reason')
+#         print('request_id->',request_id)
+#         print('cancel_reason-',cancel_reason)
+
+#         try:
+#             print('before req_obj')
+#             req_obj = Request.objects.get(request_id=request_id)
+#             print('req_obj->',req_obj)
+
+#             # Case 1: Part of cumulative request → cancel all linked requests
+#             if req_obj.cumulative_request_id:
+#                 print('Case 1: Part of cumulative request → cancel all linked requests')
+#                 related_requests = Request.objects.filter(
+#                     cumulative_request_id=req_obj.cumulative_request_id,
+#                     user=request.user
+#                 )
+
+#                 print('Case 1: Before IF CONDITION Part of cumulative request → cancel all linked requests')
+
+
+#                 for r in related_requests:
+
+#                     if r.status == 'approved':
+#                         print('r.status = approved')
+#                         try:
+#                             booking = Booking.objects.get(request=r, user=request.user)
+#                             booking.status = 'user-cancelled'
+#                             booking.msg = cancel_reason
+#                             booking.save()
+#                         except Booking.DoesNotExist:
+#                             pass  # Booking might not exist
+
+#                     r.status = 'user-cancelled'
+#                     r.reasons = cancel_reason
+#                     r.save()
+#                     print('request status = user-cancelled')
+
+#                     # # Optional: send email for each cancelled request
+#                     # send_cancellation_email_to_user(
+#                     #     user_email=request.user.email,
+#                     #     user_name=request.user.name,
+#                     #     venue_name=r.venue.venue_name,
+#                     #     event_date=r.date,
+#                     #     event_time=r.time,
+#                     #     cancel_reason=cancel_reason
+#                     # )
+
+#                 # Cancel the CumulativeRequest itself
+#                 try:
+#                     cum_req = CumulativeRequest.objects.get(cumulative_request_id=req_obj.cumulative_request_id)
+#                     cum_req.status = 'user-cancelled'
+#                     cum_req.reason_to_reject = cancel_reason
+#                     cum_req.save()
+#                     print('cumulative request status = user-cancelled')
+#                 except CumulativeRequest.DoesNotExist:
+#                     pass
+
+#                 messages.success(request, 'All linked cumulative requests have been cancelled.')
+#                 return redirect('/request_booking/booking_status')
+
+#             # Case 2: Normal single request
+#             else:
+#                 if req_obj.status == 'approved':
+#                     try:
+#                         booking = Booking.objects.get(request=req_obj, user=request.user)
+#                         booking.status = 'user-cancelled'
+#                         booking.msg = cancel_reason
+#                         booking.save()
+#                     except Booking.DoesNotExist:
+#                         messages.error(request, 'Approved booking not found.')
+#                         return redirect('/request_booking/booking_status')
+
+#                     req_obj.status = 'user-cancelled'
+#                     req_obj.reasons = cancel_reason
+#                     req_obj.save()
+
+#                     send_cancellation_email_to_user(
+#                         user_email=request.user.email,
+#                         user_name=request.user.name,
+#                         venue_name=req_obj.venue.venue_name,
+#                         event_date=req_obj.date,
+#                         event_time=req_obj.time,
+#                         cancel_reason=cancel_reason
+#                     )
+
+#                     messages.success(request, 'Approved booking has been cancelled successfully.')
+#                     return redirect('/request_booking/booking_status')
+
+#                 elif req_obj.status == 'pending':
+#                     req_obj.status = 'user-cancelled'
+#                     req_obj.reasons = cancel_reason
+#                     req_obj.save()
+
+#                     # send_cancellation_email_to_user(
+#                     #     user_email=request.user.email,
+#                     #     user_name=request.user.name,
+#                     #     venue_name=req_obj.venue.venue_name,
+#                     #     event_date=req_obj.date,
+#                     #     event_time=req_obj.time,
+#                     #     cancel_reason=cancel_reason
+#                     # )
+
+#                     messages.success(request, 'Pending request has been cancelled successfully.')
+#                     return redirect('/request_booking/booking_status')
+
+#                 else:
+#                     messages.error(request, f'Cannot cancel a request with status: {req_obj.status}')
+#                     return redirect('/request_booking/cumulative_booking_status')
+
+#         except Request.DoesNotExist:
+#             messages.error(request, 'Request not found or you are not authorized to cancel it.')
+#             return redirect('/request_booking/cumulative_booking_status')
+
+#     return redirect('/request_booking/cumulative_booking_status')
+
+
+
+# def cumulative_cancel_booking(request):
+#     print('\n\n---cumulative_cancel_booking()---\n\n')
+    
+#     if request.method == 'POST':
+#         request_id = request.POST.get('request_id')
+#         cancel_reason = request.POST.get('cancel_reason')
+
+#         print("cancel_reason:", cancel_reason)
+#         print('request_id->',request_id)
+
+#         try:
+#             print('inside try block')
+#             req_obj = Request.objects.get(request_id=request_id)
+
+#             print('req_obj->',req_obj)
+
+#             print('req_obj.cumulative_booking->',req_obj.cumulative_booking)
+#             print('eq_obj.cumulative_request_id->',eq_obj.cumulative_request_id)
+
+#             # Check if this is part of a cumulative booking
+#             if req_obj.cumulative_booking and req_obj.cumulative_request_id:
+#                 print('inside if req_obj.cumulative_booking and req_obj.cumulative_request_id')
+#                 # Handle cumulative booking cancellation
+#                 try:
+#                     print('inside try block')
+#                     # Get all requests in this cumulative booking
+#                     related_requests = Request.objects.filter(
+#                         cumulative_request_id=req_obj.cumulative_request_id,
+#                         user=request.user
+#                     )
+                    
+#                     # Get the cumulative request
+#                     cumulative_request = CumulativeRequest.objects.get(
+#                         cumulative_request_id=req_obj.cumulative_request_id,
+#                         user=request.user
+#                     )
+                    
+#                     # Cancel all related requests
+#                     for r in related_requests:
+#                         if r.status == 'approved':
+#                             try:
+#                                 booking = Booking.objects.get(request=r, user=request.user)
+#                                 booking.status = 'user-cancelled'
+#                                 booking.msg = cancel_reason
+#                                 booking.save()
+#                             except Booking.DoesNotExist:
+#                                 pass
+                        
+#                         r.status = 'user-cancelled'
+#                         r.reasons = cancel_reason
+#                         r.save()
+
+#                     # Cancel the cumulative request
+#                     cumulative_request.status = 'user-cancelled'
+#                     cumulative_request.reason_to_reject = cancel_reason
+#                     cumulative_request.save()
+
+#                     # # Send cancellation email (could modify to include all dates)
+#                     # send_cancellation_email_to_user(
+#                     #     user_email=request.user.email,
+#                     #     user_name=request.user.name,
+#                     #     venue_name=req_obj.venue.venue_name,
+#                     #     event_date=req_obj.date,  # Just using first date, could customize
+#                     #     event_time=req_obj.time,
+#                     #     cancel_reason=cancel_reason,
+#                     #     is_cumulative=True
+#                     # )
+
+#                     messages.success(request, 'Cumulative booking has been cancelled successfully.')
+#                     return redirect('/request_booking/booking_status')
+
+#                 except CumulativeRequest.DoesNotExist:
+#                     messages.error(request, 'Cumulative booking not found.')
+#                     return redirect('/request_booking/booking_status')
+
+#             # Handle non-cumulative booking (original code)
+#             if req_obj.status == 'approved':
+#                 try:
+#                     booking = Booking.objects.get(request=req_obj, user=request.user)
+                    
+#                     booking.status = 'user-cancelled'
+#                     booking.msg = cancel_reason
+#                     booking.save()
+
+#                     req_obj.status = 'user-cancelled'
+#                     req_obj.reasons = cancel_reason
+#                     req_obj.save()
+
+#                     # send_cancellation_email_to_user(
+#                     #     user_email=booking.user.email,
+#                     #     user_name=booking.user.name,
+#                     #     venue_name=booking.venue.venue_name,
+#                     #     event_date=booking.date,
+#                     #     event_time=booking.time,
+#                     #     cancel_reason=cancel_reason
+#                     # )
+
+#                     messages.success(request, 'Approved booking has been cancelled successfully.')
+#                     return redirect('/request_booking/cumulative_booking_status')
+
+#                 except Booking.DoesNotExist:
+#                     messages.error(request, 'Approved booking not found.')
+#                     return redirect('/request_booking/cumulative_booking_status')
+
+#             elif req_obj.status == 'pending':
+#                 req_obj.status = 'user-cancelled'
+#                 req_obj.reasons = cancel_reason
+#                 req_obj.save()
+
+#                 # send_cancellation_email_to_user(
+#                 #     user_email=request.user.email,
+#                 #     user_name=request.user.name,
+#                 #     venue_name=req_obj.venue.venue_name,
+#                 #     event_date=req_obj.date,
+#                 #     event_time=req_obj.time,
+#                 #     cancel_reason=cancel_reason
+#                 # )
+
+#                 messages.success(request, 'Pending request has been cancelled successfully.')
+#                 return redirect('/request_booking/cumulative_booking_status')
+
+#             else:
+#                 messages.error(request, f'Cannot cancel a request with status: {req_obj.status}')
+#                 return redirect('/request_booking/cumulative_booking_status')
+
+#         except Request.DoesNotExist:
+#             messages.error(request, 'Request not found or you are not authorized to cancel it.')
+#             return redirect('/request_booking/cumulative_booking_status')
+
+#     return redirect('/request_booking/cumulative_booking_status')
+
+
+
+
+def cumulative_cancel_booking(request):
+    print('\n\n---cumulative_cancel_booking()---\n\n')
+    
+    if request.method == 'POST':
+        received_id = request.POST.get('request_id')  # This could be either request_id or cumulative_request_id
+        cancel_reason = request.POST.get('cancel_reason')
+
+        print("cancel_reason:", cancel_reason)
+
+        try:
+            # First try to find a regular request with this ID
+            try:
+                req_obj = Request.objects.get(request_id=received_id, user=request.user)
+                is_cumulative = False
+            except Request.DoesNotExist:
+                # If not found, try to find a cumulative request
+                try:
+                    print('try to find a cumulative request')
+                    cumulative_request = CumulativeRequest.objects.get(
+                        cumulative_request_id=received_id,
+                        user=request.user
+                    )
+                    is_cumulative = True
+                except CumulativeRequest.DoesNotExist:
+                    messages.error(request, 'Request not found or you are not authorized to cancel it.')
+                    return redirect('/request_booking/cumulative_booking_status')
+
+            if is_cumulative:
+                # Handle cumulative booking cancellation
+                print('Handle cumulative booking cancellation')
+                related_requests = Request.objects.filter(
+                    cumulative_request_id=received_id,
+                    user=request.user
+                )
+                
+                # Cancel all related requests
+                print('Cancel all related requests')
+                for r in related_requests:
+                    if r.status == 'approved':
+                        try:
+                            booking = Booking.objects.get(request=r, user=request.user)
+                            booking.status = 'user-cancelled'
+                            booking.msg = cancel_reason
+                            booking.save()
+                        except Booking.DoesNotExist:
+                            pass
+                    
+                    r.status = 'user-cancelled'
+                    r.reasons = cancel_reason
+                    r.save()
+
+                # Cancel the cumulative request
+                cumulative_request.status = 'user-cancelled'
+                cumulative_request.reason_to_reject = cancel_reason
+                cumulative_request.save()
+                print('Cancel the cumulative request')
+
+                # # Send cancellation email
+                # send_cancellation_email_to_user(
+                #     user_email=request.user.email,
+                #     user_name=request.user.name,
+                #     venue_name=cumulative_request.venue.venue_name,
+                #     event_date=cumulative_request.start_date,
+                #     event_time=cumulative_request.time,
+                #     cancel_reason=cancel_reason,
+                #     is_cumulative=True
+                # )
+
+                messages.success(request, 'Your recurring booking has been cancelled successfully.')
+                return redirect('/request_booking/cumulative_booking_status')
+
+            else:
+                # Handle single request cancellation
+                if req_obj.status == 'approved':
+                    try:
+                        booking = Booking.objects.get(request=req_obj, user=request.user)
+                        
+                        booking.status = 'user-cancelled'
+                        booking.msg = cancel_reason
+                        booking.save()
+
+                        req_obj.status = 'user-cancelled'
+                        req_obj.reasons = cancel_reason
+                        req_obj.save()
+
+                        send_cancellation_email_to_user(
+                            user_email=booking.user.email,
+                            user_name=booking.user.name,
+                            venue_name=booking.venue.venue_name,
+                            event_date=booking.date,
+                            event_time=booking.time,
+                            cancel_reason=cancel_reason
+                        )
+
+                        messages.success(request, 'Your booking has been cancelled successfully.')
+                        return redirect('/request_booking/cumulative_booking_status')
+
+                    except Booking.DoesNotExist:
+                        messages.error(request, 'Approved booking not found.')
+                        return redirect('/request_booking/cumulative_booking_status')
+
+                elif req_obj.status == 'pending':
+                    req_obj.status = 'user-cancelled'
+                    req_obj.reasons = cancel_reason
+                    req_obj.save()
+                    print('inside cumulative_cancel_booking : req_obj.save()')
+
+                    # send_cancellation_email_to_user(
+                    #     user_email=request.user.email,
+                    #     user_name=request.user.name,
+                    #     venue_name=req_obj.venue.venue_name,
+                    #     event_date=req_obj.date,
+                    #     event_time=req_obj.time,
+                    #     cancel_reason=cancel_reason
+                    # )
+
+                    messages.success(request, 'Your pending request has been cancelled successfully.')
+                    return redirect('/request_booking/cumulative_booking_status')
+
+                else:
+                    messages.error(request, f'Cannot cancel a request with status: {req_obj.status}')
+                    return redirect('/request_booking/cumulative_booking_status')
+
+        except Exception as e:
+            print(f"Error cancelling booking: {str(e)}")
+            messages.error(request, 'An error occurred while processing your cancellation.')
+            return redirect('/request_booking/cumulative_booking_status')
+
+    return redirect('/request_booking/cumulative_booking_status')
+
+
 def arnav_check_multiple_week_availability_view(request):
     if request.method == 'POST':
         
@@ -2638,7 +3028,7 @@ def cancel_cumulative_request(request):
                     cumulative_req.reasons = cancel_reason
                     cumulative_req.save(update_fields=["status", "reasons"])
 
-                    send_cumulative_req_cancellation_email_to_user(cumulative_req, cancel_reason)
+                    # send_cumulative_req_cancellation_email_to_user(cumulative_req, cancel_reason)
 
                     # send_cumulative_booking_cancelled_by_user_email(cumulative_req)
 
@@ -2659,3 +3049,116 @@ def cancel_cumulative_request(request):
 
     # return redirect('request_booking:user_dashboard')
     return redirect('faculty_advisor:home')
+
+
+
+# def edit_booking(request):
+#     if request.method == 'POST':
+#         try:
+#             # Get the form data
+            
+#             event_description = request.POST.get('event_description')
+            
+
+#             # Get the booking request
+#             try:
+#                 booking_request = RequestBooking.objects.get(request_id=request_id)
+#                 cumulative_request = CumulativeRequest.objects.get(cumulative_request_id=cumulative_request_id)
+#             except (RequestBooking.DoesNotExist, CumulativeRequest.DoesNotExist):
+#                 messages.error(request, "Booking request not found")
+#                 return redirect('faculty_advisor:home')
+
+#             # Update the booking request
+#             booking_request.purpose = purpose
+            
+#             booking_request.save()
+
+            
+
+#             messages.success(request, "Booking request updated successfully")
+#             return redirect('faculty_advisor:home')
+
+#         except Exception as e:
+#             messages.error(request, f"Error updating booking: {str(e)}")
+#             return redirect('faculty_advisor:home')
+
+#     # If not POST request, redirect to home
+#     return redirect('faculty_advisor:home')
+
+
+
+
+
+def edit_booking(request):
+    if request.method == 'POST':
+        print('inside POST edit_booking')
+        try:
+            # Get cumulative_request_id from the form
+            cumulative_request_id = request.POST.get('cumulative_request_id')
+            print('cumulative_request_id->',cumulative_request_id)
+
+            # Get updated values from the form
+            event_description = request.POST.get('event_description')
+            purpose = request.POST.get('purpose')
+            guest_count = request.POST.get('guest_count')
+            event_type = request.POST.get('event_type')
+            additional_info = request.POST.get('additional_info')
+            special_requirements = request.POST.get('special_requirements')
+            reason_for_approval = request.POST.get('reason_for_approval')
+            reason_to_approve = request.POST.get('reason_to_approve')
+
+            # Get CumulativeRequest object
+            try:
+                cumulative_request = CumulativeRequest.objects.get(cumulative_request_id=cumulative_request_id)
+            except CumulativeRequest.DoesNotExist:
+                messages.error(request, "Cumulative request not found")
+                return redirect('faculty_advisor:home')
+
+            # ✅ Update CumulativeRequest
+            print('Update CumulativeRequest')
+            cumulative_request.event_details = event_description
+            
+            cumulative_request.save()
+            print('Cumulative Request saved!')
+
+            # ✅ Get all related Request objects
+            requests = Request.objects.filter(cumulative_request_id=cumulative_request_id)
+            print('requests->',requests)
+
+            for req in requests:
+                # Update Request fields
+                req.event_details = event_description
+                
+                req.save()
+
+                # Update corresponding RequestBooking if exists
+                try:
+                    print('inside try block : Update corresponding RequestBooking if exists')
+                    print('before booking_request')
+                    booking_request = Booking.objects.get(request_id=req.request_id)
+                    print('booking_request->',booking_request)
+                    print('event_description->',event_description)
+                    booking_request.event_details = event_description
+                    print('saving booking request')
+                    booking_request.save()
+                    print('booking request saved!!')
+                except RequestBooking.DoesNotExist:
+                    print('inside except block : Update corresponding RequestBooking if exists')
+                    # Optional: log or ignore missing RequestBooking
+                    continue
+
+            print('Request Purpose updated')
+
+            messages.success(request, "Cumulative booking and related requests updated successfully")
+            return redirect('faculty_advisor:home')
+
+        except Exception as e:
+            messages.error(request, f"Error updating booking: {str(e)}")
+            return redirect('faculty_advisor:home')
+
+    # If not POST request
+    return redirect('faculty_advisor:home')
+
+
+
+

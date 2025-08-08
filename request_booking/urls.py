@@ -37,10 +37,13 @@ urlpatterns = [
     path('buildings/', views.get_buildings, name='get_buildings'),
     path('home/', views.index, name='index'),
     path('cancel-booking/', views.cancel_booking, name='cancel_booking'),
+    path('cumulative-cancel-booking/', views.cumulative_cancel_booking, name='cumulative_cancel_booking'),
 
     path('process_booking_multiple/', views.process_booking_multiple, name='process_booking_multiple'),
 
     path('cancel/', views.cancel_cumulative_request, name='cancel_cumulative_booking'),
+
+    path('edit_booking/', views.edit_booking, name='edit_booking'),
 
 ]
   

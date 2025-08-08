@@ -52,7 +52,7 @@ class Request(models.Model):
     need = models.TextField(blank=True, null=True)  # Description of the need
     alternate_venue_1 = models.ForeignKey(Venue, on_delete=models.SET_NULL, null=True, related_name="alt_venue_1")  # First alternate venue
     alternate_venue_2 = models.ForeignKey(Venue, on_delete=models.SET_NULL, null=True, related_name="alt_venue_2")  # Second alternate venue
-    event_details = models.TextField()  # Description of the event
+    event_details = models.TextField(null=True)  # Description of the event
 
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting_for_approval')  # Default status
     reasons = models.CharField(max_length=255, blank=True, null=True)  # Reason for approval/rejection

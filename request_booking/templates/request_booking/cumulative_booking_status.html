@@ -347,6 +347,17 @@
             box-shadow: var(--shadow-sm);
         }
 
+        .btn-edit {
+            background-color: var(--warning-color);
+            color: var(--secondary-900);
+        }
+
+        .btn-edit:hover {
+            background-color: #e0a800;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+
         .btn-cancel {
             background-color: var(--error-color);
             color: white;
@@ -524,6 +535,46 @@
             resize: vertical;
         }
 
+        /* ====== EDIT FORM STYLES ====== */
+        .edit-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-lg);
+        }
+
+        .edit-form .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-row {
+            display: flex;
+            gap: var(--space-md);
+            align-items: center;
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .form-checkbox input {
+            width: auto;
+        }
+
+        .weekday-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+
+        .weekday-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--space-xs);
+            font-size: 0.875rem;
+        }
+
         /* ====== EMPTY STATE ====== */
         .empty-state {
             padding: var(--space-2xl);
@@ -579,6 +630,10 @@
             }
             
             .booking-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .edit-form {
                 grid-template-columns: 1fr;
             }
             
@@ -675,6 +730,7 @@
                                             <i class="fas fa-clock"></i>
                                         {% elif request.status == 'approved' %}
                                             <i class="fas fa-check-circle"></i>
+                                            
                                         {% elif request.status == 'rejected' %}
                                             <i class="fas fa-times-circle"></i>
                                         {% elif request.status == 'cancelled' %}
@@ -689,18 +745,10 @@
                                     <div class="action-buttons">
                                         <button class="btn btn-sm btn-view" onclick="showBookingDetails(this)"
                                         data-venue="{{ request.venue.venue_name }}"
-                                        {% comment %} data-date="{{ request.date }}" {% endcomment %}
-
-                                        {% comment %} data-date = "{% for date in request.dates|slice:":3" %}
-                                            {{ date }}<br>
-                                        {% endfor %}
-                                        {% if request.dates|length > 3 %}
-                                            +{{ request.dates|length|add:"-3" }} more dates
-                                        {% endif %}" {% endcomment %}
+                                        data-venue-id="{{ request.venue.venue_id }}"
                                         data-date="{% for date in request.dates %}
                                             {{ date }}{% if not forloop.last %}<br>{% endif %}
                                         {% endfor %}"
-
                                         data-duration="{{ request.duration }}"
                                         data-start-time = "{{request.time}}"
                                         data-start-date = "{{ request.start_date}}"
@@ -711,9 +759,9 @@
                                         data-requirements="{{ request.additional_info|default:'None' }}"
                                         data-special-requirements="{{ request.special_requirements|default:'None' }}"
                                         data-event-description="{{ request.event_details|default:'Not specified' }}"
-                                        {% comment %} data-special-requirements="{{ req uest.special_requirements }}" {% endcomment %}
                                         data-purpose="{{ request.purpose|default:'Not specified' }}"
                                         data-request-id="{{ request.request_id }}"
+                                        data-cumulative-request-id="{{ request.cumulative_request_id }}"
                                         {% if request.status == "rejected" %}
                                         data-reason="{{ request.reason_to_reject|default:'No reason provided' }}"
                                         data-feedback="{{ request.rejection.feedback_from_admin|default:'No feedback' }}"
@@ -730,10 +778,34 @@
                                         <i class="fas fa-eye"></i> View
                                         </button>
                                         
+                                        {% if request.status == 'approved' %}
+                                            <button class="btn btn-sm btn-edit" onclick="showEditModal(this)"
+                                                data-venue="{{ request.venue.venue_name }}"
+                                                data-venue-id="{{ request.venue.venue_id }}"
+                                                
+                                                data-duration="{{ request.duration }}"
+                                                data-start-time="{{ request.time }}"
+                                                data-start-date="{{ request.start_date }}"
+                                                data-status="{{ request.status }}"
+                                                data-numberofweek="{{ request.num_weeks }}"
+                                                data-weekdays="{{ request.weekdays }}"
+                                                data-need="{{ request.event_details }}"
+                                                data-requirements="{{ request.additional_info|default:'None' }}"
+                                                data-special-requirements="{{ request.special_requirements|default:'None' }}"
+                                                data-event-description="{{ request.event_details|default:'Not specified' }}"
+                                                data-purpose="{{ request.purpose|default:'Not specified' }}"
+                                                data-request-id="{{ request.request_id }}"
+                                                data-cumulative-request-id="{{ request.cumulative_request_id }}">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                        {% endif %}
+                                        
                                         {% if request.status == 'pending' or request.status == 'approved' or request.status == 'waiting_for_approval' %}
                                             <button class="btn btn-sm btn-cancel" onclick="showCancelModal('{{ request.cumulative_request_id }}')">
                                                 <i class="fas fa-times"></i> Cancel
                                             </button>
+                                            
+                                            
                                         {% endif %}
                                     </div>
                                 </td>
@@ -777,6 +849,83 @@
         </div>
     </div>
 
+    <!-- Edit Booking Modal -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-edit"></i> Edit Booking Request</h3>
+                <button class="close-btn" onclick="closeModal('editModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="editForm" method="POST" action="{% url 'request_booking:edit_booking' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="edit-form">
+                        <input type="hidden" name="cumulative_request_id" id="editCumulativeRequestId">
+                        <input type="hidden" name="request_id" id="editRequestId">
+            
+                        <div class="form-group">
+                            <label for="editEventDescription" class="form-label">Event Description</label>
+                            <input type="text" id="editEventDescription" name="event_description" class="form-control" required>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="editPurpose" class="form-label">Purpose</label>
+                            <input type="text" id="editPurpose" name="purpose" class="form-control" required readonly>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="editStartDate" class="form-label">Start Date</label>
+                            <input type="date" id="editStartDate" name="start_date" class="form-control" required readonly>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="editNumWeeks" class="form-label">Number of Weeks</label>
+                            <input type="text" id="editNumWeeks" name="num_weeks" class="form-control" min="1" required readonly>
+                        </div>
+            
+                        <div class="form-group full-width">
+                            <label for="editWeekdays" class="form-label">Weekdays</label>
+                            <input type="text" id="editWeekdays" name="weekdays" class="form-control" readonly>
+                        </div>
+                        
+                        
+            
+                        <div class="form-group">
+                            <label for="editStartTime" class="form-label">Start Time</label>
+                            <input type="time" id="editStartTime" name="start_time" class="form-control" require readonlyd>
+                        </div>
+            
+                        <div class="form-group">
+                            <label for="editDuration" class="form-label">Duration</label>
+                            <input type="text" id="editDuration" name="duration" class="form-control" required readonly>
+                        </div>
+            
+                        <div class="form-group full-width">
+                            <label for="editRequirements" class="form-label">Additional Requirements</label>
+                            <textarea id="editRequirements" name="requirements" class="form-control" rows="3" readonly></textarea>
+                        </div>
+            
+                        <div class="form-group full-width">
+                            <label for="editSpecialRequirements" class="form-label">Special Requirements</label>
+                            <textarea id="editSpecialRequirements" name="special_requirements" class="form-control" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-cancel" onclick="closeModal('editModal')">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-submit">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+            
+        </div>
+    </div>
+
     <!-- Cancel Confirmation Modal -->
     <div class="modal-overlay" id="cancelModal">
         <div class="modal">
@@ -786,7 +935,7 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form id="cancelForm" method="POST" action="{% url 'request_booking:cancel_booking' %}">
+            <form id="cancelForm" method="POST" action="{% url 'request_booking:cumulative_cancel_booking' %}">
                 {% csrf_token %}
                 <div class="modal-body">
                     <p style="margin-bottom: var(--space-md);">Please provide a reason for cancelling this booking request:</p>
@@ -811,7 +960,21 @@
         // Current request ID for cancellation
         let currentRequestId = null;
         
-        
+        function formatFloatToTime(val) {
+            if (val == null || val === "") return "";
+            const n = parseFloat(val);
+            if (isNaN(n)) return "";
+          
+            const hours = Math.floor(n);
+            const mins = Math.round((n - hours) * 60);
+          
+            // Pad hours and mins to always be two digits where needed
+            const hh = String(hours).padStart(2, "0");
+            const mm = String(mins).padStart(2, "0");
+          
+            return `${hh}:${mm}`;
+        }
+
         // Show booking details modal
         function showBookingDetails(button) {
             console.log("View button clicked - preparing to show modal");
@@ -831,6 +994,7 @@
                 purpose: button.getAttribute('data-purpose'),
                 special_requirements:button.getAttribute('data-special-requirements'),
                 requestId: button.getAttribute('data-request-id'),
+                cumulativeRequestId: button.getAttribute('data-cumulative-request-id'),
                 reason: button.getAttribute('data-reason'),
                 feedback: button.getAttribute('data-feedback') || 'No feedback provided',
                 alternate: button.getAttribute('data-alternate') || 'No alternate venue suggested',
@@ -844,9 +1008,10 @@
 
                 reason_to_approve : button.getAttribute('data-reason-to-approve') || 'None',
                 approval_admin_comments : button.getAttribute('data-admin-approval') || 'None',
-    
-
             };
+
+            data.duration = formatDurationHoursMins(data.duration )
+            data.start_time = formatFloatToTime(data.start_time)
             
             // Determine status icon
             const statusIcons = {
@@ -894,7 +1059,7 @@
                 
                 <div class="detail-item">
                     <div class="detail-label">Duration</div>
-                    <div class="detail-value">${data.duration} hours</div>
+                    <div class="detail-value">${data.duration}</div>
                 </div>
                 <div class="detail-item">
                     <div class="detail-label">Status</div>
@@ -905,7 +1070,7 @@
                 
                 <div class="detail-item">
                     <div class="detail-label">Event Description</div>
-                    <div class="detail-value">${data.event_description} hours</div>
+                    <div class="detail-value">${data.event_description}</div>
                 </div>
                 
                 
@@ -964,17 +1129,80 @@
             console.log("Details modal should now be visible");
         }
 
+        function formatDurationHoursMins(val) {
+            if (val == null || val === "") return "";
+            const n = parseFloat(val);
+            if (isNaN(n)) return "";
+          
+            const hours = Math.floor(n);
+            const mins = Math.round((n - hours) * 60);
+          
+            const parts = [];
+            if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? "s" : ""}`);
+            if (mins > 0) parts.push(`${mins} min${mins !== 1 ? "s" : ""}`);
+            return parts.join(" ") || "0 mins";
+          }
+
+        // Show edit booking modal
+        function showEditModal(button) {
+            console.log("In showEditModal() :Edit button clicked - preparing to show edit modal");
+            console.log('button->',button)
+
+    
+            // Get all data attributes from the button
+            const data = {
+                venue: button.getAttribute('data-venue'),
+                venueId: button.getAttribute('data-venue-id'),
+                date: button.getAttribute('data-date'),
+                duration: button.getAttribute('data-duration'),
+                status: button.getAttribute('data-status'),
+                start_time: button.getAttribute('data-start-time'),
+                start_date: button.getAttribute('data-start-date'),
+                number_of_weeks: button.getAttribute('data-numberofweek'),
+                week_days: button.getAttribute('data-weekdays'),
+                event_description: button.getAttribute('data-event-description'),
+                purpose: button.getAttribute('data-purpose'),
+                requirements: button.getAttribute('data-requirements'),
+                special_requirements: button.getAttribute('data-special-requirements'),
+                requestId: button.getAttribute('data-request-id'),
+                cumulativeRequestId: button.getAttribute('data-cumulative-request-id')
+            };
+            
+            // Populate the edit form fields
+            document.getElementById('editCumulativeRequestId').value = data.cumulativeRequestId;
+            document.getElementById('editRequestId').value = data.requestId;
+            document.getElementById('editEventDescription').value = data.event_description;
+            document.getElementById('editPurpose').value = data.purpose;
+            document.getElementById('editStartDate').value = data.start_date;
+            document.getElementById('editNumWeeks').value = data.number_of_weeks;
+            document.getElementById('editStartTime').value = data.start_time;
+            //document.getElementById('editDuration').value = data.duration;
+            document.getElementById('editRequirements').value = data.requirements;
+            document.getElementById('editSpecialRequirements').value = data.special_requirements;
+            
+            document.getElementById('editWeekdays').value = data.week_days || '';
+
+            // keep raw float for submit (hidden input)
+            const raw = data.duration;
+            const pretty = formatDurationHoursMins(raw);
+
+            document.getElementById('editDuration').value = pretty;
+
+
+            
+            // Show the modal
+            const modal = document.getElementById('editModal');
+            modal.classList.add('active');
+            console.log("Edit modal should now be visible");
+        }
+
         // Show cancel confirmation modal
         function showCancelModal(requestId) {
             console.log("Cancel button clicked for request:", requestId);
-            console.log('1');
             currentRequestId = requestId;
-            console.log('12');
             document.getElementById('cancelRequestId').value = requestId;
-            console.log('2');
             const modal = document.getElementById('cancelModal');
             modal.classList.add('active');
-            console.log('3');
             document.getElementById('cancelReason').focus();
         }
 
@@ -1010,7 +1238,7 @@
             }
         });
 
-        // Handle form submission
+        // Handle form submission for cancellation
         document.getElementById('cancelForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const reason = document.getElementById('cancelReason').value.trim();
@@ -1024,6 +1252,16 @@
                 alert('Error: No booking selected.');
                 return;
             }
+            
+            // Submit the form
+            this.submit();
+        });
+
+        // Handle form submission for editing
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            
             
             // Submit the form
             this.submit();
