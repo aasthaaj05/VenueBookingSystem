@@ -158,13 +158,6 @@ import json
 
 
 
-# class VenueListView(View):
-    # def get(self, request):
-    #     venues = Venue.objects.all().order_by('venue_name')
-    #     print('inside GET VenueListView')
-    #     print('venues->',venues)
-    #     return render(request, 'users/venue_schedule.html', {'venues': venues})
-
 from django.forms.models import model_to_dict
 
 

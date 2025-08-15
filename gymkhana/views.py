@@ -36,34 +36,7 @@ def create_venue(request):
     if request.method == "GET":
         return render(request,"gymkhana/create_venue.html")
 
-    # if request.method == "POST":
-    #     venue_name = request.POST.get("venue_name")
-    #     description = request.POST.get("description")
-    #     photo_url = request.POST.get("photo_url")
-    #     capacity = request.POST.get("capacity")
-    #     address = request.POST.get("address")
-    #     facilities = request.POST.get("facilities")
-    #     department_incharge = request.POST.get("department_incharge")
-
-    #     # Basic validation to ensure no field is empty
-    #     if not all([venue_name, description, photo_url, capacity, address, facilities, department_incharge]):
-    #         messages.error(request, "All fields are required.")
-    #     else:
-    #         try:
-    #             capacity = int(capacity)  # Ensure capacity is a valid integer
-    #             Venue.objects.create(
-    #                 venue_name=venue_name,
-    #                 description=description,
-    #                 photo_url=photo_url,
-    #                 capacity=capacity,
-    #                 address=address,
-    #                 facilities=facilities,
-    #                 department_incharge=department_incharge
-    #             )
-    #             messages.success(request, "Venue created successfully!")
-    #             return redirect("venue_admin:home")  # Redirect to home or another page
-    #         except ValueError:
-    #             messages.error(request, "Capacity must be a valid number.")
+    
     if request.method == "POST":
         venue_name = request.POST.get("venue_name")
         description = request.POST.get("description")

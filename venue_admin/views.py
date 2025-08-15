@@ -457,11 +457,29 @@ def float_to_time_str(t):
     return f"{hours}:{minutes:02d}"
 
 
+
+
 # def clean_multiline(text):
-#     return text.replace('\n', '\\n').replace('\r', '').strip() if text else 'N/A'
+#     return text.replace('\n', ' ').replace('\r', '').strip() if text else 'N/A'
+
+
+from html import unescape
 
 def clean_multiline(text):
-    return text.replace('\n', ' ').replace('\r', '').strip() if text else 'N/A'
+    if not text:
+        return 'N/A'
+    
+    # 1. First unescape any HTML entities (like &#x27; -> ')
+    text = unescape(text)
+    
+    # 2. Clean newlines and carriage returns
+    text = text.replace('\n', ' ').replace('\r', '')
+    
+    # 3. Escape single quotes for JavaScript (but keep the content readable)
+    text = text.replace("'", r"\'")
+    
+    # 4. Strip whitespace and return
+    return text.strip()
 
 
 
