@@ -1836,6 +1836,116 @@ def approved_cumulative_bookings_view(request):
 
 
 
+def rejected_cumulative_bookings_view(request):
+    print('in rejected_cumulative_bookings_view()')
+    user = request.user
+
+    if not user.is_authenticated:
+        print('user is not authenticated')
+        return render(request, 'venue_admin/cumulative_approved_bookings.html', {
+            'user': None,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
+    user_role = user.role.strip().lower()
+    if user_role == 'venue_admin':
+        managed_venues = Venue.objects.all()
+    else:
+        managed_venues = Venue.objects.filter(venue_admin=user.email)
+
+    if not managed_venues.exists():
+        return render(request, 'venue_admin/approved_bookings.html', {
+            'user': user,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
+    # ✅ Fetch cumulative requests with status 'rejected' or 'user-cancelled'
+    # Step 1: Filter cumulative requests with the desired statuses
+    rejected_cumulative_requests = CumulativeRequest.objects.filter(
+        status__in=['rejected','cancelled']
+    ).select_related('user', 'venue')
+
+    
+
+    # # Step 2: Deduplicate based on cumulative_request_id
+    # seen_cumulative_ids = set()
+    # unique_bookings = []
+
+    # for booking in approved_bookings:
+    #     cumulative_id = booking.request.cumulative_request_id
+    #     if cumulative_id and cumulative_id not in seen_cumulative_ids:
+    #         seen_cumulative_ids.add(cumulative_id)
+    #         unique_bookings.append({
+    #             'booking': booking,
+    #             'request': booking.request
+    #         })
+
+    # print('unique_cumulative_bookings:', unique_bookings)
+
+    # Step 2: Process the requests
+    processed_requests = []
+    for req in rejected_cumulative_requests:
+        # Clean the event_details and additional_info fields
+        req.event_details = clean_multiline(req.event_details) if req.event_details else ""
+        req.additional_info = clean_multiline(req.additional_info) if req.additional_info else ""
+        req.reason_to_reject = clean_multiline(req.reason_to_reject) if req.reason_to_reject else ""
+        req.suggest_alternate_venues = clean_multiline(req.suggest_alternate_venues) if req.suggest_alternate_venues else ""
+        req.additional_comments = clean_multiline(req.additional_comments) if req.additional_comments else ""
+        
+        processed_requests.append({
+            'request': req
+        })
+
+    print('rejected_cumulative_requests:', processed_requests)
+    print("\n==== Final Values Sent to Template ====")
+
+    print("\n==== Final Values Sent to Template ====")
+    for item in processed_requests:
+
+        
+
+        req = item['request']
+
+        # Clean the event_details field in-place
+        req.event_details = clean_multiline(req.event_details)
+        req.additional_info = clean_multiline(req.additional_info)
+
+
+        print(f"User Name: {req.user.name}")
+        print(f"Organization Name: {req.organization_name}")
+        print(f"Cumualative Request ID: {req.cumulative_request_id}")
+        print(f"Venue: {req.venue.venue_name}")
+        print(f"Date: {req.start_date}")
+        print(f"Time: {req.time}")
+        print(f"Duration: {req.duration}")
+        # print(f"Event Details (truncated): {req.event_details[:50] + '...' if len(req.event_details) > 50 else req.event_details}")
+        # print(f"Event Details: {req.event_details.replace('\n', ' ').replace('\r', ' ')}")
+        print(f"Event Details: {req.event_details}")
+        print(f"Reason to Reject: {req.reason_to_reject}")
+        print(f"Suggest Alternated Venues: {req.suggest_alternate_venues}")
+        print(f"Additional Comments: {req.additional_comments}")
+
+        print("----------------------------------------")
+
+
+    context = {
+        'user': user,
+        'managed_venues': managed_venues,
+        'approved_bookings': processed_requests
+    }
+
+    return render(request, 'venue_admin/cumulative_rejected_bookings.html', context)
+
+
+
+
+
+
+
+
+
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from .forms import VenueSelectForm, VenueEditForm
