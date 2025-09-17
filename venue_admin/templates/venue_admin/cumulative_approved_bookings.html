@@ -600,7 +600,13 @@
                     )">
                         <i class="fas fa-eye"></i> View
                     </button>
-                    <button type="button" class="btn cancel-btn" onclick="showCancelDialog('{{ request.cumulative_request_id }}', '{{ request.venue.venue_name }}', '{{ request.date }}')">
+                    <button type="button" class="btn cancel-btn" onclick="showCancelDialog(
+                        '{{ request.request_id }}',
+                        '{{ request.user.name }}',
+                        '{{ request.venue.venue_name }}',
+                        '{{ request.date }}',
+                        '{{ request.time }}'
+                    )">
                         <i class="fas fa-times"></i> Cancel
                     </button>
                 </div>
@@ -642,14 +648,16 @@
             </div>
             <div class="dialog-body">
                 <div id="cancelBookingInfo"></div>
-                <div class="detail-group">
-                    <div class="detail-label"><i class="fas fa-comment-alt"></i> Reason for Cancellation</div>
-                    <textarea id="cancelReason" class="cancel-reason" placeholder="Please provide the reason for cancellation..."></textarea>
+                <div class="form-group">
+                    <label for="cancelReason" class="form-label">
+                        <i class="fas fa-comment-alt"></i> Reason for Cancellation
+                    </label>
+                    <textarea id="cancelReason" class="form-control" placeholder="Please provide the reason for cancellation..." rows="4" required></textarea>
                 </div>
             </div>
             <div class="dialog-footer">
                 <button type="button" class="btn" onclick="closeDialog('cancelDialog')" style="background-color: var(--medium-gray);">
-                    <i class="fas fa-times"></i> Cancel
+                    <i class="fas fa-times"></i> Close
                 </button>
                 <button type="button" class="btn cancel-btn" onclick="submitCancellation(this)">
                     <i class="fas fa-check"></i> Confirm Cancellation
@@ -715,29 +723,6 @@
             openDialog('bookingDialog');
         }
 
-        function showCancelDialog(requestId, venueName, date) {
-            currentRequestId = requestId;
-            
-            const infoHtml = `
-                <div class="detail-group">
-                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Venue</div>
-                    <div class="detail-value">${venueName}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label"><i class="far fa-calendar-alt"></i> Date</div>
-                    <div class="detail-value">${date}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label"><i class="fas fa-info-circle"></i> Note</div>
-                    <div class="detail-value">Please provide a reason for cancelling this booking.</div>
-                </div>
-            `;
-            
-            document.getElementById('cancelBookingInfo').innerHTML = infoHtml;
-            document.getElementById('cancelReason').value = '';
-            openDialog('cancelDialog');
-        }
-
         function submitCancellation(buttonElement) {
             const reason = document.getElementById('cancelReason').value.trim();
             
@@ -745,21 +730,18 @@
                 alert('Please provide a reason for cancellation.');
                 return;
             }
-
-            // Disable the button to prevent double submission
-            buttonElement.disabled = true;
             
-            // Get CSRF token (required if you remove @csrf_exempt)
-            const csrftoken = getCookie('csrftoken');
+            // Disable the button to prevent multiple clicks
+            const confirmBtn = buttonElement;
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             
-
-            // const strippedId = currentRequestId.replaceAll('-', '');
-            
-            fetch(`/venue_admin/cancel-cumulative-booking/${currentRequestId}/`, {
+            // Send the cancellation request to the server
+            fetch(`/cancel-booking/${currentRequestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': csrftoken  // Include this if using CSRF protection
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
                     reason: reason
@@ -768,26 +750,65 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove the row from the table
+                    // Remove the booking row from the table
                     const row = document.getElementById(`row-${currentRequestId}`);
                     if (row) {
                         row.remove();
                     }
-                    closeDialog('cancelDialog');
                     
-                    // Show success message (you could use a nicer notification system)
-                    alert('Booking cancelled successfully.');
+                    // Show success message
+                    alert(data.message || 'Booking has been successfully cancelled.');
                 } else {
-                    alert('Error: ' + data.message);
+                    // Show error message
+                    alert(data.message || 'Failed to cancel booking.');
+                    
+                    // Re-enable the button if there was an error
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Cancellation';
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while cancelling the booking.');
+                alert('An error occurred while processing your request.');
+                
+                // Re-enable the button if there was an error
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Cancellation';
+            })
+            .finally(() => {
+                closeDialog('cancelDialog');
             });
         }
         
-        // Helper function to get CSRF token
+        // Function to show cancel dialog with booking info
+        function showCancelDialog(requestId, requesterName, venueName, date, time) {
+            currentRequestId = requestId;
+            
+            // Populate booking information
+            const bookingInfoHtml = `
+                <p>Are you sure you want to cancel this booking?</p>
+                <div class="booking-info">
+                    <div class="detail-group">
+                        <div class="detail-label"><i class="fas fa-user"></i> Requester</div>
+                        <div class="detail-value">${requesterName}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Venue</div>
+                        <div class="detail-value">${venueName}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label"><i class="far fa-calendar-alt"></i> Date & Time</div>
+                        <div class="detail-value">${date} at ${time}:00</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('cancelBookingInfo').innerHTML = bookingInfoHtml;
+            document.getElementById('cancelReason').value = '';
+            openDialog('cancelDialog');
+        }
+        
+        // Function to get CSRF token
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {

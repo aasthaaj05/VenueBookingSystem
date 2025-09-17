@@ -2563,3 +2563,144 @@ class BookingScheduleAPI(View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
+
+
+
+
+
+def send_booking_single_request_cancelled_email(req, cancellation_reason):
+    """
+    Send email notification about booking cancellation
+    """
+    print('\n\n--------start : send_booking_single_request_cancelled_email-----------')
+
+    requester_email = req.user.email
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    venue = req.venue
+    incharge_email = venue.dept_incharge_email or "Not available"
+    incharge_phone = venue.dept_incharge_phone or "Not available"
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Cancelled ❌"
+
+    body = f"""
+Dear {req.user.name},
+
+We regret to inform you that your venue booking has been cancelled.
+
+Booking Details:
+- Request ID: {req.request_id}
+- Venue: {venue.venue_name}
+- Date: {req.date}
+- Time: {req.time}
+- Duration: {req.duration} hours
+- Event Details: {req.event_details}
+
+Reason for Cancellation:
+{cancellation_reason}
+
+If you have any questions, please contact:
+- Venue Incharge Email: {incharge_email}
+- Venue Incharge Phone: {incharge_phone}
+
+Regards,  
+COEP Venue Booking System
+"""
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        context = ssl.create_default_context()
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls(context=context)
+            server.login(sender_email, sender_password)
+            server.sendmail(sender_email, requester_email, msg.as_string())
+            print(f"Booking cancellation email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send cancellation email: {e}")
+
+    print('-----end send_booking_single_request_cancelled_email--------')
+
+
+
+
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404
+
+
+
+
+@csrf_exempt
+@require_POST
+def single_booking_cancel_booking(request,request_id):
+    print('inside single_booking_cancel_booking()')
+    
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body)
+        cancel_reason = data.get('reason', 'No reason provided')
+        
+        # Get the booking object and related request
+        booking = get_object_or_404(Booking, request__request_id=request_id)
+        booking_request = booking.request
+
+
+        print('booking.status->',booking.status)
+        
+        # Check if booking is already cancelled
+        if booking.status == 'cancelled':
+            return JsonResponse({
+                'success': False,
+                'message': 'This booking has already been cancelled.'
+            }, status=400)
+        
+        # Update booking status to cancelled
+        booking.status = 'cancelled'
+        booking.msg = f"Cancellation reason: {cancel_reason}"
+        booking.save()
+        
+        # Update the related request status to 'cancelled'
+        booking_request.status = 'cancelled'
+        
+        # Store cancellation reason in appropriate field
+        # Using rejection_reason field since it's already available for storing reasons
+        booking_request.rejection_reason = f"Booking cancelled: {cancel_reason}"
+        
+        # You could also use additional_comments_Venueadmin if preferred
+        # booking_request.additional_comments_Venueadmin = f"Cancellation: {cancel_reason}"
+        
+        booking_request.save()
+
+        # Send cancellation email to the user
+        send_booking_single_request_cancelled_email(booking_request, cancel_reason)
+        
+        print(f"Booking {booking.booking_id} and Request {booking_request.request_id} cancelled successfully. Reason: {cancel_reason}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking cancelled successfully.',
+            'booking_id': str(booking.booking_id),
+            'request_id': str(booking_request.request_id)
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid JSON data in request.'
+        }, status=400)
+        
+    except Exception as e:
+        print(f"Error cancelling booking: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'message': f'An error occurred while cancelling the booking: {str(e)}'
+        }, status=500)
