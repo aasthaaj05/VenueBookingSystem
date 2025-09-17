@@ -147,14 +147,17 @@
             background-color: var(--white);
             border-radius: var(--border-radius-md);
             box-shadow: var(--shadow-md);
-            overflow: hidden;
+            overflow-x: auto;              /* was: hidden */
+            overflow-y: hidden;
             margin-bottom: 2rem;
         }
 
         table {
             width: 100%;
+            min-width: 1200px; 
             border-collapse: collapse;
             background-color: var(--white);
+            table-layout: auto;            /* or keep default */
         }
 
         thead {
@@ -187,6 +190,15 @@
             background-color: var(--primary-light);
             transform: translateY(-2px);
             box-shadow: var(--shadow-sm);
+        }
+
+        /* optionally constrain the “Event Description” column so Actions has space */
+        thead th:nth-child(7),
+        tbody td:nth-child(7) {
+        max-width: 420px;              /* tweak as needed */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
         }
 
         /* Status badge */
