@@ -16,6 +16,26 @@ from .models import Venue, Request
 import uuid
 
 
+def format_time(value):
+    """
+    Convert time values like 10, 10.5, 13.5 into formatted string HH:MM.
+    Handles None, null, or invalid values gracefully.
+    """
+    if value is None:
+        return "Not specified"
+
+    try:
+        # Convert string to float if needed
+        time_float = float(value)
+
+        hours = int(time_float)
+        minutes = 30 if (time_float - hours) == 0.5 else 0
+
+        return f"{hours:02d}:{minutes:02d}"
+    except (ValueError, TypeError):
+        return str(value) or "Invalid time"
+
+
 
 
 

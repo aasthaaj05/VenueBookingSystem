@@ -598,7 +598,7 @@
             <td>{{ request.organization_name }}</td>
             <td>{{ request.venue.venue_name }}</td>
             <td>{{ request.date }}</td>
-            <td>{{ request.time }}:00</td>
+            <td class="time-cell" data-time="{{ request.time }}"></td>
             <td>{{ request.duration }} hours</td>
             <td>{{ request.event_details|truncatechars:50 }}</td>
             <td>
@@ -611,6 +611,7 @@
                         '{{ request.venue.venue_name }}', 
                         '{{ request.date }}', 
                         '{{ request.time }}', 
+                        
                         '{{ request.duration }}', 
                         '{{ request.event_details }}', 
                         '{{ request.event_type }}', 
@@ -707,7 +708,7 @@
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-clock"></i> Time</div>
-                    <div class="detail-value">${time}:00</div>
+                    <div class="detail-value">${formatTimeForDisplay(time)}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-hourglass-half"></i> Duration</div>
@@ -820,6 +821,19 @@
             document.body.style.overflow = '';
         }
 
+        // Add this function to format time values
+        function formatTimeForDisplay(timeValue) {
+            // Handle both string and number inputs
+            const time = typeof timeValue === 'string' ? parseFloat(timeValue) : timeValue;
+            
+            // Extract hours and minutes
+            const hours = Math.floor(time);
+            const minutes = Math.round((time - hours) * 60);
+            
+            // Format to HH:MM
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
         // Close dialog when clicking outside
         document.querySelectorAll('.dialog-overlay').forEach(dialog => {
             dialog.addEventListener('click', function(event) {
@@ -840,6 +854,14 @@
 
         // Add subtle animation to table rows on load
         document.addEventListener('DOMContentLoaded', function() {
+
+            // Format all time cells in the table
+            const timeCells = document.querySelectorAll('td.time-cell');
+            timeCells.forEach(cell => {
+                const timeValue = cell.getAttribute('data-time');
+                cell.textContent = formatTimeForDisplay(timeValue);
+            });
+
             const rows = document.querySelectorAll('tbody tr');
             rows.forEach((row, index) => {
                 row.style.opacity = '0';

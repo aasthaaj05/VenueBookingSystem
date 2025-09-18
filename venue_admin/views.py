@@ -62,6 +62,30 @@ def home(request):
 
 
 
+
+
+
+def format_time(value):
+    """
+    Convert time values like 10, 10.5, 13.5 into formatted string HH:MM
+    """
+    if value is None:
+        return "Not specified"
+    try:
+        # Convert string to float if needed
+        time_float = float(value)
+
+        hours = int(time_float)
+        minutes = 30 if (time_float - hours) == 0.5 else 0
+
+        return f"{hours:02d}:{minutes:02d}"
+    except (ValueError, TypeError):
+        return str(value)  # fallback if invalid
+
+
+
+
+
 def get_requests(request):
     # Logic for handling view requests
     return render(request, 'venue_admin/venue_admin_get_pending_requests.html')
@@ -96,6 +120,9 @@ def send_booking_rejected_email(req, full_msg):
     incharge_email = venue.dept_incharge_email or "Not available"
     incharge_phone = venue.dept_incharge_phone or "Not available"
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = requester_email
@@ -110,7 +137,7 @@ Request Details:
 - Request ID: {req.request_id}
 - Venue: {venue.venue_name}
 - Date: {req.date}
-- Time: {req.time}
+- Time: {formatted_time}
 - Duration: {req.duration} hours
 - Event Details: {req.event_details}
 
@@ -606,6 +633,9 @@ def send_booking_accepted_email_to_incharge(req):
     print('requester_email : ', requester_email)
     print('requester_phone_number : ', requester_phone_number)
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = incharge_email
@@ -622,7 +652,7 @@ def send_booking_accepted_email_to_incharge(req):
     - Booking ID: {req.request_id}
     - Venue: {venue.venue_name}
     - Date: {req.date}
-    - Time: {req.time}
+    - Time: {formatted_time}
     - Duration: {req.duration} hours
     - Event Details: {req.event_details}
 
@@ -663,6 +693,9 @@ def send_booking_accepted_email(req, feedback_reason, feedback_comments):
     incharge_phone = venue.dept_incharge_phone or "Not available"
     print('incharge_email : ', incharge_email)
     print('incharge_phone : ', incharge_phone)
+
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
     
     # Email content
     msg = MIMEMultipart()
@@ -682,7 +715,7 @@ Booking Details:
 - Booking ID: {req.request_id}
 - Venue: {req.venue.venue_name}
 - Date: {req.date}
-- Time: {req.time}
+- Time: {formatted_time}
 - Duration: {req.duration} hours
 - Event Details: {req.event_details}
 
@@ -817,6 +850,9 @@ def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedb
     
     weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     body = f"""
 Dear Venue In-charge,
 
@@ -833,7 +869,7 @@ Here are the details and requirements of the booking:
 - Purpose: {purpose}
 - Start Date: {start_date}
 - Weekdays: {weekdays_display}
-- Time: {time}:00 hrs
+- Time: {formatted_time}
 - Duration: {duration} hour(s)
 - Number of Weeks: {num_weeks}
 - Special Requirements: {special_requirements}
@@ -937,6 +973,9 @@ def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason,
     
     weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     body = f"""
 Dear {full_name if full_name.strip() else 'Requester'},
 
@@ -951,7 +990,7 @@ Your venue booking request has been approved! 🎉
 - Purpose: {purpose}
 - Start Date: {start_date}
 - Weekdays: {weekdays_display}
-- Time: {time}:00 hrs
+- Time: {formatted_time}
 - Duration: {duration} hour(s)
 - Number of Weeks: {num_weeks}
 - Special Requirements: {special_requirements}
@@ -1071,6 +1110,11 @@ def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
 
 
     time = req.time or "N/A"
+
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
+
     print("Time:", time)
 
     duration = cumulative_req.duration or "N/A"
@@ -1128,7 +1172,7 @@ We regret to inform you that your venue booking request has been rejected.
 - Purpose: {purpose}
 - Start Date: {start_date}
 - Weekdays: {weekdays}
-- Time: {time}:00 hrs
+- Time: {formatted_time}
 - Duration: {duration} hour(s)
 - Number of Weeks: {num_weeks}
 - Special Requirements: {special_requirements}
@@ -1166,6 +1210,9 @@ def send_request_forwarded_email(req, new_venue):
     requester_email = req.user.email  # Get requester's email
     print('Requester Email:', requester_email)
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     if not requester_email:
         print("Requester email not found.")
         return
@@ -1189,7 +1236,7 @@ def send_request_forwarded_email(req, new_venue):
     New Request Details:
     - Venue: {new_venue.venue_name}
     - Date: {req.date}
-    - Time: {req.time}
+    - Time: {formatted_time}
     - Duration: {req.duration} hours
     - Event Details: {req.event_details}
 
@@ -1445,10 +1492,13 @@ def send_request_rejected_email(req):
     msg['To'] = req.user.email
     msg['Subject'] = "Venue Booking Request Rejected ❌"
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     body = f"""
     Dear {req.user.name},
 
-    We regret to inform you that your venue booking request for {req.venue.venue_name} on {req.date} at {req.time}
+    We regret to inform you that your venue booking request for {req.venue.venue_name} on {req.date} at {formatted_time}
     has been rejected due to scheduling conflicts and no alternate venues being available.
 
     Please try again with a different venue or date.
@@ -2583,10 +2633,15 @@ def send_booking_single_request_cancelled_email(req, cancellation_reason):
     incharge_email = venue.dept_incharge_email or "Not available"
     incharge_phone = venue.dept_incharge_phone or "Not available"
 
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
     msg = MIMEMultipart()
     msg['From'] = sender_email
     msg['To'] = requester_email
     msg['Subject'] = "Venue Booking Cancelled ❌"
+
+
 
     body = f"""
 Dear {req.user.name},
@@ -2597,7 +2652,7 @@ Booking Details:
 - Request ID: {req.request_id}
 - Venue: {venue.venue_name}
 - Date: {req.date}
-- Time: {req.time}
+- Time: {formatted_time}
 - Duration: {req.duration} hours
 - Event Details: {req.event_details}
 

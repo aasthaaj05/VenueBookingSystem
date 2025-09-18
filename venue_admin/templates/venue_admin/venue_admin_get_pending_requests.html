@@ -742,17 +742,19 @@
                         <td>{{ request.user.name }}</td>
                         <td>{{ request.venue.venue_name }}</td>
                         <td>{{ request.date }}</td>
-                        <td>{{ request.time }}</td>
+                        {% comment %} <td>{{ request.time }}</td> {% endcomment %}
+                        <td class="time-cell" data-time="{{ request.time }}"></td>
+                        
                         <td>{{ request.duration }} hours</td>
                         <td>{{ request.event_details|truncatechars:30 }}</td>
                         <td class="action-buttons">
                             <div class="action-container">
                                 <button type="button" class="btn view-details-btn" onclick="showBookingDetails(
-                                    '{{ request.request_id }}', '{{ request.user.name }}', '{{ request.email }}', 
-                                    '{{ request.phone_number }}', '{{ request.venue.venue_name }}', '{{ request.date }}', 
-                                    '{{ request.time }}', '{{ request.duration }}', '{{ request.event_details }}', 
-                                    '{{ request.event_type }}', '{{ request.guest_count }}', 
-                                    '{{ request.additional_info }}','{{ request.special_requirements }}','{{ request.need }}'
+                                    '{{ request.request_id |escapejs}}', '{{ request.user.name|escapejs }}', '{{ request.email |escapejs}}', 
+                                    '{{ request.phone_number|escapejs }}', '{{ request.venue.venue_name|escapejs }}', '{{ request.date |escapejs}}', 
+                                    '{{ request.time|escapejs }}', '{{ request.duration|escapejs }}', '{{ request.event_details|escapejs }}', 
+                                    '{{ request.event_type|escapejs }}', '{{ request.guest_count|escapejs }}', 
+                                    '{{ request.additional_info|escapejs }}','{{ request.special_requirements|escapejs }}','{{ request.need |escapejs }}'
                                 )">
                                     <i class="fas fa-eye"></i> View
                                 </button>
@@ -1117,6 +1119,19 @@
             document.body.style.overflow = '';
         }
 
+        // Add this function to your existing JavaScript code
+        function formatTimeForDisplay(timeValue) {
+            // Handle both string and number inputs
+            const time = typeof timeValue === 'string' ? parseFloat(timeValue) : timeValue;
+            
+            // Extract hours and minutes
+            const hours = Math.floor(time);
+            const minutes = Math.round((time - hours) * 60);
+            
+            // Format to HH:MM
+            return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        }
+
         // Close dialog when clicking outside
         document.querySelectorAll('.dialog-overlay').forEach(dialog => {
             dialog.addEventListener('click', function(event) {
@@ -1137,6 +1152,15 @@
 
         // Add subtle animation to table rows on load
         document.addEventListener('DOMContentLoaded', function() {
+
+            // Format all time cells
+            const timeCells = document.querySelectorAll('td.time-cell');
+            timeCells.forEach(cell => {
+                const timeValue = cell.getAttribute('data-time');
+                cell.textContent = formatTimeForDisplay(timeValue);
+            });
+
+
             const rows = document.querySelectorAll('tbody tr');
             rows.forEach((row, index) => {
                 row.style.opacity = '0';
