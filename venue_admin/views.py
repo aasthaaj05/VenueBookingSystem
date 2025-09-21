@@ -2759,3 +2759,89 @@ def single_booking_cancel_booking(request,request_id):
             'success': False,
             'message': f'An error occurred while cancelling the booking: {str(e)}'
         }, status=500)
+
+
+
+
+def cancel_booking_from_calendar(request):
+    print('inside cancel_booking_from_calendar()')
+    print('inside cancel_booking_from_calendar()')
+    print('inside cancel_booking_from_calendar()')
+    print('inside cancel_booking_from_calendar()')
+    try:
+        # Parse the request data
+        data = json.loads(request.body)
+        booking_id = data.get('booking_id')
+        reason = data.get('reason')
+
+        print('data->',data)
+        print('booking_id->',booking_id)
+        print('reason->',reason)
+
+        # Validate required fields
+        if not booking_id or not reason:
+            return JsonResponse({
+                'success': False,
+                'message': 'Booking ID and reason are required'
+            }, status=400)
+
+
+         # Get the booking object
+        try:
+            booking = Booking.objects.get(booking_id=booking_id)
+        except Booking.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Booking not found'
+            }, status=404)
+
+        # Get the related request
+        booking_request = booking.request
+
+        print('booking.status->', booking.status)
+        
+        # Check if booking is already cancelled
+        if booking.status in ['cancelled', 'user-cancelled']:
+            return JsonResponse({
+                'success': False,
+                'message': 'This booking has already been cancelled.'
+            }, status=400)
+        
+        # Update booking status to cancelled
+        booking.status = 'cancelled'
+        booking.msg = f"Cancellation reason: {reason}"
+        booking.save()
+        
+        # Update the related request status to 'cancelled'
+        booking_request.status = 'rejected'
+        
+        # Store cancellation reason in appropriate field
+        booking_request.feedback_from_admin = f"Booking cancelled: {reason}"
+
+
+        # You could also use additional_comments_Venueadmin if preferred
+        # booking_request.additional_comments_Venueadmin = f"Cancellation: {reason}"
+        
+        booking_request.save()
+
+        send_booking_single_request_cancelled_email(booking_request, reason)
+
+        # Send cancellation email to the user (if you have this function)
+        # send_booking_single_request_cancelled_email(booking_request, reason)
+        
+        print(f"Booking {booking.booking_id} and Request {booking_request.request_id} cancelled successfully. Reason: {reason}")
+
+
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Booking cancelled successfully'
+        })
+    except Exception as e:
+        # Log the error for debugging
+        print(f"Error cancelling booking: {str(e)}")
+        
+        return JsonResponse({
+            'success': False,
+            'message': 'An error occurred while processing your request'
+        }, status=500)

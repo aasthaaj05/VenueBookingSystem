@@ -27,6 +27,9 @@ urlpatterns = [
     path('cancel-cumulative-booking/<uuid:cumulative_request_id>/', views.cumulative_cancel_booking, name='cumulative_cancel_booking'),
 
 
+    path('cancel_booking_from_calendar/' , views.cancel_booking_from_calendar , name = 'cancel_booking_from_calendar'),
+
+
 
     path('approve_request/<uuid:request_id>', views.approve_request, name="approve_request"),
     

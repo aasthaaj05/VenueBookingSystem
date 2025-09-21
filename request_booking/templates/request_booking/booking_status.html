@@ -692,7 +692,7 @@
                                         data-request-id="{{ request.request_id }}"
                                         {% if request.status == "rejected" %}
                                         data-reason="{{ request.reasons|default:'No reason provided' }}"
-                                        data-feedback="{{ request.rejection.feedback_from_admin|default:'No feedback' }}"
+                                        data-feedback="{{ request.feedback_from_admin|default:'No feedback' }}"
                                         data-alternate="{{ request.rejection.alternate_venues_suggestion|default:'None suggested' }}"
                                         {% elif request.status == "approved" %}
                                         data-accept-reason="{{request.booking.reason_for_approval|default:'No reason provided'}}"

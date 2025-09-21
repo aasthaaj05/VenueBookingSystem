@@ -714,6 +714,49 @@
             font-weight: bold;
         }
 
+        /* Add these styles to the existing CSS */
+        .reason-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 1001;
+            width: 90%;
+            max-width: 500px;
+        }
+        
+        .reason-dialog textarea {
+            width: 100%;
+            min-height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+        }
+        
+        .reason-dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .dialog-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
     </style>
 </head>
 <body>
@@ -901,9 +944,22 @@
                 <!-- Content will be filled dynamically -->
             </div>
             <div class="modal-footer">
+                <button class="btn btn-danger" id="cancel-booking-btn">Cancel</button>
                 <button class="btn btn-outline" id="close-modal-btn">Close</button>
-                {% comment %} <button class="btn btn-primary" id="approve-booking-btn">Close</button> {% endcomment %}
+                
             </div>
+        </div>
+    </div>
+
+    <!-- Cancellation Reason Dialog -->
+    <div class="dialog-overlay" id="cancel-dialog-overlay"></div>
+    <div class="reason-dialog" id="cancel-reason-dialog">
+        <h3>Cancel Booking</h3>
+        <p>Please provide a reason for cancellation:</p>
+        <textarea id="cancel-reason" placeholder="Enter reason for cancellation..."></textarea>
+        <div class="reason-dialog-buttons">
+            <button class="btn btn-outline" id="cancel-dialog-cancel">Cancel</button>
+            <button class="btn btn-danger" id="cancel-dialog-confirm">Confirm Cancellation</button>
         </div>
     </div>
 
@@ -928,6 +984,12 @@
                 this.currentDate = new Date();
                 this.selectedVenue = null;
                 this.venues = [];
+
+                // Store the current booking being viewed
+                this.currentBooking = null;
+                
+                // Initialize cancellation dialog
+                this.initCancelDialog();
                 
                 // Initialize UI components
                 this.initDatePicker();
@@ -936,6 +998,106 @@
                 // Load venues from backend
                 this.loadVenues();
             }
+
+            initCancelDialog() {
+                // Get dialog elements
+                this.cancelDialog = document.getElementById('cancel-reason-dialog');
+                this.cancelOverlay = document.getElementById('cancel-dialog-overlay');
+                this.cancelReasonTextarea = document.getElementById('cancel-reason');
+                
+                // Event listeners for cancellation dialog
+                document.getElementById('cancel-booking-btn').addEventListener('click', () => this.showCancelDialog());
+                document.getElementById('cancel-dialog-cancel').addEventListener('click', () => this.hideCancelDialog());
+                document.getElementById('cancel-dialog-confirm').addEventListener('click', () => this.confirmCancellation());
+                
+                // Close dialog when clicking outside
+                this.cancelOverlay.addEventListener('click', () => this.hideCancelDialog());
+            }
+            
+            showCancelDialog() {
+                this.cancelDialog.style.display = 'block';
+                this.cancelOverlay.style.display = 'block';
+                this.cancelReasonTextarea.value = ''; // Clear previous reason
+            }
+            
+            hideCancelDialog() {
+                this.cancelDialog.style.display = 'none';
+                this.cancelOverlay.style.display = 'none';
+            }
+            
+            async confirmCancellation() {
+                const reason = this.cancelReasonTextarea.value.trim();
+                
+                if (!reason) {
+                    alert('Please provide a reason for cancellation.');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    const confirmBtn = document.getElementById('cancel-dialog-confirm');
+                    const originalText = confirmBtn.textContent;
+                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    confirmBtn.disabled = true;
+                    
+                    // Make API call to cancel booking
+                    const response = await fetch('/venue_admin/cancel_booking_from_calendar/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCSRFToken() // You'll need to implement this
+                        },
+                        body: JSON.stringify({
+                            booking_id: this.currentBooking.id,
+                            reason: reason
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Show success message and reload schedule
+                        alert('Booking cancelled successfully!');
+                        this.hideCancelDialog();
+                        this.closeModal();
+                        this.loadSchedule(); // Refresh the schedule
+                    } else {
+                        throw new Error(result.message || 'Failed to cancel booking');
+                    }
+                    
+                } catch (error) {
+                    console.error('Cancellation failed:', error);
+                    alert('Failed to cancel booking: ' + error.message);
+                    
+                    // Reset button state
+                    const confirmBtn = document.getElementById('cancel-dialog-confirm');
+                    confirmBtn.textContent = 'Confirm Cancellation';
+                    confirmBtn.disabled = false;
+                }
+            }
+            
+            // Helper method to get CSRF token (you may need to adjust this based on your setup)
+            getCSRFToken() {
+                const name = 'csrftoken';
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+
             // Add this new method to get color definitions
             getEventColors(type) {
                 switch(type) {
@@ -1328,6 +1490,9 @@
             showEventDetails(event) {
                 const modalBody = document.getElementById('modal-body');
                 const details = event.details;
+
+                this.currentBooking = event.details; // Store the current booking
+
                 
                 modalBody.innerHTML = `
                     <div style="margin-bottom: 20px;">
@@ -1387,6 +1552,15 @@
                 `;
                 
                 document.getElementById('booking-modal').classList.add('active');
+
+                // Update the cancel button based on booking status
+                const cancelBtn = document.getElementById('cancel-booking-btn');
+                if (event.details.status === 'cancelled' || event.details.status === 'user-cancelled') {
+                    cancelBtn.style.display = 'none';
+                } else {
+                    cancelBtn.style.display = 'block';
+                }
+
             }
 
             getStatusColor(status) {
