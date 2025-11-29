@@ -425,6 +425,7 @@ class BookingScheduleAPI(View):
                     'status': booking.get_status_display(),
                     'venue_name': booking.venue.venue_name,
                     'email': booking.user.email,
+                    'phone_number' : booking.request.phone_number,
                 })
             print('bookings_data->',bookings_data)
 
