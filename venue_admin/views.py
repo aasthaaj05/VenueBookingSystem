@@ -327,16 +327,7 @@ def reject_cumulative_request(request, cumulative_request_id):
             cumulative_req.additional_comments = cumulative_req_feedback_comments
             cumulative_req.suggest_alternate_venues = cumulative_req_alternative_options
             cumulative_req.accept=0
-            '''
-            feedback_reason = request.POST.get('feedback_reason', 'No reason provided')
-            cumulative_req_feedback_reason = feedback_reason
-            # feedback_comments
-            # feedback_comments = request.POST.get('feedbackComments_Admin', 'No comments')
-            feedback_comments = request.POST.get('feedback_comments', 'No comments')
-            cumulative_req_feedback_comments = feedback_comments
-            alternative_options = request.POST.get('alternative_options', 'No alternatives suggested')
-            cumulative_req_alternative_options = alternative_options
-            '''
+            
             cumulative_req.save()  # Save all changes including feedback details
 
             send_cumulative_booking_rejected_email(req, cumulative_req, None)
@@ -2456,12 +2447,13 @@ def cumulative_cancel_booking(request, cumulative_request_id):
 
 class VenueListView(View):
     def get(self, request):
+        print('inside VenueListView()')
         # venues = Venue.objects.all()
 
         # Order venues by venue_name
         venues = Venue.objects.all().order_by('venue_name')
         
-        print('venues->', venues)
+        # print('venues->', venues)
         
         # Manually create the dictionary instead of using model_to_dict
         venue_data = [{
@@ -2469,7 +2461,7 @@ class VenueListView(View):
             'venue_name': venue.venue_name
         } for venue in venues]
         
-        print('venue_data->', venue_data)
+        # print('venue_data->', venue_data)
         return render(request, 'venue_admin/venue_schedule.html', {'venue_data': venue_data})
 
 
@@ -2845,3 +2837,487 @@ def cancel_booking_from_calendar(request):
             'success': False,
             'message': 'An error occurred while processing your request'
         }, status=500)
+
+
+
+
+# class CumulativeCancelBookingAPI(View):
+#     def post(self, request):
+#         print("-------in CumulativeCancelBookingAPI()-------")
+        
+#         try:
+#             # Parse JSON data from request body
+#             data = json.loads(request.body)
+            
+#             # Extract data from request
+#             user_id = data.get('user_id')
+#             venue_id = data.get('venue_id')
+#             reason = data.get('reason')
+#             reference_booking_id = data.get('reference_booking_id')
+            
+#             print("CUMULATIVE CANCELLATION DATA RECEIVED:")
+#             print(f"User ID: {user_id}")
+#             print(f"Venue ID: {venue_id}")
+#             print(f"Reason: {reason}")
+#             print(f"Reference Booking ID: {reference_booking_id}")
+            
+#             # Get the reference booking to identify user and venue
+#             try:
+#                 reference_booking = Booking.objects.get(booking_id=reference_booking_id)
+#                 user = reference_booking.user
+#                 venue = reference_booking.venue
+                
+#                 # Get the associated request to check if it's cumulative
+#                 reference_request = reference_booking.request
+                
+#             except Booking.DoesNotExist:
+#                 return JsonResponse({
+#                     'success': False,
+#                     'message': 'Reference booking not found'
+#                 }, status=404)
+            
+#             # Determine if this is a cumulative booking or single booking
+#             is_cumulative_booking = False
+#             cumulative_request_id = None
+            
+#             if reference_request.cumulative_booking and reference_request.cumulative_request_id:
+#                 is_cumulative_booking = True
+#                 cumulative_request_id = reference_request.cumulative_request_id
+#                 print(f"📅 This is a CUMULATIVE booking (ID: {cumulative_request_id})")
+#             else:
+#                 print("📅 This is a SINGLE booking")
+            
+#             # Get today's date for filtering future bookings
+#             today = timezone.now().date()
+            
+#             cancelled_count = 0
+            
+#             with transaction.atomic():
+#                 if is_cumulative_booking:
+#                     # 🟡 CUMULATIVE BOOKING LOGIC: Cancel all related cumulative requests
+#                     print("Processing CUMULATIVE cancellation...")
+                    
+#                     # Find all requests from the same cumulative booking
+#                     cumulative_requests = Request.objects.filter(
+#                         cumulative_request_id=cumulative_request_id,
+#                         date__gte=today,  # Only future dates
+#                     ).exclude(
+#                         status__in=['cancelled', 'rejected', 'user-cancelled']
+#                     )
+                    
+#                     print(f"Found {cumulative_requests.count()} cumulative requests to cancel")
+                    
+#                     # Cancel all cumulative requests
+#                     for req in cumulative_requests:
+#                         old_status = req.status
+#                         req.status = 'cancelled'
+#                         req.reasons = f"Cumulative booking cancelled by admin. Reason: {reason}"
+#                         req.feedback_from_admin = reason
+#                         req.save(update_fields=['status', 'reasons', 'feedback_from_admin'])
+                        
+#                         # Update corresponding booking if it exists
+#                         try:
+#                             if hasattr(req, 'booking'):
+#                                 booking = req.booking
+#                                 booking.status = 'cancelled'
+#                                 booking.additional_comments_Venueadmin = f"Cumulative booking cancelled. Reason: {reason}"
+#                                 booking.save(update_fields=['status', 'additional_comments_Venueadmin'])
+#                         except Exception as e:
+#                             print(f"Error updating booking for request {req.request_id}: {e}")
+                        
+#                         # Create rejection record
+#                         Rejection.objects.create(
+#                             request=req,
+#                             user=user,
+#                             reason=f"Cumulative cancellation: {reason}",
+#                             msg=f"Cumulative booking cancelled. Original status: {old_status}",
+#                             feedback_from_admin=reason,
+#                             alternate_venues_suggestion=""
+#                         )
+                        
+#                         cancelled_count += 1
+#                         print(f"Cancelled cumulative request {req.request_id} for date {req.date}")
+                    
+#                     # Also update the main CumulativeRequest status
+#                     try:
+#                         cumulative_req = CumulativeRequest.objects.get(cumulative_request_id=cumulative_request_id)
+#                         cumulative_req.status = 'cancelled'
+#                         cumulative_req.reasons = f"Cumulatively cancelled by admin. Reason: {reason}"
+#                         cumulative_req.reason_to_reject = reason
+#                         cumulative_req.accept = 0
+#                         cumulative_req.save()
+#                         print(f"Updated CumulativeRequest {cumulative_request_id} status to cancelled")
+#                     except CumulativeRequest.DoesNotExist:
+#                         print(f"Warning: CumulativeRequest {cumulative_request_id} not found")
+                    
+#                 else:
+#                     # 🟢 SINGLE BOOKING LOGIC: Cancel all future single bookings for this user+venue
+#                     print("Processing SINGLE booking cancellation (all future bookings for user+venue)...")
+                    
+#                     # Find all future single requests for this user in this venue
+#                     future_requests = Request.objects.filter(
+#                         user=user,
+#                         venue=venue,
+#                         date__gte=today,  # Only future dates
+#                         cumulative_booking=False,  # Only single bookings
+#                     ).exclude(
+#                         status__in=['cancelled', 'rejected', 'user-cancelled']
+#                     )
+                    
+#                     print(f"Found {future_requests.count()} future single requests to cancel")
+                    
+#                     # Cancel all future single requests
+#                     for req in future_requests:
+#                         old_status = req.status
+#                         req.status = 'cancelled'
+#                         req.reasons = f"All future bookings cancelled by admin. Reason: {reason}"
+#                         req.feedback_from_admin = reason
+#                         req.save(update_fields=['status', 'reasons', 'feedback_from_admin'])
+                        
+#                         # Update corresponding booking if it exists
+#                         try:
+#                             if hasattr(req, 'booking'):
+#                                 booking = req.booking
+#                                 booking.status = 'cancelled'
+#                                 booking.additional_comments_Venueadmin = f"All future bookings cancelled. Reason: {reason}"
+#                                 booking.save(update_fields=['status', 'additional_comments_Venueadmin'])
+#                         except Exception as e:
+#                             print(f"Error updating booking for request {req.request_id}: {e}")
+                        
+#                         # Create rejection record
+#                         Rejection.objects.create(
+#                             request=req,
+#                             user=user,
+#                             reason=f"Future bookings cancellation: {reason}",
+#                             msg=f"All future single bookings cancelled. Original status: {old_status}",
+#                             feedback_from_admin=reason,
+#                             alternate_venues_suggestion=""
+#                         )
+                        
+#                         cancelled_count += 1
+#                         print(f"Cancelled single request {req.request_id} for date {req.date}")
+                
+#                 print(f"✅ Successfully cancelled {cancelled_count} requests for user {user.name} in venue {venue.venue_name}")
+            
+#             # Prepare response
+#             booking_type = "cumulative" if is_cumulative_booking else "single"
+#             response_data = {
+#                 'success': True,
+#                 'message': f'Successfully cancelled {cancelled_count} future {booking_type} booking(s) for {user.name}',
+#                 'cancelled_count': cancelled_count,
+#                 'user_name': user.name,
+#                 'venue_name': venue.venue_name,
+#                 'booking_type': booking_type,
+#                 'debug_info': {
+#                     'user_id': str(user.id),
+#                     'venue_id': str(venue.id),
+#                     'reason': reason,
+#                     'reference_booking_id': reference_booking_id,
+#                     'is_cumulative': is_cumulative_booking,
+#                     'cumulative_request_id': str(cumulative_request_id) if cumulative_request_id else None
+#                 }
+#             }
+            
+#             return JsonResponse(response_data)
+            
+#         except Exception as e:
+#             print(f"CUMULATIVE CANCELLATION ERROR: {str(e)}")
+#             import traceback
+#             traceback.print_exc()
+#             return JsonResponse({
+#                 'success': False,
+#                 'message': f'Server error: {str(e)}'
+#             }, status=500)
+
+
+
+
+class CumulativeCancelBookingAPI(View):
+    def post(self, request):
+        print("-------in CumulativeCancelBookingAPI()-------")
+        
+        try:
+            # Parse JSON data from request body
+            data = json.loads(request.body)
+            
+            # Extract data from request
+            user_id = data.get('user_id')
+            venue_id = data.get('venue_id')
+            reason = data.get('reason')
+            reference_booking_id = data.get('reference_booking_id')
+            
+            print("CUMULATIVE CANCELLATION DATA RECEIVED:")
+            print(f"User ID: {user_id}")
+            print(f"Venue ID: {venue_id}")
+            print(f"Reason: {reason}")
+            print(f"Reference Booking ID: {reference_booking_id}")
+            
+            # Get the reference booking to identify user and venue
+            try:
+                reference_booking = Booking.objects.get(booking_id=reference_booking_id)
+                user = reference_booking.user
+                venue = reference_booking.venue
+                
+                # Get the associated request to check if it's cumulative
+                reference_request = reference_booking.request
+                
+            except Booking.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Reference booking not found'
+                }, status=404)
+            
+            # Determine if this is a cumulative booking or single booking
+            is_cumulative_booking = False
+            cumulative_request_id = None
+            
+            if reference_request.cumulative_booking and reference_request.cumulative_request_id:
+                is_cumulative_booking = True
+                cumulative_request_id = reference_request.cumulative_request_id
+                print(f"📅 This is a CUMULATIVE booking (ID: {cumulative_request_id})")
+            else:
+                print("📅 This is a SINGLE booking")
+            
+            # Get today's date for filtering future bookings
+            today = timezone.now().date()
+            
+            cancelled_count = 0
+            cancelled_requests = []  # Store cancelled requests for email
+            
+            with transaction.atomic():
+                if is_cumulative_booking:
+                    # 🟡 CUMULATIVE BOOKING LOGIC: Cancel all related cumulative requests
+                    print("Processing CUMULATIVE cancellation...")
+                    
+                    # Find all requests from the same cumulative booking
+                    cumulative_requests = Request.objects.filter(
+                        cumulative_request_id=cumulative_request_id,
+                        date__gte=today,  # Only future dates
+                    ).exclude(
+                        status__in=['cancelled', 'rejected', 'user-cancelled']
+                    )
+                    
+                    print(f"Found {cumulative_requests.count()} cumulative requests to cancel")
+                    
+                    # Cancel all cumulative requests
+                    for req in cumulative_requests:
+                        old_status = req.status
+                        req.status = 'cancelled'
+                        req.reasons = f"Cumulative booking cancelled by admin. Reason: {reason}"
+                        req.feedback_from_admin = reason
+                        req.save(update_fields=['status', 'reasons', 'feedback_from_admin'])
+                        
+                        # Update corresponding booking if it exists
+                        try:
+                            if hasattr(req, 'booking'):
+                                booking = req.booking
+                                booking.status = 'cancelled'
+                                booking.additional_comments_Venueadmin = f"Cumulative booking cancelled. Reason: {reason}"
+                                booking.save(update_fields=['status', 'additional_comments_Venueadmin'])
+                        except Exception as e:
+                            print(f"Error updating booking for request {req.request_id}: {e}")
+                        
+                        # Create rejection record
+                        Rejection.objects.create(
+                            request=req,
+                            user=user,
+                            reason=f"Cumulative cancellation: {reason}",
+                            msg=f"Cumulative booking cancelled. Original status: {old_status}",
+                            feedback_from_admin=reason,
+                            alternate_venues_suggestion=""
+                        )
+                        
+                        cancelled_count += 1
+                        cancelled_requests.append(req)
+                        print(f"Cancelled cumulative request {req.request_id} for date {req.date}")
+                    
+                    # Also update the main CumulativeRequest status
+                    try:
+                        cumulative_req = CumulativeRequest.objects.get(cumulative_request_id=cumulative_request_id)
+                        cumulative_req.status = 'cancelled'
+                        cumulative_req.reasons = f"Cumulatively cancelled by admin. Reason: {reason}"
+                        cumulative_req.reason_to_reject = reason
+                        cumulative_req.accept = 0
+                        cumulative_req.save()
+                        print(f"Updated CumulativeRequest {cumulative_request_id} status to cancelled")
+                    except CumulativeRequest.DoesNotExist:
+                        print(f"Warning: CumulativeRequest {cumulative_request_id} not found")
+                    
+                else:
+                    # 🟢 SINGLE BOOKING LOGIC: Cancel all future single bookings for this user+venue
+                    print("Processing SINGLE booking cancellation (all future bookings for user+venue)...")
+                    
+                    # Find all future single requests for this user in this venue
+                    future_requests = Request.objects.filter(
+                        user=user,
+                        venue=venue,
+                        date__gte=today,  # Only future dates
+                        cumulative_booking=False,  # Only single bookings
+                    ).exclude(
+                        status__in=['cancelled', 'rejected', 'user-cancelled']
+                    )
+                    
+                    print(f"Found {future_requests.count()} future single requests to cancel")
+                    
+                    # Cancel all future single requests
+                    for req in future_requests:
+                        old_status = req.status
+                        req.status = 'cancelled'
+                        req.reasons = f"All future bookings cancelled by admin. Reason: {reason}"
+                        req.feedback_from_admin = reason
+                        req.save(update_fields=['status', 'reasons', 'feedback_from_admin'])
+                        
+                        # Update corresponding booking if it exists
+                        try:
+                            if hasattr(req, 'booking'):
+                                booking = req.booking
+                                booking.status = 'cancelled'
+                                booking.additional_comments_Venueadmin = f"All future bookings cancelled. Reason: {reason}"
+                                booking.save(update_fields=['status', 'additional_comments_Venueadmin'])
+                        except Exception as e:
+                            print(f"Error updating booking for request {req.request_id}: {e}")
+                        
+                        # Create rejection record
+                        Rejection.objects.create(
+                            request=req,
+                            user=user,
+                            reason=f"Future bookings cancellation: {reason}",
+                            msg=f"All future single bookings cancelled. Original status: {old_status}",
+                            feedback_from_admin=reason,
+                            alternate_venues_suggestion=""
+                        )
+                        
+                        cancelled_count += 1
+                        cancelled_requests.append(req)
+                        print(f"Cancelled single request {req.request_id} for date {req.date}")
+                
+                print(f"✅ Successfully cancelled {cancelled_count} requests for user {user.name} in venue {venue.venue_name}")
+                
+                # Send email notification if any bookings were cancelled
+                if cancelled_count > 0:
+                    try:
+                        self.send_cumulative_cancellation_email(
+                            user, venue, reason, cancelled_count, 
+                            is_cumulative_booking, cancelled_requests
+                        )
+                    except Exception as e:
+                        print(f"Email sending failed but cancellation completed: {e}")
+            
+            # Prepare response
+            booking_type = "cumulative" if is_cumulative_booking else "single"
+            response_data = {
+                'success': True,
+                'message': f'Successfully cancelled {cancelled_count} future {booking_type} booking(s) for {user.name}',
+                'cancelled_count': cancelled_count,
+                'user_name': user.name,
+                'venue_name': venue.venue_name,
+                'booking_type': booking_type,
+                'debug_info': {
+                    'user_id': str(user.id),
+                    'venue_id': str(venue.id),
+                    'reason': reason,
+                    'reference_booking_id': reference_booking_id,
+                    'is_cumulative': is_cumulative_booking,
+                    'cumulative_request_id': str(cumulative_request_id) if cumulative_request_id else None
+                }
+            }
+            
+            return JsonResponse(response_data)
+            
+        except Exception as e:
+            print(f"CUMULATIVE CANCELLATION ERROR: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({
+                'success': False,
+                'message': f'Server error: {str(e)}'
+            }, status=500)
+
+    def send_cumulative_cancellation_email(self, user, venue, reason, cancelled_count, is_cumulative, cancelled_requests):
+        """
+        Send email notification for cumulative cancellation
+        """
+        print('\n\n--------start : send_cumulative_cancellation_email-----------')
+
+        requester_email = user.email
+        if not requester_email:
+            print("Requester email not found.")
+            return
+
+        # Prepare email content based on booking type
+        booking_type = "recurring" if is_cumulative else "future"
+        
+        # Format dates for display
+        dates_text = ""
+        if cancelled_requests:
+            dates_text = "\nCancelled Dates:\n"
+            for req in cancelled_requests[:10]:  # Show first 10 dates
+                dates_text += f"  - {req.date}: {req.time} ({req.duration} hours)\n"
+            
+            if len(cancelled_requests) > 10:
+                dates_text += f"  - ... and {len(cancelled_requests) - 10} more bookings\n"
+
+        # Format time (similar to your reference code)
+        def format_time(time_str):
+            """Format time for display in email"""
+            try:
+                # If time is in decimal format (like 9.5 for 9:30 AM)
+                if '.' in str(time_str):
+                    time_float = float(time_str)
+                    hours = int(time_float)
+                    minutes = int((time_float - hours) * 60)
+                    period = "AM" if hours < 12 else "PM"
+                    hours_12 = hours if hours <= 12 else hours - 12
+                    if hours_12 == 0: hours_12 = 12
+                    return f"{hours_12}:{minutes:02d} {period}"
+                else:
+                    return str(time_str)
+            except:
+                return str(time_str)
+
+        body = f"""
+Dear {user.name},
+
+We regret to inform you that your {booking_type} venue booking(s) have been cancelled by the administrator.
+
+Cancellation Summary:
+- Venue: {venue.venue_name}
+- Number of Bookings Cancelled: {cancelled_count}
+- Cancellation Reason: {reason}
+
+{dates_text}
+
+This action affects all your {booking_type} bookings for this venue. 
+If you believe this is an error or have any questions, please contact the venue administrator.
+
+For any queries, please contact:
+- Email: {venue.dept_incharge_email if hasattr(venue, 'dept_incharge_email') else 'Not available'}
+
+
+Regards,  
+COEP Venue Booking System
+"""
+
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = requester_email
+            msg['Subject'] = f"Venue Booking(s) Cancelled - {venue.venue_name}"
+
+            msg.attach(MIMEText(body, 'plain'))
+
+            # Create secure connection and send email
+            context = ssl.create_default_context()
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls(context=context)
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, requester_email, msg.as_string())
+                print(f"✅ Cancellation email sent to {requester_email}")
+                
+        except Exception as e:
+            print(f"❌ Failed to send cancellation email: {e}")
+            # Don't raise the exception - cancellation should succeed even if email fails
+
+        print('-----end send_cumulative_cancellation_email--------')
+
+    

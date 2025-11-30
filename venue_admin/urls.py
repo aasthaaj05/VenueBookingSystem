@@ -59,6 +59,7 @@ urlpatterns = [
     path('venue-schedule/', views.VenueListView.as_view(), name='venue_schedule'),
     # path('api/bookings/', views.BookingScheduleAPI.as_view(), name='booking_schedule_api'),
     path('bookings/schedule/', views.BookingScheduleAPI.as_view(), name='booking-schedule-api'),
+    path('cumulative_cancel_bookings/', views.CumulativeCancelBookingAPI.as_view(), name='cumulative_cancel_bookings'),
 
 
 ]

@@ -714,6 +714,21 @@
             font-weight: bold;
         }
 
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+            border: none;
+        }
+        
+        .btn-warning:hover {
+            background-color: #c05621; /* Darker shade of warning color */
+            transform: translateY(-2px);
+        }
+        
+        .btn-warning:active {
+            transform: translateY(0);
+        }
+
         /* Add these styles to the existing CSS */
         .reason-dialog {
             display: none;
@@ -946,6 +961,7 @@
             <div class="modal-footer">
                 <button class="btn btn-danger" id="cancel-booking-btn">Cancel</button>
                 <button class="btn btn-outline" id="close-modal-btn">Close</button>
+                <button class="btn btn-warning" id="cumulative-cancel-btn">Cumulative Cancel Booking</button>
                 
             </div>
         </div>
@@ -997,7 +1013,151 @@
                 
                 // Load venues from backend
                 this.loadVenues();
+                
+                // Initialize cumulative cancellation dialog
+                this.initCumulativeCancelDialog();
             }
+
+            initCumulativeCancelDialog() {
+                // Create cumulative cancellation dialog elements dynamically
+                this.createCumulativeCancelDialog();
+                
+                // Event listeners for cumulative cancellation
+                document.getElementById('cumulative-cancel-btn').addEventListener('click', () => this.showCumulativeCancelDialog());
+                document.getElementById('cumulative-cancel-dialog-cancel').addEventListener('click', () => this.hideCumulativeCancelDialog());
+                document.getElementById('cumulative-cancel-dialog-confirm').addEventListener('click', () => this.confirmCumulativeCancellation());
+            }
+
+            createCumulativeCancelDialog() {
+                // Create dialog overlay
+                const cumulativeOverlay = document.createElement('div');
+                cumulativeOverlay.className = 'dialog-overlay';
+                cumulativeOverlay.id = 'cumulative-cancel-dialog-overlay';
+                
+                // Create dialog
+                const cumulativeDialog = document.createElement('div');
+                cumulativeDialog.className = 'reason-dialog';
+                cumulativeDialog.id = 'cumulative-cancel-reason-dialog';
+                cumulativeDialog.innerHTML = `
+                    <h3>Cumulative Cancel Booking</h3>
+                    <p>This will cancel all future bookings for <strong id="cumulative-user-name"></strong> in this venue.</p>
+                    <p>Please provide a reason for cumulative cancellation:</p>
+                    <textarea id="cumulative-cancel-reason" placeholder="Enter reason for cumulative cancellation..."></textarea>
+                    <div class="reason-dialog-buttons">
+                        <button class="btn btn-outline" id="cumulative-cancel-dialog-cancel">Cancel</button>
+                        <button class="btn btn-warning" id="cumulative-cancel-dialog-confirm">Confirm Cumulative Cancellation</button>
+                    </div>
+                `;
+                
+                // Add to DOM
+                document.body.appendChild(cumulativeOverlay);
+                document.body.appendChild(cumulativeDialog);
+            }
+        
+            showCumulativeCancelDialog() {
+                const dialog = document.getElementById('cumulative-cancel-reason-dialog');
+                const overlay = document.getElementById('cumulative-cancel-dialog-overlay');
+                const userNameElement = document.getElementById('cumulative-user-name');
+                
+                // Set the user name in the dialog
+                if (this.currentBooking) {
+                    userNameElement.textContent = this.currentBooking.user_name;
+                }
+                
+                dialog.style.display = 'block';
+                overlay.style.display = 'block';
+                document.getElementById('cumulative-cancel-reason').value = '';
+            }
+        
+            hideCumulativeCancelDialog() {
+                document.getElementById('cumulative-cancel-reason-dialog').style.display = 'none';
+                document.getElementById('cumulative-cancel-dialog-overlay').style.display = 'none';
+            }
+        
+            async confirmCumulativeCancellation() {
+                const reason = document.getElementById('cumulative-cancel-reason').value.trim();
+                
+                if (!reason) {
+                    alert('Please provide a reason for cumulative cancellation.');
+                    return;
+                }
+                
+                if (!this.currentBooking) {
+                    alert('No booking selected.');
+                    return;
+                }
+                
+                try {
+                    // Show loading state
+                    const confirmBtn = document.getElementById('cumulative-cancel-dialog-confirm');
+                    const originalText = confirmBtn.textContent;
+                    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                    confirmBtn.disabled = true;
+                    
+                    // ACTUAL BACKEND CALL
+                    const response = await this.makeCumulativeCancelCall(this.currentBooking, reason);
+                    
+                    if (response.success) {
+                        alert(`Cumulative cancellation successful! ${response.message}`);
+                        this.hideCumulativeCancelDialog();
+                        this.closeModal();
+                        this.loadSchedule(); // Refresh the schedule
+                    } else {
+                        throw new Error(response.message || 'Failed to process cumulative cancellation');
+                    }
+                    
+                } catch (error) {
+                    console.error('Cumulative cancellation failed:', error);
+                    alert('Failed to process cumulative cancellation: ' + error.message);
+                    
+                    // Reset button state
+                    const confirmBtn = document.getElementById('cumulative-cancel-dialog-confirm');
+                    confirmBtn.textContent = 'Confirm Cumulative Cancellation';
+                    confirmBtn.disabled = false;
+                }
+            }
+        
+            // Replace the temporary method with this actual implementation
+            async makeCumulativeCancelCall(booking, reason) {
+                console.log('Making cumulative cancellation call to backend:', {
+                    user_name: booking.user_name,
+                    venue_id: this.selectedVenue,
+                    reason: reason,
+                    reference_booking_id: booking.id
+                });
+                
+                try {
+                    const response = await fetch('/venue_admin/cumulative_cancel_bookings/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': this.getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            // Note: You might need to adjust these field names based on your actual data structure
+                            user_id: booking.user_id || booking.user_name, // Use appropriate user identifier
+                            venue_id: this.selectedVenue,
+                            reason: reason,
+                            reference_booking_id: booking.id
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('Cumulative cancellation response:', result);
+                    return result;
+                    
+                } catch (error) {
+                    console.error('Cumulative cancellation API call failed:', error);
+                    throw error;
+                }
+            }
+            
+
+                
 
             initCancelDialog() {
                 // Get dialog elements
@@ -1489,6 +1649,7 @@
             // Update the showEventDetails method to use the actual data structure from backend
             showEventDetails(event) {
                 const modalBody = document.getElementById('modal-body');
+                
                 const details = event.details;
                 console.log('details', details);
 
@@ -1568,6 +1729,19 @@
                             </span>
                         </p>
                 */
+
+                document.getElementById('booking-modal').classList.add('active');
+
+                // Update button visibility based on booking status
+                const cumulativeCancelBtn = document.getElementById('cumulative-cancel-btn');
+                
+                if (event.details.status === 'cancelled' || event.details.status === 'user-cancelled') {
+                    cancelBtn.style.display = 'none';
+                    cumulativeCancelBtn.style.display = 'none';
+                } else {
+                    cancelBtn.style.display = 'block';
+                    cumulativeCancelBtn.style.display = 'block';
+                }
 
             }
 
