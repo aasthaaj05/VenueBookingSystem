@@ -2077,6 +2077,7 @@ def cumulative_cancel_booking(request):
     return redirect('/request_booking/cumulative_booking_status')
 
 from datetime import datetime, timedelta
+from django.db.models.functions import Lower
 
 def arnav_check_multiple_week_availability_view(request):
     if request.method == 'POST':
@@ -2100,7 +2101,7 @@ def arnav_check_multiple_week_availability_view(request):
             print("End date before start date")
             return []
 
-        venues = Venue.objects.all()
+        venues = Venue.objects.all().order_by(Lower('venue_name'))
         available_venues = []
 
         user = request.user
