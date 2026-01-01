@@ -1051,18 +1051,25 @@
                         <i class="fas fa-calendar-day form-icon"></i>
                     </div>
                     
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            const today = new Date().toISOString().split('T')[0];
-                            document.getElementById('start_date').setAttribute('min', today);
-                        });
-                    </script>
-
                     <div class="form-group">
-                        <label for="num_weeks">Number of Weeks</label>
-                        <input type="number" name="num_weeks" class="form-control" min="1" placeholder="e.g., 4" required>
-                        <i class="fas fa-calendar-week form-icon"></i>
+                        <label for="end_date">End Date</label>
+                        <input type="date" name="end_date" id="end_date" class="form-control" required>
+                        <i class="fas fa-calendar-day form-icon"></i>
                     </div>
+
+                    <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const startInput = document.getElementById('start_date');
+                        const endInput = document.getElementById('end_date');
+
+                        const today = new Date().toISOString().split('T')[0];
+                        startInput.setAttribute('min', today);
+
+                        startInput.addEventListener('change', function() {
+                            endInput.setAttribute('min', startInput.value);
+                        });
+                    });
+                    </script>
                 </div>
 
                 <div class="form-grid">
