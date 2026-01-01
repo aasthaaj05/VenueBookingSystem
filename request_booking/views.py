@@ -995,8 +995,17 @@ def process_booking_multiple(request):
             print('[[[[[[[[[]]]]]]]]]')
             print('[[[[[[[[[]]]]]]]]]')
             #num_weeks = int(request.POST.get("num_weeks", 1))
-            end_date_str = request.POST.get("end_date_str")
-            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+
+            num_weeks_str = request.POST.get("num_weeks")
+
+            if not num_weeks_str:
+                messages.error(request, "Number of weeks is required.")
+                return redirect("request_booking:booking_status")
+
+            num_weeks = int(num_weeks_str)
+
+            end_date = start_date + timedelta(weeks=num_weeks) - timedelta(days=1)
 
             weekdays = request.POST.getlist("weekdays")  # Should be list of strings like ["0", "2", "4"]
 
@@ -1061,8 +1070,6 @@ def process_booking_multiple(request):
             event_type = request.session.get('eventType')
             print('event_type : ', event_type)
 
-
-            # ✅ Create CumulativeRequest entry
             cumulative_req = CumulativeRequest.objects.create(
                 cumulative_request_id=cumulative_request_id,
                 user=user,
