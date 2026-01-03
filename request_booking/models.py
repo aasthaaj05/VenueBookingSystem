@@ -118,7 +118,7 @@ class CumulativeRequest(models.Model):
 
     time = models.CharField(max_length=255)  # Keeping same as your Request model
     duration = models.CharField(max_length=255)
-    num_weeks = models.IntegerField()  # Keeping same as your Request model
+    end_date = models.DateField()  
 
     # venue = models.ForeignKey('Venue', on_delete=models.CASCADE, related_name="cumulative_venue_requests")
     user = models.ForeignKey('users.CustomUser', on_delete=models.CASCADE, related_name="cumulative_requests")
