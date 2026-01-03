@@ -246,6 +246,7 @@ def reject_request(request, request_id):
 
 
 
+'''
 def reject_cumulative_request(request, cumulative_request_id):
     print("-------in reject_cumulative_request()-------")
 
@@ -338,6 +339,90 @@ def reject_cumulative_request(request, cumulative_request_id):
         return redirect('/venue_admin/cumulative_requests')
 
     return redirect('/venue_admin/cumulative_requests')
+'''
+
+
+
+
+
+
+
+def reject_cumulative_request(request, cumulative_request_id):
+    print("-------in reject_cumulative_request()-------")
+
+    if request.method == "POST":
+        print('POST data received in reject_cumulative_request():')
+        for key, value in request.POST.items():
+            print(f"{key}: {value}")
+
+        # Fix: Use consistent field names
+        feedback_reason = request.POST.get("feedbackReason_Admin", "") or request.POST.get("feedback_reason", "No reason provided")
+        feedback_comments = request.POST.get("feedbackComments_Admin", "") or request.POST.get("feedback_comments", "No comments")
+        alternative_options = request.POST.get("alternativeOptions", "") or request.POST.get("alternative_options", "No alternatives suggested")
+        
+        print("Feedback Reason:", feedback_reason)
+        print("Feedback Comments:", feedback_comments)
+        print("Alternative Options:", alternative_options)
+
+        cumulative_req = get_object_or_404(CumulativeRequest, cumulative_request_id=cumulative_request_id)
+        individual_requests = Request.objects.filter(
+            cumulative_request_id=cumulative_request_id,
+            status='pending'  # Only reject pending requests
+        )
+
+        if not individual_requests.exists():
+            messages.error(request, "No pending requests found for this cumulative booking.")
+            return redirect('/venue_admin/cumulative_requests')
+
+        store_rejection_msg = ""
+        first_request = None  # Store the first request for email
+
+        with transaction.atomic():
+            for req in individual_requests:
+                if first_request is None:  # Store the first request
+                    first_request = req
+                    
+                req.status = 'rejected'
+                req.reasons = feedback_reason
+                req.save(update_fields=["status", "reasons"])
+
+                rejection = Rejection.objects.create(
+                    request=req,
+                    user=req.user,
+                    reason=feedback_reason,
+                    msg=f"{feedback_comments}\n\nSuggested Alternatives:\n{alternative_options}".strip(),
+                    feedback_from_admin=feedback_comments,
+                    alternate_venues_suggestion=alternative_options,
+                )
+                store_rejection_msg = rejection.msg
+
+            cumulative_req.status = 'rejected'
+            cumulative_req.reasons = feedback_reason
+            cumulative_req.reason_to_reject = feedback_reason
+            cumulative_req.additional_comments = feedback_comments
+            cumulative_req.suggest_alternate_venues = alternative_options
+            cumulative_req.accept = 0
+            
+            cumulative_req.save()
+
+            # Send rejection email - only if we have a request
+            if first_request:
+                send_cumulative_booking_rejected_email(first_request, cumulative_req, store_rejection_msg)
+            else:
+                print("No request found to send rejection email")
+
+            messages.success(request, "Cumulative booking and all its requests have been rejected.")
+            print("✅ Cumulative booking rejected successfully")
+
+        return redirect('/venue_admin/cumulative_requests')
+
+    return redirect('/venue_admin/cumulative_requests')
+
+
+
+
+
+
 
 
 @api_view(['POST'])
@@ -501,6 +586,26 @@ def clean_multiline(text):
 
 
 
+
+
+
+# Calculate num_weeks dynamically based on start_date and end_date
+def calculate_num_weeks(cr):
+    if hasattr(cr, 'num_weeks') and cr.num_weeks is not None:
+        # If the record already has num_weeks field (old records)
+        return cr.num_weeks
+    elif cr.start_date and cr.end_date:
+        # Calculate from date range (new records)
+        days_difference = (cr.end_date - cr.start_date).days
+        if days_difference > 0:
+            # Calculate weeks: (total_days / 7) rounded up
+            return (days_difference + 6) // 7  # Ceiling division
+    return 1  # Default value
+
+
+
+
+
 def cumulative_request_booking(request): 
     user = request.user
     try:
@@ -563,10 +668,12 @@ def cumulative_request_booking(request):
             'event_type': cr.event_type,
             'dates': dates,  # All dates from individual requests
             'start_date': cr.start_date.strftime('%Y-%m-%d'),
+            'end_date': cr.end_date.strftime('%Y-%m-%d') if cr.end_date else None,  # Add end_date
             'weekdays': weekday_str,  # String representation of weekdays
             'time': float_to_time_str(cr.time),
             'duration': f"{cr.duration}",
-            'num_weeks': cr.num_weeks,
+            # 'num_weeks': cr.num_weeks,
+            'num_weeks': calculate_num_weeks(cr),  # Use the helper function
             'venue': {
                 'venue_name': cr.venue.venue_name if cr.venue else 'Unknown Venue',
                 'capacity': cr.venue.capacity if cr.venue else 'N/A',
@@ -776,6 +883,11 @@ COEP Venue Booking System
     send_booking_accepted_email_to_incharge(req)
     print('\n\n')
 
+
+
+
+
+'''
 def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req,feedback_reason, feedback_comments):
     print('\n--------start : venue_admin_send_cumulative_booking_accepted_email-----------')
     print(req)
@@ -892,11 +1004,168 @@ COEP Venue Booking System
 
     print('--------end : venue_admin_send_cumulative_booking_accepted_email-----------\n')
 
+'''
 
 
 
 
 
+
+
+
+
+
+def venue_admin_send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments):
+    print('\n--------start : venue_admin_send_cumulative_booking_accepted_email-----------')
+    print(req)
+    
+    # Use email from request row directly
+    requester_email = cumulative_req.venue.dept_incharge_email
+    print(' requester_email : ', requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Approved ✅"
+
+    # Handle missing data with defaults
+    full_name = req.full_name or "User"
+    organization = req.organization_name or "N/A"
+    event_type = req.event_type or "N/A"
+    guest_count = req.guest_count or "N/A"
+    additional_info = req.additional_info or "N/A"
+    event_details = req.event_details or "N/A"
+    purpose = req.purpose or "N/A"
+    start_date = cumulative_req.start_date or "N/A"
+    weekdays = cumulative_req.weekdays or "N/A"
+    time = req.time or "N/A"
+    duration = req.duration or "N/A"
+    num_weeks = get_num_weeks(cumulative_req)  # FIXED: Use helper function
+    special_requirements = req.special_requirements or "None"
+    venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    booking_id = req.cumulative_request_id
+    
+    # Add end_date if available
+    end_date = getattr(cumulative_req, 'end_date', "N/A")
+    
+    # Process weekdays to show day names and remove duplicates
+    weekday_names = []
+    if hasattr(cumulative_req, 'weekdays') and cumulative_req.weekdays:
+        weekday_map = {
+            0: "Monday",
+            1: "Tuesday",
+            2: "Wednesday",
+            3: "Thursday",
+            4: "Friday",
+            5: "Saturday",
+            6: "Sunday"
+        }
+        
+        # Convert to list if it's not already (assuming it might be a string or other format)
+        weekdays_data = cumulative_req.weekdays
+        if isinstance(weekdays_data, str):
+            # If it's a string like "0,0,2,2,3,3", split and convert to integers
+            try:
+                weekdays_list = [int(day) for day in weekdays_data.split(',')]
+            except ValueError:
+                weekdays_list = []
+        elif isinstance(weekdays_data, (list, tuple)):
+            try:
+                weekdays_list = [int(day) for day in weekdays_data]
+            except (ValueError, TypeError):
+                weekdays_list = []
+        else:
+            weekdays_list = []
+        
+        # Get unique sorted weekday numbers and map to names
+        unique_weekdays = sorted(set(weekdays_list))
+        weekday_names = [weekday_map.get(day, "Unknown") for day in unique_weekdays]
+    
+    weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
+
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+    
+    # Build email body with end_date if available
+    if end_date != "N/A":
+        date_range_text = f"Date Range: {start_date} to {end_date}"
+    else:
+        date_range_text = f"Start Date: {start_date}"
+
+    body = f"""
+Dear Venue In-charge,
+
+Please be informed that a new venue booking request has been approved and requires your attention for further arrangements.
+
+Here are the details and requirements of the booking:
+
+📌 **Booking ID:** {booking_id}
+- Requester Name: {full_name}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- {date_range_text}
+- Weekdays: {weekdays_display}
+- Time: {formatted_time}
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+Please contact the requester for any clarifications or further arrangements needed to ensure all requirements for the venue are met.
+
+Requester Contact:
+- Email: {req.email}
+- Phone (if available): {getattr(req, 'phone_number', 'N/A')}
+
+Thank you for your cooperation.
+
+Regards,
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking approval email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : venue_admin_send_cumulative_booking_accepted_email-----------\n')
+
+
+
+def get_num_weeks(cumulative_request):
+    """Get number of weeks from cumulative request, handling both old and new records"""
+    # Try to get from num_weeks field if it exists (old records)
+    if hasattr(cumulative_request, 'num_weeks') and cumulative_request.num_weeks is not None:
+        return cumulative_request.num_weeks
+    
+    # Calculate from date range (new records)
+    if hasattr(cumulative_request, 'end_date') and cumulative_request.end_date:
+        if cumulative_request.start_date:
+            days = (cumulative_request.end_date - cumulative_request.start_date).days
+            if days > 0:
+                return (days + 6) // 7  # Ceiling division to get weeks
+    
+    return "N/A"  # Default if can't calculate
+
+
+
+
+'''
 def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments):
     print('\n--------start : send_cumulative_booking_accepted_email-----------')
     print(req)
@@ -1015,7 +1284,140 @@ COEP Venue Booking System
 
     print('--------end : send_booking_accepted_email-----------\n')
 
+'''
 
+
+
+def send_cumulative_booking_accepted_email(req, cumulative_req, feedback_reason, feedback_comments):
+    print('\n--------start : send_cumulative_booking_accepted_email-----------')
+    print(req)
+    
+    # Use email from request row directly
+    requester_email = req.user.email
+    print('requester_email : ', requester_email)
+
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    # Email content
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Approved ✅"
+
+    # Handle missing data with defaults
+    full_name = req.full_name or "User"
+    organization = req.organization_name or "N/A"
+    event_type = req.event_type or "N/A"
+    guest_count = req.guest_count or "N/A"
+    additional_info = req.additional_info or "N/A"
+    event_details = req.event_details or "N/A"
+    purpose = req.purpose or "N/A"
+    start_date = req.date or "N/A"
+    
+    weekdays = cumulative_req.weekdays or "N/A"
+    time = req.time or "N/A"
+    duration = cumulative_req.duration or "N/A"
+    num_weeks = get_num_weeks(cumulative_req)  # FIXED: Use helper function
+    special_requirements = req.special_requirements or "None"
+    venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    booking_id = req.cumulative_request_id
+
+    # Add end_date if available
+    end_date = getattr(cumulative_req, 'end_date', "N/A")
+    
+    # Process weekdays to show day names and remove duplicates
+    weekday_names = []
+    if hasattr(cumulative_req, 'weekdays') and cumulative_req.weekdays:
+        weekday_map = {
+            0: "Monday",
+            1: "Tuesday",
+            2: "Wednesday",
+            3: "Thursday",
+            4: "Friday",
+            5: "Saturday",
+            6: "Sunday"
+        }
+        
+        # Convert to list if it's not already (assuming it might be a string or other format)
+        weekdays_data = cumulative_req.weekdays
+        if isinstance(weekdays_data, str):
+            # If it's a string like "0,0,2,2,3,3", split and convert to integers
+            try:
+                weekdays_list = [int(day) for day in weekdays_data.split(',')]
+            except ValueError:
+                weekdays_list = []
+        elif isinstance(weekdays_data, (list, tuple)):
+            try:
+                weekdays_list = [int(day) for day in weekdays_data]
+            except (ValueError, TypeError):
+                weekdays_list = []
+        else:
+            weekdays_list = []
+        
+        # Get unique sorted weekday numbers and map to names
+        unique_weekdays = sorted(set(weekdays_list))
+        weekday_names = [weekday_map.get(day, "Unknown") for day in unique_weekdays]
+    
+    weekdays_display = ", ".join(weekday_names) if weekday_names else "N/A"
+
+    # ✅ Call formatter here
+    formatted_time = format_time(req.time)
+
+    # Build email body with end_date if available
+    if end_date != "N/A":
+        date_range_text = f"Date Range: {start_date} to {end_date}"
+    else:
+        date_range_text = f"Start Date: {start_date}"
+
+    body = f"""
+Dear {full_name if full_name.strip() else 'Requester'},
+
+Your venue booking request has been approved! 🎉
+
+📌 **Booking Details**
+- Booking ID: {booking_id}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- {date_range_text}
+- Weekdays: {weekdays_display}
+- Time: {formatted_time}
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+💬 **Admin Feedback**
+- Reason: {feedback_reason}
+- Comments: {feedback_comments}
+
+Please ensure to follow all venue rules and be present on time.
+
+For any queries, contact the venue in-charge:
+- Email : {req.venue.dept_incharge_email}
+- Phone Number : {req.venue.dept_incharge_phone}
+
+Regards,  
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    # Send email
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking approval email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : send_booking_accepted_email-----------\n')
 
 
 
@@ -1036,6 +1438,10 @@ def format_weekdays(weekdays_str):
         print(f"Error formatting weekdays: {e}")
         return weekdays_str  # fallback to raw if anything goes wrong
 
+
+
+
+'''
 
 def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
     print('\n--------start : send_cumulative_booking_rejected_email-----------')
@@ -1114,6 +1520,9 @@ def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
     num_weeks = cumulative_req.num_weeks or "N/A"
     print("Number of Weeks:", num_weeks)
 
+
+    
+
     special_requirements = req.special_requirements or "None"
     print("Special Requirements:", special_requirements)
 
@@ -1190,6 +1599,148 @@ COEP Venue Booking System
         print(f"Failed to send email: {e}")
 
     print('--------end : send_cumulative_booking_rejected_email-----------\n')
+
+
+
+'''
+
+
+
+
+def send_cumulative_booking_rejected_email(req, cumulative_req, full_msg):
+    print('\n--------start : send_cumulative_booking_rejected_email-----------')
+    
+    # Check if req is None
+    if req is None:
+        print("Request object is None, using only cumulative request data")
+        # Use cumulative_req data only
+        requester_email = cumulative_req.email
+        if not requester_email:
+            print("Requester email not found in cumulative request.")
+            return
+    else:
+        requester_email = cumulative_req.email or req.email
+    
+    if not requester_email:
+        print("Requester email not found.")
+        return
+
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = requester_email
+    msg['Subject'] = "Venue Booking Rejected ❌"
+
+    # Helper function to get num_weeks
+    def get_num_weeks(cumulative_req):
+        if hasattr(cumulative_req, 'num_weeks') and cumulative_req.num_weeks is not None:
+            return cumulative_req.num_weeks
+        if hasattr(cumulative_req, 'end_date') and cumulative_req.end_date and cumulative_req.start_date:
+            days = (cumulative_req.end_date - cumulative_req.start_date).days
+            if days > 0:
+                return (days + 6) // 7
+        return "N/A"
+
+    # Handle missing data with defaults - check if req is not None
+    if req:
+        full_name = req.full_name or cumulative_req.full_name or "User"
+        organization = req.organization_name or cumulative_req.organization_name or "N/A"
+        event_type = req.event_type or cumulative_req.event_type or "N/A"
+        guest_count = req.guest_count or cumulative_req.guest_count or "N/A"
+        event_details = req.event_details or cumulative_req.event_details or "N/A"
+        purpose = req.purpose or cumulative_req.purpose or "N/A"
+        time = req.time or "N/A"
+        formatted_time = format_time(req.time) if req.time else "N/A"
+        special_requirements = req.special_requirements or "None"
+        venue_name = req.venue.venue_name if hasattr(req, 'venue') else "Unknown Venue"
+    else:
+        # Use only cumulative request data
+        full_name = cumulative_req.full_name or "User"
+        organization = cumulative_req.organization_name or "N/A"
+        event_type = cumulative_req.event_type or "N/A"
+        guest_count = cumulative_req.guest_count or "N/A"
+        event_details = cumulative_req.event_details or "N/A"
+        purpose = cumulative_req.purpose or "N/A"
+        time = "N/A"
+        formatted_time = "N/A"
+        special_requirements = "None"
+        venue_name = cumulative_req.venue.venue_name if cumulative_req.venue else "Unknown Venue"
+    
+    start_date = cumulative_req.start_date or "N/A"
+    end_date = getattr(cumulative_req, 'end_date', "N/A")
+    
+    # Build date display
+    if end_date != "N/A" and start_date != "N/A":
+        date_display = f"Date Range: {start_date} to {end_date}"
+    else:
+        date_display = f"Start Date: {start_date}"
+    
+    raw_weekdays = cumulative_req.weekdays or "N/A"
+    weekdays = format_weekdays(raw_weekdays)
+    
+    duration = cumulative_req.duration or "N/A"
+    num_weeks = get_num_weeks(cumulative_req)
+    
+    booking_id = req.cumulative_request_id if req else cumulative_req.cumulative_request_id
+    
+    reason_to_reject = cumulative_req.reason_to_reject or "N/A"
+    additional_comments = cumulative_req.additional_comments or "N/A"
+    suggest_alternate_venues = cumulative_req.suggest_alternate_venues or "N/A"
+
+    # Include full_msg only if it's not '2' and not None
+    if full_msg and full_msg != '2':
+        full_msg_section = f"\n📢 Message-\n{full_msg}\n\n"
+    else:
+        full_msg_section = f"- Reason to reject : {reason_to_reject} \n" \
+                          f"- Additional Comments : {additional_comments} \n" \
+                          f"- Suggested Venue : {suggest_alternate_venues}\n\n"
+
+    body = f"""
+Dear {full_name if full_name.strip() else 'Requester'},
+
+We regret to inform you that your venue booking request has been rejected.
+
+📌 **Request Details**
+- Booking ID: {booking_id}
+- Organization: {organization}
+- Event Type: {event_type}
+- Guest Count: {guest_count}
+- Event Details: {event_details}
+- Purpose: {purpose}
+- {date_display}
+- Weekdays: {weekdays}
+- Time: {formatted_time}
+- Duration: {duration} hour(s)
+- Number of Weeks: {num_weeks}
+- Special Requirements: {special_requirements}
+- Venue: {venue_name}
+
+💬 **Admin Feedback**
+{full_msg_section}
+If you believe this was a mistake or you have further queries, feel free to reach out to the venue in-charge.
+
+Regards,  
+COEP Venue Booking System
+    """
+
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        with smtplib.SMTP(smtp_server, smtp_port) as server:
+            server.starttls()
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        print(f"Booking rejection email sent to {requester_email}")
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+
+    print('--------end : send_cumulative_booking_rejected_email-----------\n')
+    
+
+
+
+
+
+
 
 
 

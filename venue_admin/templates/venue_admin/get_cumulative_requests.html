@@ -778,7 +778,8 @@
                                         '{{ cumulative_request.start_date }}',
                                         '{{ cumulative_request.weekdays }}',
                                         '{{ cumulative_request.num_weeks }}',
-                                        '{{ cumulative_request.user.organization_name }}'
+                                        '{{ cumulative_request.user.organization_name }}',
+                                        '{{ cumulative_request.end_date }}'
                                     )">
                                         <i class="fas fa-eye"></i> View
                                     </button>
@@ -942,7 +943,7 @@
         let currentRequestId = null;
         let currentActionType = null;
 
-        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements, need, start_date , week_days, num_weeks, organization_name) {
+        function showBookingDetails(requestId, name, email, phone, venue, date, time, duration, eventDetails, eventType, expectedCrowd, additionalInfo, special_requirements, need, start_date , week_days, num_weeks, organization_name , end_date) {
             currentRequestId = requestId;
 
             console.log('special_requirements...',special_requirements)
@@ -981,6 +982,10 @@
                 <div class="detail-group">
                     <div class="detail-label"><i class="fas fa-map-marker-alt"></i> Number of Weeks</div>
                     <div class="detail-value">${num_weeks} weeks</div>
+                </div>
+                <div class="detail-group">
+                    <div class="detail-label"><i class="fas fa-map-marker-alt"></i> End Date</div>
+                    <div class="detail-value">${end_date}</div>
                 </div>
                 <div class="detail-group">
                     <div class="detail-label"><i class="far fa-clock"></i> Dates</div>
