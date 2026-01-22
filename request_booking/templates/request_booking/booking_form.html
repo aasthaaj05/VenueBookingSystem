@@ -884,7 +884,7 @@
                     </div>
                 </div>
                 
-                <div class="form-section">
+                {% comment %} <div class="form-section">
                     <h3 class="form-section-title"><i class="fas fa-exchange-alt"></i> Alternate Venues</h3>
                     
                     <div class="form-group">
@@ -905,14 +905,14 @@
                                 <option value="{{ venue.id }}">{{ venue.venue_name }}</option>
                             {% endfor %}
                         </select>
-                    </div>
+                    </div> {% endcomment %}
                     
                     {% comment %} <div class="checkbox-group">
                         <input type="checkbox" id="flexibleDates" name="flexibleDates" class="checkbox-input">
                         <span class="checkbox-custom"></span>
                         <label for="flexibleDates" class="checkbox-label">I'm flexible with alternate Venues if Venue isnt available</label>
                     </div>  {% endcomment %}
-                    <div class="checkbox-group">
+                    {% comment %} <div class="checkbox-group">
                         <label for="flexibleDates" class="checkbox-label">
                           <input type="checkbox" id="flexibleDates" name="flexibleDates" class="checkbox-input">
                           <span class="checkbox-custom"></span>
@@ -920,7 +920,7 @@
                         </label>
                       </div> 
                     
-                </div>  
+                </div>   {% endcomment %}
                 
                 <div class="form-section" style="grid-column: 1 / -1;">
                     <h3 class="form-section-title"><i class="fas fa-info-circle"></i> Event Details</h3>
