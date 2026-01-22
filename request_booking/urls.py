@@ -19,7 +19,7 @@ urlpatterns = [
     path('book/', views.book_venue, name='book_venue'),
 
     path('user_dashboard/<str:building_name>/', views.user_dashboard, name='user_dashboard'),
-
+    path('process-multiple-venue-booking/', views.process_multiple_venue_booking, name='process_multiple_venue_booking'),
 
     path(
         'request_multiple/',

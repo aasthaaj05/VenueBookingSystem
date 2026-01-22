@@ -2668,7 +2668,7 @@ class RequestMultipleWeekAvailabilityView(View):
             value = request.session.get(key)
             print(f"{key}: {value} | type: {type(value)}")
 
-        return render(request, 'request_booking/book_multiple_venues.html', {
+        return render(request, 'request_booking/select_multiple_venues.html', {
             "venues": formatted_venues,
             'eventType': request.session.get('eventType'),
             'fullName': request.session.get('fullName'),
@@ -2862,6 +2862,207 @@ def edit_booking(request):
     # If not POST request
     return redirect('faculty_advisor:home')
 
+from django.contrib.auth.decorators import login_required
+@login_required
+def process_multiple_venue_booking(request):
+    """
+    Process booking for multiple venues across multiple weeks
+    """
+    print('---process_multiple_venue_booking---\n\n\n')
+    if request.method == "POST":
+        print('---POST process_multiple_venue_booking---\n\n\n')
+        
+        user = request.user
+        print(f"User: {user}")
 
-
-
+        try:
+            # Get selected venue IDs (now multiple)
+            venue_ids = request.POST.getlist("selected_venues")
+            
+            if not venue_ids:
+                messages.error(request, "Please select at least one venue.")
+                return redirect("request_booking:request_multiple_week_availability_view")
+            
+            # Get form data from session (stored from the first form)
+            event_type = request.session.get('eventType')
+            full_name = request.session.get('fullName')
+            email = request.session.get('email', user.email)
+            organization_name = request.session.get('organization_name')
+            start_date_str = request.session.get('start_date')
+            end_date_str = request.session.get('end_date')
+            start_time_str = request.session.get('start_time')
+            end_time_str = request.session.get('end_time')
+            phone_number = request.session.get('phone')
+            guest_count = request.session.get('guestCount')
+            event_details = request.session.get('eventDetails')
+            purpose = request.session.get('purpose', "")
+            special_requirements = request.session.get('specialRequirements', "")
+            
+            # Parse dates and times
+            start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+            end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+            
+            if end_date < start_date:
+                messages.error(request, "End date cannot be before start date.")
+                return redirect("request_booking:booking_status")
+            
+            weekdays = request.session.get('weekdays', [])
+            weekdays = sorted([int(day) for day in weekdays])
+            
+            # Time parsing
+            start_time = time_str_to_float(start_time_str)
+            end_time = time_str_to_float(end_time_str)
+            duration = end_time - start_time
+            
+            # Create a mapping from day names to numbers
+            DAY_TO_NUM = {
+                'Monday': 0,
+                'Tuesday': 1,
+                'Wednesday': 2,
+                'Thursday': 3,
+                'Friday': 4,
+                'Saturday': 5,
+                'Sunday': 6
+            }
+            NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
+            weekday_names = tuple([NUM_TO_DAY[num] for num in weekdays])
+            
+            total_bookings_created = 0
+            total_days = (end_date - start_date).days + 1
+            
+            # Process each selected venue
+            for venue_id in venue_ids:
+                try:
+                    venue = Venue.objects.get(id=venue_id)
+                    
+                    # Generate a unique cumulative request ID for this venue
+                    cumulative_request_id = uuid.uuid4()
+                    
+                    # Create cumulative request for this venue
+                    cumulative_req = CumulativeRequest.objects.create(
+                        cumulative_request_id=cumulative_request_id,
+                        user=user,
+                        full_name=full_name,
+                        email=email,
+                        phone_number=phone_number,
+                        organization_name=organization_name,
+                        event_type=event_type,
+                        guest_count=guest_count,
+                        event_details=event_details,
+                        purpose=purpose,
+                        special_requirements=special_requirements,
+                        venue=venue,
+                        start_date=start_date,
+                        end_date=end_date,
+                        weekdays=",".join([str(day) for day in weekdays]),
+                        time=start_time,
+                        duration=duration,
+                        status='waiting_for_approval'
+                    )
+                    
+                    venue_bookings_created = 0
+                    current_date = start_date
+                    
+                    # Create individual requests for each matching day
+                    while current_date <= end_date:
+                        if current_date.weekday() in weekdays:
+                            new_req = Request.objects.create(
+                                user=user,
+                                email=email,
+                                phone_number=phone_number,
+                                full_name=full_name,
+                                organization_name=organization_name,
+                                event_type=event_type,
+                                guest_count=guest_count,
+                                additional_info=purpose,
+                                date=current_date,
+                                time=start_time,
+                                duration=duration,
+                                venue=venue,
+                                need=organization_name,
+                                alternate_venue_1=None,
+                                alternate_venue_2=None,
+                                event_details=event_details,
+                                special_requirements=special_requirements,
+                                status='pending',
+                                cumulative_booking=True,
+                                cumulative_request_id=cumulative_request_id
+                            )
+                            
+                            print(f"Created request for {venue.venue_name} on {current_date}")
+                            venue_bookings_created += 1
+                        
+                        current_date += timedelta(days=1)
+                    
+                    # Send confirmation emails for this venue
+                    try:
+                        cumulative_send_confirmation_email_to_requester(
+                            email=email,
+                            full_name=full_name,
+                            venue_obj=venue,
+                            event_type=event_type,
+                            purpose=purpose,
+                            start_date=start_date,
+                            end_date=end_date,
+                            start_time=start_time,
+                            booking_duration=duration,
+                            weekdays=weekday_names,
+                            total_days=venue_bookings_created
+                        )
+                    except Exception as e:
+                        print(f"Failed to send confirmation email for {venue.venue_name}: {e}")
+                    
+                    try:
+                        cumulative_send_booking_request_email_to_admin(
+                            email=venue.venue_admin,
+                            full_name=full_name,
+                            venue_obj=venue,
+                            event_type=event_type,
+                            purpose=purpose,
+                            start_date=start_date,
+                            end_date=end_date,
+                            start_time=start_time,
+                            booking_duration=duration,
+                            weekdays=weekday_names,
+                            total_days=venue_bookings_created
+                        )
+                    except Exception as e:
+                        print(f"Failed to send admin notification for {venue.venue_name}: {e}")
+                    
+                    total_bookings_created += venue_bookings_created
+                    print(f"Created {venue_bookings_created} bookings for {venue.venue_name}")
+                    
+                except Venue.DoesNotExist:
+                    print(f"Venue with ID {venue_id} not found.")
+                    continue
+                except Exception as e:
+                    print(f"Error processing venue {venue_id}: {e}")
+                    continue
+            
+            if total_bookings_created > 0:
+                messages.success(
+                    request, 
+                    f"Successfully created {total_bookings_created} booking request(s) across {len(venue_ids)} venue(s)!"
+                )
+            else:
+                messages.warning(request, "No bookings were created. Please check availability.")
+            
+            # Clear session data
+            session_keys = [
+                'eventType', 'fullName', 'email', 'organization_name',
+                'start_date', 'end_date', 'start_time', 'end_time',
+                'weekdays', 'phone', 'guestCount', 'eventDetails',
+                'purpose', 'specialRequirements', 'terms'
+            ]
+            for key in session_keys:
+                request.session.pop(key, None)
+            
+            return redirect("faculty_advisor:home")
+            
+        except Exception as e:
+            print(f"Error in process_multiple_venue_booking: {e}")
+            traceback.print_exc()
+            messages.error(request, "An error occurred while processing your booking.")
+            return redirect("request_booking:booking_status")
+    
+    return redirect("request_booking:request_multiple_week_availability_view")
