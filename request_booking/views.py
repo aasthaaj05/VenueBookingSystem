@@ -427,24 +427,19 @@ from django.http import HttpResponseNotAllowed
 from django.shortcuts import render
 from gymkhana.models import Venue
 
+from django.http import HttpResponseNotAllowed
+from django.shortcuts import render
+from gymkhana.models import Venue
+from django.db.models.functions import Lower
+from django.db.models.functions import Lower
+
 def user_dashboard(request, building_name=None):  # Accept building_name
     if request.method == "GET":
         print("Inside user_dashboard view")
         print("Building Name:", building_name)  # Debugging output
 
-        # # Retrieve stored venue slot availability from the session
-        # all_slots = request.session.get('all_slots', {})
-        # print(all_slots)
-
-        # Extract venue names from all_slots
-        # venue_names = all_slots.keys()
-
-        # Fetch venues from the database filtered by building_name
-        # venues = Venue.objects.filter(venue_name__in=venue_names)
-        # print('venues : ' , venues)
-
-        # Fetch all venues from the database
-        venues = Venue.objects.all()
+        # Fetch all venues from the database and sort alphabetically by venue_name
+        venues = Venue.objects.all().order_by(Lower('venue_name'))  
 
         if building_name:
             venues = venues.filter(building__name=building_name)  # ✅ Correct field reference
@@ -470,7 +465,6 @@ def user_dashboard(request, building_name=None):  # Accept building_name
         })
 
     return HttpResponseNotAllowed(['GET'])
-
 
 
 
