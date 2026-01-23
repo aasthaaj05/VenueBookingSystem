@@ -20,8 +20,11 @@
             --accent-color: #47b2e4;
             --success-color: #48bb78;
             --error-color: #f56565;
+            --warning-color: #ff9800;
             --light-bg: #f8f9fa;
             --dark-text: #2d3748;
+            --secondary-600: #757575;
+            --secondary-700: #616161;
             --box-shadow: 0 10px 30px rgba(55, 81, 126, 0.1);
         }
 
@@ -336,6 +339,14 @@
     <div class="container">
         <div class="header1">Select Venues for Booking</div>
         <p class="subtitle">Choose one or more venues for your multi-week booking</p>
+        
+        {% if matching_dates_info %}
+        <div class="alert alert-info" style="max-width: 800px; margin: 0 auto 2rem; padding: 1rem; background: #e3f2fd; border-left: 4px solid var(--accent-color); border-radius: 8px;">
+            <i class="fas fa-calendar-check"></i>
+            <strong>{{ matching_dates_count }} matching date(s) found:</strong>
+            You selected {{ selected_weekdays }} between {{ start_date }} and {{ end_date }}
+        </div>
+        {% endif %}
 
         {% if venues %}
         <!-- Selection Controls -->
@@ -416,9 +427,36 @@
 
         {% else %}
         <div class="empty-state">
+            {% if no_matching_dates %}
+            <i class="fas fa-exclamation-triangle" style="color: var(--warning-color);"></i>
+            <h3>No Matching Days Found</h3>
+            <p style="color: var(--error-color); font-size: 1.1rem; margin: 1rem 0;">
+                The days you selected ({{ selected_weekdays }}) are not available between 
+                <strong>{{ start_date }}</strong> and <strong>{{ end_date }}</strong>.
+            </p>
+            <p style="color: var(--secondary-600); margin-top: 1rem;">
+                Please go back and either:
+            </p>
+            <ul style="text-align: left; display: inline-block; margin: 1rem auto; color: var(--secondary-700);">
+                <li>Select different days that fall within your date range, or</li>
+                <li>Extend your date range to include the days you want</li>
+            </ul>
+            <a href="{% url 'request_booking:request_multiple_week_availability_view' %}" 
+               style="display: inline-block; margin-top: 1.5rem; padding: 0.75rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 50px; transition: all 0.3s;">
+                <i class="fas fa-arrow-left"></i> Go Back & Adjust Selection
+            </a>
+            {% else %}
             <i class="fas fa-calendar-times"></i>
             <h3>No Available Venues</h3>
             <p>Unfortunately, no venues are available for the selected dates and times.</p>
+            <p style="color: var(--secondary-600); margin-top: 1rem;">
+                All venues are already booked for {{ matching_dates_count }} matching day(s) in your selected range.
+            </p>
+            <a href="{% url 'request_booking:request_multiple_week_availability_view' %}" 
+               style="display: inline-block; margin-top: 1.5rem; padding: 0.75rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 50px; transition: all 0.3s;">
+                <i class="fas fa-arrow-left"></i> Try Different Dates
+            </a>
+            {% endif %}
         </div>
         {% endif %}
     </div>

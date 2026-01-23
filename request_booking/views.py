@@ -1402,7 +1402,7 @@ def process_booking_multiple(request):
             email = request.POST.get("email", user.email)
             organization_name = request.POST.get("organization_name")
             start_date_str = request.POST.get("start_date_str")
-            end_date_str = request.POST.get("end_date")  # Get end_date from POST
+            end_date_str = request.POST.get("end_date")
             start_time_str = request.POST.get("start_time_str")
             end_time_str = request.POST.get("end_time_str")
             phone_number = request.POST.get("phone_number")
@@ -1410,8 +1410,6 @@ def process_booking_multiple(request):
             event_details = request.POST.get("event_details")
             purpose = request.POST.get("purpose", "")
             special_requirements = request.POST.get("special_requirements", "")
-            
-            print('[[[[[[[[[]]]]]]]]]')
             
             # Parse dates
             start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
@@ -1428,57 +1426,52 @@ def process_booking_multiple(request):
                 return redirect("request_booking:booking_status")
 
             weekdays = request.POST.getlist("weekdays")
-
-            print('venue.dept_incharge_email : ', venue.dept_incharge_email)
-
-            # Print form data and types
-            print("Form Data and Types:")
-            print(f"venue_id: {venue_id} (type: {type(venue_id).__name__})")
-            print(f"start_date: {start_date} (type: {type(start_date).__name__})")
-            print(f"end_date: {end_date} (type: {type(end_date).__name__})")
-            print(f"Duration in days: {(end_date - start_date).days + 1} days")
-            print(f"Event type: {event_type} (type: {type(event_type).__name__})")
-            print(f"full_name: {full_name} (type: {type(full_name).__name__})")
-            print(f"email: {email} (type: {type(email).__name__})")
-            print(f"organization_name: {organization_name} (type: {type(organization_name).__name__})")
-            print(f"start_time_str: {start_time_str} (type: {type(start_time_str).__name__})")
-            print(f"end_time_str: {end_time_str} (type: {type(end_time_str).__name__})")
-            print(f"phone_number: {phone_number} (type: {type(phone_number).__name__})")
-            print(f"guest_count: {guest_count} (type: {type(guest_count).__name__})")
-            print(f"event_details: {event_details} (type: {type(event_details).__name__})")
-            print(f"purpose: {purpose} (type: {type(purpose).__name__})")
-            print(f"special_requirements: {special_requirements} (type: {type(special_requirements).__name__})")
-            print(f"weekdays: {weekdays} (type: {type(weekdays).__name__})")
-
-            print()
-            print()
-            print()
-
-            print(f"weekdays (raw): {weekdays}")
             weekdays = sorted([int(day) for day in weekdays])
-            print(f"Parsed weekdays: {weekdays}")
+            
+            # ✅ Find all matching dates in the range
+            matching_dates = []
+            check_date = start_date
+            while check_date <= end_date:
+                if check_date.weekday() in weekdays:
+                    matching_dates.append(check_date)
+                check_date += timedelta(days=1)
+            
+            # ✅ Validate that there are matching dates
+            if not matching_dates:
+                DAY_TO_NUM = {
+                    'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+                    'Friday': 4, 'Saturday': 5, 'Sunday': 6
+                }
+                NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
+                selected_days = ', '.join([NUM_TO_DAY[day] for day in weekdays])
+                messages.error(
+                    request, 
+                    f"No {selected_days} found between {start_date.strftime('%b %d, %Y')} and {end_date.strftime('%b %d, %Y')}. "
+                    f"Please select a date range that includes these days."
+                )
+                return redirect("request_booking:booking_status")
+
+            print(f"Matching dates found: {len(matching_dates)}")
+            print(f"Dates: {[d.strftime('%Y-%m-%d (%A)') for d in matching_dates]}")
 
             # Time parsing
             start_time = time_str_to_float(start_time_str)
-            print('start_time', start_time)
             end_time = time_str_to_float(end_time_str)
-            print('end_time', end_time)
             duration = end_time - start_time
-            print('duration', duration)
 
-            created_count = 0
+            # Create a mapping from day names to numbers
+            DAY_TO_NUM = {
+                'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
+                'Friday': 4, 'Saturday': 5, 'Sunday': 6
+            }
+            NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
+            weekday_names = tuple([NUM_TO_DAY[num] for num in weekdays])
 
             # Generate a unique cumulative request ID
             cumulative_request_id = uuid.uuid4()
 
-            # Get event_type from session if not in POST
             if not event_type:
                 event_type = request.session.get('eventType')
-            print('event_type : ', event_type)
-
-            # Calculate number of weeks (for information only, not used in date calculation)
-            days_diff = (end_date - start_date).days + 1
-            num_weeks_info = days_diff / 7  # For informational purposes only
 
             cumulative_req = CumulativeRequest.objects.create(
                 cumulative_request_id=cumulative_request_id,
@@ -1494,71 +1487,45 @@ def process_booking_multiple(request):
                 special_requirements=special_requirements,
                 venue=venue,
                 start_date=start_date,
-                end_date=end_date,               
+                end_date=end_date,
                 weekdays=",".join([str(day) for day in weekdays]),
                 time=start_time,
                 duration=duration,
                 status='waiting_for_approval'
             )
-            
-            # Create a mapping from day names to numbers (Monday=0)
-            DAY_TO_NUM = {
-                'Monday': 0,
-                'Tuesday': 1,
-                'Wednesday': 2,
-                'Thursday': 3,
-                'Friday': 4,
-                'Saturday': 5,
-                'Sunday': 6
-            }
 
-            weekdays = list(dict.fromkeys(weekdays))  # Removes duplicates while preserving order
+            weekdays = list(dict.fromkeys(weekdays))  # Remove duplicates
+            created_count = 0
 
-            current_date = start_date
-            mail_start_time = start_time
-            mail_duration = duration
+            # ✅ Create requests for each matching date
+            for current_date in matching_dates:
+                new_req = Request.objects.create(
+                    user=user,
+                    email=email,
+                    phone_number=phone_number,
+                    full_name=full_name,
+                    organization_name=organization_name,
+                    event_type=event_type,
+                    guest_count=guest_count,
+                    additional_info=purpose,
+                    date=current_date,
+                    time=start_time,
+                    duration=duration,
+                    venue=venue,
+                    need=organization_name,
+                    alternate_venue_1=None,
+                    alternate_venue_2=None,
+                    event_details=event_details,
+                    special_requirements=special_requirements,
+                    status='pending',
+                    cumulative_booking=True,
+                    cumulative_request_id=cumulative_request_id
+                )
 
-            while current_date <= end_date:
-                if current_date.weekday() in weekdays:
-                    new_req = Request.objects.create(
-                        user=user,
-                        email=email,
-                        phone_number=phone_number,
-                        full_name=full_name,
-                        organization_name=organization_name,
-                        event_type=event_type,
-                        guest_count=guest_count,
-                        additional_info=purpose,
-                        date=current_date,
-                        time=start_time,
-                        duration=duration,
-                        venue=venue,
-                        need=organization_name,
-                        alternate_venue_1=None,
-                        alternate_venue_2=None,
-                        event_details=event_details,
-                        special_requirements=special_requirements,
-                        status='pending',
-                        cumulative_booking=True,
-                        cumulative_request_id=cumulative_request_id
-                    )
+                print(f"✅ Created request for {current_date.strftime('%Y-%m-%d (%A)')}")
+                created_count += 1
 
-                    print(f"Created request for {current_date}")
-                    created_count += 1
-
-                current_date += timedelta(days=1)
-
-            # Reverse the dictionary: from {0: 'Monday', 1: 'Tuesday', ...}
-            NUM_TO_DAY = {v: k for k, v in DAY_TO_NUM.items()}
-            weekday_names = tuple([NUM_TO_DAY[num] for num in weekdays])
-
-            print("Parsed weekday names:", weekday_names)
-
-            # Calculate total weeks spanned for email info
-            total_days = (end_date - start_date).days + 1
-            total_weeks_span = total_days / 7
-
-            '''
+            # Send emails
             try:
                 cumulative_send_confirmation_email_to_requester(
                     email=email,
@@ -1567,11 +1534,11 @@ def process_booking_multiple(request):
                     event_type=event_type,
                     purpose=purpose,
                     start_date=start_date,
-                    # end_date=end_date,
-                    start_time=mail_start_time,
-                    booking_duration=mail_duration,
+                    end_date=end_date,
+                    start_time=start_time,
+                    booking_duration=duration,
                     weekdays=weekday_names,
-                    # total_days=total_days
+                    total_days=created_count
                 )
             except Exception as e:
                 print(f"Failed to send confirmation email to requester: {e}")
@@ -1585,55 +1552,18 @@ def process_booking_multiple(request):
                     purpose=purpose,
                     start_date=start_date,
                     end_date=end_date,
-                    start_time=mail_start_time,
-                    booking_duration=mail_duration,
+                    start_time=start_time,
+                    booking_duration=duration,
                     weekdays=weekday_names,
-                    # total_days=total_days
+                    total_days=created_count
                 )
             except Exception as e:
-                print(f"Failed to send confirmation email to requester: {e}")
-            '''
-
-            # In your views.py, update the function calls:
-
-            try:
-                cumulative_send_confirmation_email_to_requester(
-                    email=email,
-                    full_name=full_name,
-                    venue_obj=venue,
-                    event_type=event_type,
-                    purpose=purpose,
-                    start_date=start_date,
-                    end_date=end_date,  # Add this
-                    start_time=mail_start_time,
-                    booking_duration=mail_duration,
-                    weekdays=weekday_names,
-                    total_days=total_days  # Add this
-                )
-            except Exception as e:
-                print(f"Failed to send confirmation email to requester: {e}")
-
-            try:
-                cumulative_send_booking_request_email_to_admin(
-                    email=venue.venue_admin,
-                    full_name=full_name,
-                    venue_obj=venue,
-                    event_type=event_type,
-                    purpose=purpose,
-                    start_date=start_date,
-                    end_date=end_date,  # Add this
-                    start_time=mail_start_time,
-                    booking_duration=mail_duration,
-                    weekdays=weekday_names,  # This should be weekday_names from NUM_TO_DAY
-                    total_days=total_days  # Add this
-                )
-            except Exception as e:
-                print(f"Failed to send confirmation email to requester: {e}")
+                print(f"Failed to send confirmation email to admin: {e}")
 
             if created_count:
                 messages.success(request, f"{created_count} booking request(s) submitted successfully!")
             else:
-                messages.warning(request, "No requests were created (conflicts or duplicates).")
+                messages.warning(request, "No requests were created.")
 
             return redirect("faculty_advisor:home")
 
@@ -1643,11 +1573,15 @@ def process_booking_multiple(request):
         except ValueError as ve:
             print(f"ValueError: {ve}")
             messages.error(request, "Invalid input. Please check your form.")
+        except Exception as e:
+            print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, "An error occurred while processing your request.")
 
         return redirect("request_booking:booking_status")
     else:
         venues = Venue.objects.all()
-        print("heherer ewrewrhewjwhrjwh in request multiple")
         return render(request, "request_booking/check_multiple_week_avail.html", {"venues": venues})
 
 
@@ -1670,7 +1604,6 @@ from django.shortcuts import render
 def check_multiple_week_availability_view(request):
     if request.method == 'POST':
         try:
-            # num_weeks = int(request.POST.get("num_weeks"))
             start_date_str = request.POST.get("start_date")
             end_date_str = request.POST.get("end_date")
             weekdays = request.POST.getlist("weekdays")
@@ -1686,61 +1619,73 @@ def check_multiple_week_availability_view(request):
                     "message": "End date cannot be before start date"
                 }, status=400)
 
-            venues = Venue.objects.all()
+            # ✅ First, find all matching dates in the range
+            matching_dates = []
+            check_date = start_date
+            while check_date <= end_date:
+                if check_date.weekday() in weekdays:
+                    matching_dates.append(check_date)
+                check_date += timedelta(days=1)
+
+            # ✅ Validate that there are matching dates
+            if not matching_dates:
+                weekday_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+                selected_days = ', '.join([weekday_names[day] for day in weekdays])
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"No {selected_days} found between {start_date.strftime('%b %d, %Y')} and {end_date.strftime('%b %d, %Y')}. Please select a date range that includes these days."
+                }, status=400)
+
+            venues = Venue.objects.all().order_by(Lower('venue_name'))
             available_venues = []
 
             user = request.user
 
             start_time_str = request.POST.get("start_time")
             end_time_str = request.POST.get("end_time")
+            phone_number = request.POST.get("phone")
+            guest_count = request.POST.get("guestCount")
+            event_details = request.POST.get("eventDetails")
+            purpose = request.POST.get("purpose", "")
+            special_requirements = request.POST.get("specialRequirements", "")
 
-            start_hour = datetime.strptime(start_time_str, "%H:%M").time().hour
-            end_hour = datetime.strptime(end_time_str, "%H:%M").time().hour
-            duration = end_hour - start_hour
+            start_hour = float(start_time_str)
+            end_hour = float(end_time_str)
+            duration = float(end_hour - start_hour)
 
             # Debugging output
             print(f"Start Date: {start_date}")
             print(f"End Date: {end_date}")
+            print(f"Matching dates found: {len(matching_dates)}")
+            print(f"Matching dates: {[d.strftime('%Y-%m-%d (%A)') for d in matching_dates]}")
             print(f"Start Time: {start_time_str}")
             print(f"End Time: {end_time_str}")
             print(f"Weekdays: {weekdays}")
 
             for venue in venues:
-
-                # is_available = check_venue_availability_mul_weeks(
-                #     venue=venue,
-                #     start_date=start_date,
-                #     num_weeks=num_weeks,
-                #     weekdays=weekdays,
-                #     time=int(start_hour),
-                #     duration=duration,
-                # )
-
                 is_available = True
-                current_date = start_date
 
-                while current_date <= end_date:
-                    if current_date.weekday() in weekdays:
-                        existing_bookings = Booking.objects.filter(
-                            venue=venue,
-                            date=current_date,
-                            status='active'
-                        )
+                # ✅ Check availability for each matching date
+                for current_date in matching_dates:
+                    existing_bookings = Booking.objects.filter(
+                        venue=venue,
+                        date=current_date,
+                        status='active'
+                    )
 
-                        for booking in existing_bookings:
-                            booking_start = float(booking.time)
-                            booking_end = booking_start + float(booking.duration)
-                            request_start = float(start_hour)
-                            request_end = request_start + float(duration)
+                    for booking in existing_bookings:
+                        booking_start = float(booking.time)
+                        booking_end = booking_start + float(booking.duration)
+                        request_start = float(start_hour)
+                        request_end = request_start + float(duration)
 
-                            if request_start < booking_end and request_end > booking_start:
-                                is_available = False
-                                break
+                        if request_start < booking_end and request_end > booking_start:
+                            is_available = False
+                            print(f"❌ Conflict at {venue.venue_name} on {current_date.strftime('%Y-%m-%d (%A)')}")
+                            break
 
                     if not is_available:
                         break
-
-                    current_date += timedelta(days=1)
 
                 if is_available:
                     available_venues.append({
@@ -1749,14 +1694,18 @@ def check_multiple_week_availability_view(request):
                         "capacity": venue.capacity,
                     })
 
-            print("venues available:", available_venues)
+            print(f"✅ Available venues: {len(available_venues)}")
 
             return JsonResponse({
                 "status": "success",
                 "venues": available_venues,
+                "matching_dates_count": len(matching_dates),
+                "matching_dates": [d.strftime('%Y-%m-%d') for d in matching_dates]
             })
 
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return JsonResponse({
                 "status": "error",
                 "message": f"Error occurred: {str(e)}"
@@ -2415,15 +2364,10 @@ from django.db.models.functions import Lower
 
 def arnav_check_multiple_week_availability_view(request):
     if request.method == 'POST':
-
         print('POST check_multiple_week_availability_view')
 
         start_date_str = request.POST.get("start_date")
-
-        # num_weeks = int(request.POST.get("num_weeks"))
-
         end_date_str = request.POST.get("end_date")
-
         weekdays = request.POST.getlist("weekdays")
 
         # Convert inputs
@@ -2435,87 +2379,74 @@ def arnav_check_multiple_week_availability_view(request):
             print("End date before start date")
             return []
 
+        # ✅ First, find all matching dates in the range
+        matching_dates = []
+        check_date = start_date
+        while check_date <= end_date:
+            if check_date.weekday() in weekdays:
+                matching_dates.append(check_date)
+            check_date += timedelta(days=1)
+
+        # ✅ If no matching dates, return empty list
+        if not matching_dates:
+            print(f"No matching weekdays found in date range")
+            return []
+
         venues = Venue.objects.all().order_by(Lower('venue_name'))
         available_venues = []
 
         user = request.user
 
         start_time_str = request.POST.get("start_time")
-        print("1")
         end_time_str = request.POST.get("end_time")
-        print("2")
         phone_number = request.POST.get("phone")
-        print("3")
         guest_count = request.POST.get("guestCount")
-        print("4")
         event_details = request.POST.get("eventDetails")
-        print("5")
         purpose = request.POST.get("purpose", "")
-        print("6")
         special_requirements = request.POST.get("specialRequirements", "")
-        print("7")
 
         start_hour = float(start_time_str)
-        print("8")
         end_hour = float(end_time_str)
-        print("9")
         duration = float(end_hour - start_hour)
-        print("10")
 
         # Debugging output
         print(f"Start Date: {start_date}")
         print(f"End Date: {end_date}")
+        print(f"Matching dates: {[d.strftime('%Y-%m-%d (%A)') for d in matching_dates]}")
         print(f"Start Time: {start_time_str}")
         print(f"End Time: {end_time_str}")
         print(f"Weekdays: {weekdays}")
-        print(f"Guest Count: {guest_count}")
-        print(f"Event Details: {event_details}")
-        print(f"Purpose: {purpose}")
-        print(f"Special Requirements: {special_requirements}")
         print(f"Duration: {duration}")
 
         for venue in venues:
-
-            # is_available = check_venue_availability_mul_weeks(
-            #     venue=venue,
-            #     start_date=start_date,
-            #     num_weeks=num_weeks,
-            #     weekdays=weekdays,
-            #     time=start_hour,
-            #     duration=duration,
-            # )
-
             is_available = True
-            current_date = start_date
 
-            while current_date <= end_date:
-                if current_date.weekday() in weekdays:
-                    existing_bookings = Booking.objects.filter(
-                        venue=venue,
-                        date=current_date,
-                        status='active'
-                    )
+            # ✅ Check each matching date
+            for current_date in matching_dates:
+                existing_bookings = Booking.objects.filter(
+                    venue=venue,
+                    date=current_date,
+                    status='active'
+                )
 
-                    for booking in existing_bookings:
-                        booking_start = float(booking.time)
-                        booking_end = booking_start + float(booking.duration)
-                        request_start = float(start_hour)
-                        request_end = request_start + float(duration)
+                for booking in existing_bookings:
+                    booking_start = float(booking.time)
+                    booking_end = booking_start + float(booking.duration)
+                    request_start = float(start_hour)
+                    request_end = request_start + float(duration)
 
-                        if request_start < booking_end and request_end > booking_start:
-                            is_available = False
-                            print(f"❌ Conflict at {venue.venue_name} on {current_date}")
-                            break
+                    if request_start < booking_end and request_end > booking_start:
+                        is_available = False
+                        print(f"❌ Conflict at {venue.venue_name} on {current_date.strftime('%Y-%m-%d (%A)')}")
+                        break
 
                 if not is_available:
                     break
 
-                current_date += timedelta(days=1)
-
             if is_available:
                 available_venues.append(venue)
 
-        print("venues available:", available_venues)
+        print(f"✅ venues available: {len(available_venues)}")
 
         return available_venues
 
@@ -2540,77 +2471,27 @@ import pprint
 
 class RequestMultipleWeekAvailabilityView(View):
     def get(self, request, *args, **kwargs):
-        
-
         venues = Venue.objects.all()
-        # Convert venues queryset to proper format
-        # venue_list = []
-        # for venue in venues:
-        #     venue_dict = {
-        #         'id': venue.id,
-        #         'name': str(venue.venue_name),  # Ensure this is a string
-        #         'capacity': venue.capacity,
-        #         'facilities': venue.facilities,
-        #         'images': []  # Add proper image handling if needed
-        #     }
-        #     venue_list.append(venue_dict)
-
-        print("heherer ewrewrhewjwhrjwh in request multiple")
-        print('venues : ', venues)
-        # print('venue_list : ', venue_list)
+        
         # Fetch user details from session
         user_data = {
-            "name": request.session.get("name"),  # Full name from session
+            "name": request.session.get("name"),
             "email": request.session.get("email"),
             "organization_name": request.session.get("organization_name"),
-            "date": request.session.get("start_date"),  # Extracting start date
-            "start_time": request.session.get("start_time"),  # Extracting start time
-            "end_time": request.session.get("end_time"),  # Extracting end time
+            "date": request.session.get("start_date"),
+            "start_time": request.session.get("start_time"),
+            "end_time": request.session.get("end_time"),
         }
 
-        print('user_data : ', user_data)
-        return render(request, "request_booking/check_multiple_week_avail.html", {"venue_list": venues, "user_data":user_data})
+        return render(request, "request_booking/check_multiple_week_avail.html", {
+            "venue_list": venues, 
+            "user_data": user_data
+        })
 
     def post(self, request, *args, **kwargs):
         print('in RequestMultipleWeekAvailabilityView POST')
 
-        available_venue_response = arnav_check_multiple_week_availability_view(request)
-
-        print("\n" + "="*50)
-        print('available_venue_response : ', available_venue_response)
-        print('type(available_venue_response) : ', type(available_venue_response))
-        if available_venue_response:
-            print('type(available_venue_response[0]) : ', type(available_venue_response[0]))
-
-        print("\nDEBUG: FORM DATA RECEIVED")
-        print("="*50)
-
-        print("\nPOST Data:")
-        pprint.pprint(request.POST.dict())
-
-        print("\nIndividual Fields:")
-        print(f"Venue ID: {request.POST.get('venue')}")
-        print(f"Event Type: {request.POST.get('eventType')}")
-        print(f"Full Name: {request.POST.get('fullName')}")
-        print(f"Email: {request.POST.get('email')}")
-        print(f"Organization: {request.POST.get('organization_name')}")
-        print(f"Start Date: {request.POST.get('start_date')}")
-        print(f"End Date: {request.POST.get('end_date')}")
-        print(f"Start Time: {request.POST.get('start_time')}")
-        print(f"End Time: {request.POST.get('end_time')}")
-
-        # ---------- OLD (commented) ----------
-        # print(f"Number of Weeks: {request.POST.get('num_weeks')}")
-
-        print(f"Selected Weekdays: {request.POST.getlist('weekdays')}")
-        print(f"Phone: {request.POST.get('phone')}")
-        print(f"Guest Count: {request.POST.get('guestCount')}")
-        print(f"Event Details: {request.POST.get('eventDetails')}")
-        print(f"Purpose: {request.POST.get('purpose')}")
-        print(f"Special Requirements: {request.POST.get('specialRequirements')}")
-        print(f"Terms Accepted: {request.POST.get('terms')}")
-
-        # ---------- Store form data in session ----------
+        # Store form data in session first
         request.session['venue'] = request.POST.get('venue')
         request.session['eventType'] = request.POST.get('eventType')
         request.session['fullName'] = request.POST.get('fullName')
@@ -2620,8 +2501,6 @@ class RequestMultipleWeekAvailabilityView(View):
         request.session['end_date'] = request.POST.get('end_date')
         request.session['start_time'] = request.POST.get('start_time')
         request.session['end_time'] = request.POST.get('end_time')
-        # request.session['num_weeks'] = request.POST.get('num_weeks')
-
         request.session['weekdays'] = request.POST.getlist('weekdays')
         request.session['phone'] = request.POST.get('phone')
         request.session['guestCount'] = request.POST.get('guestCount')
@@ -2629,38 +2508,65 @@ class RequestMultipleWeekAvailabilityView(View):
         request.session['purpose'] = request.POST.get('purpose')
         request.session['specialRequirements'] = request.POST.get('specialRequirements')
         request.session['terms'] = request.POST.get('terms')
-
         request.session.modified = True
 
-        print("\n" + "="*50 + "\n")
+        # ✅ Calculate matching dates for display FIRST
+        start_date_str = request.POST.get('start_date')
+        end_date_str = request.POST.get('end_date')
+        weekdays = [int(day) for day in request.POST.getlist('weekdays')]
+        
+        start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
+        end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
+        
+        matching_dates = []
+        check_date = start_date
+        while check_date <= end_date:
+            if check_date.weekday() in weekdays:
+                matching_dates.append(check_date)
+            check_date += timedelta(days=1)
+        
+        # Create weekday names string
+        DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+        selected_weekdays = ', '.join([DAY_NAMES[day] for day in sorted(weekdays)])
+        
+        if not matching_dates:
+            print(f"❌ No matching dates found for weekdays {weekdays} in range {start_date} to {end_date}")
+            return render(request, 'request_booking/select_multiple_venues.html', {
+                "venues": [],
+                'eventType': request.session.get('eventType'),
+                'fullName': request.session.get('fullName'),
+                'email': request.session.get('email'),
+                'organization_name': request.session.get('organization_name'),
+                'start_date': start_date.strftime('%B %d, %Y'),
+                'end_date': end_date.strftime('%B %d, %Y'),
+                'start_time': request.session.get('start_time'),
+                'end_time': request.session.get('end_time'),
+                'weekdays': request.session.get('weekdays'),
+                'phone': request.session.get('phone'),
+                'guestCount': request.session.get('guestCount'),
+                'eventDetails': request.session.get('eventDetails'),
+                'purpose': request.session.get('purpose'),
+                'specialRequirements': request.session.get('specialRequirements'),
+                'terms': request.session.get('terms'),
+                'matching_dates_count': 0,
+                'matching_dates_info': False,
+                'selected_weekdays': selected_weekdays,
+                'no_matching_dates': True,  
+            })
 
-        # ---------- Map venues ----------
+        # Get available venues
+        available_venue_response = arnav_check_multiple_week_availability_view(request)
+
+        # Format venues
         formatted_venues = []
-
         for venue in available_venue_response:
             formatted_venues.append({
                 "id": venue.id,
-                "name": venue.venue_name,   # ✅ FIXED: removed comma
+                "name": venue.venue_name,
                 "capacity": venue.capacity,
                 "facilities": venue.facilities,
                 "images": venue.photo_url,
             })
-
-        print('formatted_venues : ', formatted_venues)
-        print('---------')
-
-        # ---------- Session debug ----------
-        debug_keys = [
-            'eventType', 'fullName', 'email', 'organization_name',
-            'start_date', 'end_date',
-            'start_time', 'end_time',
-            # 'num_weeks',
-            'weekdays', 'phone', 'guestCount',
-            'eventDetails', 'purpose', 'specialRequirements', 'terms'
-        ]
-        for key in debug_keys:
-            value = request.session.get(key)
-            print(f"{key}: {value} | type: {type(value)}")
 
         return render(request, 'request_booking/select_multiple_venues.html', {
             "venues": formatted_venues,
@@ -2668,8 +2574,8 @@ class RequestMultipleWeekAvailabilityView(View):
             'fullName': request.session.get('fullName'),
             'email': request.session.get('email'),
             'organization_name': request.session.get('organization_name'),
-            'start_date': request.session.get('start_date'),
-            'end_date': request.session.get('end_date'),
+            'start_date': start_date.strftime('%B %d, %Y'),
+            'end_date': end_date.strftime('%B %d, %Y'),
             'start_time': request.session.get('start_time'),
             'end_time': request.session.get('end_time'),
             'weekdays': request.session.get('weekdays'),
@@ -2679,8 +2585,11 @@ class RequestMultipleWeekAvailabilityView(View):
             'purpose': request.session.get('purpose'),
             'specialRequirements': request.session.get('specialRequirements'),
             'terms': request.session.get('terms'),
-        })
-        
+            'matching_dates_count': len(matching_dates),
+            'matching_dates_info': True if matching_dates else False,
+            'selected_weekdays': selected_weekdays,
+            'no_matching_dates': False,  
+        })  
         # Return a simple response (in production, you'd process the data and return appropriate response)
         return HttpResponse("Form data received and printed in console. Check your server logs for details.", 
                           content_type="text/plain")
