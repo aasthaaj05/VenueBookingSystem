@@ -1093,6 +1093,15 @@
                     alert('Please fill in all required fields before submitting.');
                     return;
                 }
+
+                const alt1 = document.getElementById('alternateVenue1');
+                const alt2 = document.getElementById('alternateVenue2');
+                const flex = document.getElementById('flexibleDates');
+
+                const alternateVenue1Text = alt1 ? alt1.options[alt1.selectedIndex].text : 'Not selected';
+                const alternateVenue2Text = alt2 ? alt2.options[alt2.selectedIndex].text : 'Not selected';
+                const flexibleDatesText = flex ? (flex.checked ? 'Yes' : 'No') : 'N/A';
+
                 
                 // Gather all form data
                 const formData = {
@@ -1106,12 +1115,12 @@
                     end_time: formatTime(document.getElementById('end_time').value),
                     phone: document.getElementById('phone').value,
                     guestCount: document.getElementById('guestCount').value,
-                    alternateVenue1: document.getElementById('alternateVenue1').options[document.getElementById('alternateVenue1').selectedIndex].text,
-                    alternateVenue2: document.getElementById('alternateVenue2').options[document.getElementById('alternateVenue2').selectedIndex].text,
                     eventDetails: document.getElementById('eventDetails').value,
                     purpose: document.getElementById('purpose').value,
                     specialRequirements: document.getElementById('specialRequirements').value,
-                    flexibleDates: document.getElementById('flexibleDates').checked ? 'Yes' : 'No'
+                    alternateVenue1: alternateVenue1Text,
+                    alternateVenue2: alternateVenue2Text,
+                    flexibleDates: flexibleDatesText
                 };
                 
                 // Populate confirmation dialog
