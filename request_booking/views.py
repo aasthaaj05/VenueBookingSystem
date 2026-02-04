@@ -2871,6 +2871,9 @@ def process_multiple_venue_booking(request):
         # Collect all email tasks to send asynchronously
         email_tasks = []
         
+        # Track venues and their results
+        venue_results = []  # Will store success/failure info for each venue
+        
         # Process each selected venue
         for venue_id in venue_ids:
             try:
@@ -2879,34 +2882,76 @@ def process_multiple_venue_booking(request):
                 # Generate a unique cumulative request ID for this venue
                 cumulative_request_id = uuid.uuid4()
                 
-                # Create cumulative request for this venue
-                cumulative_req = CumulativeRequest.objects.create(
-                    cumulative_request_id=cumulative_request_id,
-                    user=user,
-                    full_name=full_name,
-                    email=email,
-                    phone_number=phone_number,
-                    organization_name=organization_name,
-                    event_type=event_type,
-                    guest_count=guest_count,
-                    event_details=event_details,
-                    purpose=purpose,
-                    special_requirements=special_requirements,
-                    venue=venue,
-                    start_date=start_date,
-                    end_date=end_date,
-                    weekdays=",".join([str(day) for day in weekdays]),
-                    time=start_time,
-                    duration=duration,
-                    status='waiting_for_approval'
-                )
-                
                 venue_bookings_created = 0
+                skipped_dates = []  # Track dates that were skipped due to conflicts
                 current_date = start_date
+                
+                # First, collect all valid dates (without conflicts)
+                valid_dates = []
                 
                 # Create individual requests for each matching day
                 while current_date <= end_date:
                     if current_date.weekday() in weekdays:
+                        # Check for conflicts with existing bookings
+                        end_time_for_check = start_time + duration
+                        
+                        # Check for overlapping bookings on this date/venue
+                        conflicts = Request.objects.filter(
+                            venue=venue,
+                            date=current_date,
+                            status__in=['pending', 'approved', 'waiting_for_approval']
+                        ).filter(
+                            # Check if the time ranges overlap
+                            Q(time__lt=end_time_for_check, time__gte=start_time) |  # Existing booking starts during our slot
+                            Q(time__lte=start_time + duration, time__gt=start_time)  # Existing booking overlaps our slot
+                        )
+                        
+                        # Also check against confirmed bookings from the Booking model
+                        booking_conflicts = Booking.objects.filter(
+                            venue_id=venue.id,
+                            date=current_date,
+                            status__in=['confirmed', 'pending']
+                        ).filter(
+                            Q(time__lt=end_time_for_check, time__gte=start_time) |
+                            Q(time__lte=start_time + duration, time__gt=start_time)
+                        )
+                        
+                        if conflicts.exists() or booking_conflicts.exists():
+                            # Skip this date due to conflict
+                            print(f"Conflict found for {venue.venue_name} on {current_date} - skipping")
+                            skipped_dates.append(current_date.strftime('%Y-%m-%d'))
+                        else:
+                            # No conflict - add to valid dates
+                            valid_dates.append(current_date)
+                    
+                    current_date += timedelta(days=1)
+                
+                # Only create cumulative request if we have at least one valid date
+                if len(valid_dates) > 0:
+                    # Create cumulative request for this venue
+                    cumulative_req = CumulativeRequest.objects.create(
+                        cumulative_request_id=cumulative_request_id,
+                        user=user,
+                        full_name=full_name,
+                        email=email,
+                        phone_number=phone_number,
+                        organization_name=organization_name,
+                        event_type=event_type,
+                        guest_count=guest_count,
+                        event_details=event_details,
+                        purpose=purpose,
+                        special_requirements=special_requirements,
+                        venue=venue,
+                        start_date=start_date,
+                        end_date=end_date,
+                        weekdays=",".join([str(day) for day in weekdays]),
+                        time=start_time,
+                        duration=duration,
+                        status='waiting_for_approval'
+                    )
+                    
+                    # Now create individual requests for valid dates
+                    for valid_date in valid_dates:
                         new_req = Request.objects.create(
                             user=user,
                             email=email,
@@ -2916,7 +2961,7 @@ def process_multiple_venue_booking(request):
                             event_type=event_type,
                             guest_count=guest_count,
                             additional_info=purpose,
-                            date=current_date,
+                            date=valid_date,
                             time=start_time,
                             duration=duration,
                             venue=venue,
@@ -2930,53 +2975,87 @@ def process_multiple_venue_booking(request):
                             cumulative_request_id=cumulative_request_id
                         )
                         
-                        print(f"Created request for {venue.venue_name} on {current_date}")
+                        print(f"Created request for {venue.venue_name} on {valid_date}")
                         venue_bookings_created += 1
                     
-                    current_date += timedelta(days=1)
+                    # Queue emails for async sending
+                    email_tasks.append({
+                        'function': cumulative_send_confirmation_email_to_requester,
+                        'kwargs': {
+                            'email': email,
+                            'full_name': full_name,
+                            'venue_obj': venue,
+                            'event_type': event_type,
+                            'purpose': purpose,
+                            'start_date': start_date,
+                            'end_date': end_date,
+                            'start_time': start_time,
+                            'booking_duration': duration,
+                            'weekdays': weekday_names,
+                            'total_days': venue_bookings_created
+                        }
+                    })
+                    
+                    email_tasks.append({
+                        'function': cumulative_send_booking_request_email_to_admin,
+                        'kwargs': {
+                            'email': venue.venue_admin,
+                            'full_name': full_name,
+                            'venue_obj': venue,
+                            'event_type': event_type,
+                            'purpose': purpose,
+                            'start_date': start_date,
+                            'end_date': end_date,
+                            'start_time': start_time,
+                            'booking_duration': duration,
+                            'weekdays': weekday_names,
+                            'total_days': venue_bookings_created
+                        }
+                    })
+                    
+                    total_bookings_created += venue_bookings_created
+                    
+                    # Track success for this venue
+                    venue_results.append({
+                        'venue_name': venue.venue_name,
+                        'success': True,
+                        'bookings_created': venue_bookings_created,
+                        'skipped_count': len(skipped_dates)
+                    })
+                    
+                    print(f"Created {venue_bookings_created} bookings for {venue.venue_name}")
+                    if skipped_dates:
+                        print(f"Skipped {len(skipped_dates)} dates for {venue.venue_name} due to conflicts: {', '.join(skipped_dates)}")
                 
-                # Queue emails for async sending instead of sending immediately
-                email_tasks.append({
-                    'function': cumulative_send_confirmation_email_to_requester,
-                    'kwargs': {
-                        'email': email,
-                        'full_name': full_name,
-                        'venue_obj': venue,
-                        'event_type': event_type,
-                        'purpose': purpose,
-                        'start_date': start_date,
-                        'end_date': end_date,
-                        'start_time': start_time,
-                        'booking_duration': duration,
-                        'weekdays': weekday_names,
-                        'total_days': venue_bookings_created
-                    }
-                })
-                
-                email_tasks.append({
-                    'function': cumulative_send_booking_request_email_to_admin,
-                    'kwargs': {
-                        'email': venue.venue_admin,
-                        'full_name': full_name,
-                        'venue_obj': venue,
-                        'event_type': event_type,
-                        'purpose': purpose,
-                        'start_date': start_date,
-                        'end_date': end_date,
-                        'start_time': start_time,
-                        'booking_duration': duration,
-                        'weekdays': weekday_names,
-                        'total_days': venue_bookings_created
-                    }
-                })
-                
-                total_bookings_created += venue_bookings_created
-                print(f"Created {venue_bookings_created} bookings for {venue.venue_name}")
+                else:
+                    # All dates had conflicts - don't create cumulative request
+                    venue_results.append({
+                        'venue_name': venue.venue_name,
+                        'success': False,
+                        'bookings_created': 0,
+                        'skipped_count': len(skipped_dates),
+                        'reason': 'All requested dates have conflicting bookings'
+                    })
+                    print(f"Skipped venue {venue.venue_name} - all {len(skipped_dates)} dates had conflicts")
                 
             except Venue.DoesNotExist:
+                venue_results.append({
+                    'venue_name': f'Venue ID {venue_id}',
+                    'success': False,
+                    'bookings_created': 0,
+                    'skipped_count': 0,
+                    'reason': 'Venue not found'
+                })
                 print(f"Venue with ID {venue_id} not found.")
                 continue
             except Exception as e:
+                venue_results.append({
+                    'venue_name': venue.venue_name if 'venue' in locals() else f'Venue ID {venue_id}',
+                    'success': False,
+                    'bookings_created': 0,
+                    'skipped_count': 0,
+                    'reason': f'Error: {str(e)}'
+                })
                 print(f"Error processing venue {venue_id}: {e}")
                 traceback.print_exc()
                 continue
@@ -2985,13 +3064,48 @@ def process_multiple_venue_booking(request):
         if email_tasks:
             send_emails_async(email_tasks)
         
-        if total_bookings_created > 0:
+        # Provide detailed feedback to user
+        successful_venues = [r for r in venue_results if r['success']]
+        failed_venues = [r for r in venue_results if not r['success']]
+        
+        if successful_venues and not failed_venues:
+            # All venues succeeded
             messages.success(
                 request, 
-                f"Successfully created {total_bookings_created} booking request(s) across {len(venue_ids)} venue(s)! Confirmation emails will be sent shortly."
+                f"Successfully created {total_bookings_created} booking request(s) across {len(successful_venues)} venue(s)! Confirmation emails will be sent shortly."
+            )
+        elif successful_venues and failed_venues:
+            # Some succeeded, some failed
+            success_msg = f"Successfully created {total_bookings_created} booking request(s) for {len(successful_venues)} venue(s). "
+            
+            # Build detailed message about partial successes and failures
+            venue_details = []
+            for r in successful_venues:
+                if r['skipped_count'] > 0:
+                    venue_details.append(f"{r['venue_name']}: {r['bookings_created']} requests created, {r['skipped_count']} dates skipped due to conflicts")
+                else:
+                    venue_details.append(f"{r['venue_name']}: {r['bookings_created']} requests created")
+            
+            for r in failed_venues:
+                venue_details.append(f"{r['venue_name']}: Failed - {r['reason']}")
+            
+            messages.warning(
+                request,
+                success_msg + " Details: " + "; ".join(venue_details)
+            )
+        elif not successful_venues and failed_venues:
+            # All failed
+            failure_details = []
+            for r in failed_venues:
+                failure_details.append(f"{r['venue_name']}: {r['reason']}")
+            
+            messages.error(
+                request,
+                "No bookings were created. " + "; ".join(failure_details)
             )
         else:
-            messages.warning(request, "No bookings were created. Please check availability.")
+            # Shouldn't happen, but just in case
+            messages.warning(request, "No bookings were created. Please check availability and try again.")
         
         # Clear session data
         session_keys = [
@@ -3003,7 +3117,7 @@ def process_multiple_venue_booking(request):
         for key in session_keys:
             request.session.pop(key, None)
         
-        return redirect("faculty_advisor:home")
+        return redirect("request_booking:request_multiple_week_availability_view")
         
     except Exception as e:
         print(f"Error in process_multiple_venue_booking: {e}")
