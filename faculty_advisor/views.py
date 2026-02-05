@@ -1,17 +1,37 @@
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q, F
+from django.db.models import Q, F, Count
 from datetime import datetime, timedelta
 import json
 import sys
 import traceback
+import uuid  # ADDED: Missing import
 
 from services import booking_service
 from gymkhana.models import Booking, Venue
 
 from request_booking.models import Request  # Replace 'your_app' with the actual app name where Request is defined
 
+
+# ADDED: Helper function to convert decimal time to string format
+def decimal_to_time_str(decimal_time):
+    """
+    Convert decimal time (e.g., 14.5) to time string (e.g., '2:30 PM')
+    """
+    try:
+        hours = int(decimal_time)
+        minutes = int((decimal_time - hours) * 60)
+        
+        # Convert to 12-hour format
+        suffix = 'AM' if hours < 12 else 'PM'
+        hour_12 = hours % 12
+        if hour_12 == 0:
+            hour_12 = 12
+            
+        return f"{hour_12}:{minutes:02d} {suffix}"
+    except (ValueError, TypeError):
+        return str(decimal_time)
 
 
 def index(request):
@@ -229,40 +249,58 @@ class BookingScheduleAPI(View):
             
 
             
-            # Get bookings for the venue and date range
+            # FIXED: Get bookings for the venue and date range
+            # Changed to filter only active/approved bookings
             bookings = Booking.objects.filter(
                 venue_id=venue_uuid,
                 date__gte=start_date_obj,
-                date__lte=end_date_obj
+                date__lte=end_date_obj,
+                status='active'  # ADDED: Only show active (approved) bookings in schedule
             ).select_related('user', 'venue')
 
             print('bookings->',bookings)
+            print(f'Found {bookings.count()} active bookings')
             
             # Prepare response data
             bookings_data = []
             for booking in bookings:
+                # Convert duration to float if it's stored as string
+                try:
+                    duration_float = float(booking.duration)
+                except (ValueError, TypeError):
+                    duration_float = 1.0  # Default 1 hour if conversion fails
+                
                 bookings_data.append({
                     'id': str(booking.booking_id),
                     'date': booking.date.isoformat(),
                     'time': decimal_to_time_str(booking.time),  # Using the conversion function
-                    'duration': booking.duration,
+                    'duration': duration_float,
                     'event_details': booking.event_details,
                     'user_name': f"{booking.user.name}",
-                    'status': booking.get_status_display(),
+                    'status': booking.status,  # FIXED: Use actual status field instead of get_status_display()
                     'venue_name': booking.venue.venue_name,
                     'email': booking.user.email,
                 })
             print('bookings_data->',bookings_data)
 
 
-            # Booking statistics
-            status_counts = bookings.values('status').annotate(count=Count('venue_id'))
+            # FIXED: Booking statistics - now properly counts by status
+            # Get all bookings (not just confirmed) for statistics
+            all_bookings = Booking.objects.filter(
+                venue_id=venue_uuid,
+                date__gte=start_date_obj,
+                date__lte=end_date_obj
+            )
+            
+            status_counts = all_bookings.values('status').annotate(count=Count('booking_id'))
             print("\n\n\n")
             print('status_counts->',status_counts)
             print("\n\n\n")
+            
             stats = {
-                'total_bookings': bookings.count(),
+                'total_bookings': all_bookings.count(),
                 'active': 0,
+                'pending': 0,
                 'cancelled': 0,
                 'user_cancelled': 0,
             }
@@ -270,8 +308,10 @@ class BookingScheduleAPI(View):
             for entry in status_counts:
                 status = entry['status']
                 count = entry['count']
-                if status == 'active':
+                if status == 'active':  # FIXED: Using 'active' instead of 'confirmed'
                     stats['active'] = count
+                elif status == 'pending':
+                    stats['pending'] = count
                 elif status == 'cancelled':
                     stats['cancelled'] = count
                 elif status == 'user-cancelled':
@@ -295,5 +335,3 @@ class BookingScheduleAPI(View):
             import traceback
             traceback.print_exc()
             return JsonResponse({'error': str(e)}, status=500)
-
-
