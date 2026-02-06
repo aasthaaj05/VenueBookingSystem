@@ -2396,7 +2396,7 @@ def arnav_check_multiple_week_availability_view(request):
         available_venues = []
 
         user = request.user
-
+    
         start_time_str = request.POST.get("start_time")
         end_time_str = request.POST.get("end_time")
         phone_number = request.POST.get("phone")
