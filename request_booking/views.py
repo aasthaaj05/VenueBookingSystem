@@ -1,5 +1,3 @@
-
-
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
 from django.views.decorators.csrf import csrf_exempt
@@ -2396,7 +2394,7 @@ def arnav_check_multiple_week_availability_view(request):
         available_venues = []
 
         user = request.user
-
+    
         start_time_str = request.POST.get("start_time")
         end_time_str = request.POST.get("end_time")
         phone_number = request.POST.get("phone")
@@ -2900,10 +2898,11 @@ def process_multiple_venue_booking(request):
                             venue=venue,
                             date=current_date,
                             status__in=['pending', 'approved', 'waiting_for_approval']
-                        ).filter(
-                            # Check if the time ranges overlap
-                            Q(time__lt=end_time_for_check, time__gte=start_time) |  # Existing booking starts during our slot
-                            Q(time__lte=start_time + duration, time__gt=start_time)  # Existing booking overlaps our slot
+                        ).exclude(
+                            # Exclude bookings that end before or when our booking starts
+                            Q(time__lte=start_time - F('duration')) |
+                            # Exclude bookings that start at or after our booking ends
+                            Q(time__gte=end_time_for_check)
                         )
                         
                         # Also check against confirmed bookings from the Booking model
@@ -2911,9 +2910,9 @@ def process_multiple_venue_booking(request):
                             venue_id=venue.id,
                             date=current_date,
                             status__in=['confirmed', 'pending']
-                        ).filter(
-                            Q(time__lt=end_time_for_check, time__gte=start_time) |
-                            Q(time__lte=start_time + duration, time__gt=start_time)
+                        ).exclude(
+                            Q(time__lte=start_time - F('duration')) |
+                            Q(time__gte=end_time_for_check)
                         )
                         
                         if conflicts.exists() or booking_conflicts.exists():
