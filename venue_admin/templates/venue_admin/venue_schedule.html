@@ -924,7 +924,7 @@
                 </div>
             </div>
             
-            <div class="loading" id="loading">
+            <div class="loading d-none" id="loading">
                 <div class="loading-spinner"></div>
                 <div>Loading schedule data...</div>
             </div>
@@ -1301,9 +1301,12 @@
                     onChange: (selectedDates) => {
                         if (selectedDates.length > 0) {
                             this.currentDate = selectedDates[0];
-                            if (this.selectedVenue) {
+                            if (this.selectedVenue && this.currentDate) {
                                 this.loadSchedule();
-                            }
+                            } else {
+                                this.showEmptyState();
+                                }
+
                         }
                     }
                 });
@@ -1318,10 +1321,14 @@
                 
                 document.getElementById('venue-select').addEventListener('change', (e) => {
                     this.selectedVenue = e.target.value;
-                    if (this.selectedVenue) {
+
+                    if (this.selectedVenue && this.currentDate) {
                         this.loadSchedule();
+                    } else {
+                        this.showEmptyState();
                     }
-                });
+});
+
             }
 
             navigateWeek(direction) {
@@ -1364,9 +1371,12 @@
             }
 
             async loadSchedule() {
-                if (!this.selectedVenue) return;
-                
-                this.showLoading();
+                if (!this.selectedVenue || !this.currentDate) {
+                    this.showEmptyState();
+                    return;
+    }
+
+            this.showLoading();
                 
                 try {
                     console.log("inside loadSchedule() ")
