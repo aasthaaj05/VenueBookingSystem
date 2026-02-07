@@ -116,44 +116,42 @@ def print_all_session_data(request):
     print("--------------------\n")
 
 
-
-
-
+from django.contrib.messages import get_messages
+from django.contrib import messages
 
 @api_view(['GET', 'POST'])
 def login_view(request):
-    # Flush existing session only on GET requests
+
     if request.method == 'GET':
+
+        # Clear old messages
+        storage = get_messages(request)
+        for _ in storage:
+            pass
+
         request.session.flush()
         return render(request, 'users/login.html')
-    
-    # Handle POST request
+
     username = request.POST.get('username')
     password = request.POST.get('password')
-    
-    # Don't print credentials in production code
-    # print('username : ', username)  # Remove this
-    # print('password : ', password)  # Remove this
-    
+
     user = authenticate(request, username=username, password=password)
+
     if user is None:
+        messages.error(request, "Invalid email or password", extra_tags="login")
         return render(request, 'users/login.html')
-    
-    # Set session data and login
+
     request.session['email'] = user.email
     login(request, user)
-    
-    # Store additional session data if needed
+
     store_user_session(request, username)
-    
-    # Handle redirects based on role
+
     if request.user.role.lower() in ["faculty_advisor", "faculty"]:
         return redirect('/faculty_advisor/home')
     elif request.user.role.lower() in ["venue_admin"]:
         return redirect('/venue_admin/home')
     else:
         return redirect('/users/login')
-
 
 
 @api_view(['GET', 'POST'])
