@@ -926,14 +926,14 @@
                 this.currentDate = new Date();
                 this.selectedVenue = null;
                 this.venues = [];
-                
-                // Initialize UI components
+
                 this.initDatePicker();
                 this.initEventListeners();
-                
-                // Load venues from backend
                 this.loadVenues();
-            }
+
+                this.showEmptyState();   // ⭐ ADD THIS
+}
+
             // Add this new method to get color definitions
             getEventColors(type) {
                 switch(type) {
@@ -986,19 +986,42 @@
             }
 
             initEventListeners() {
-                document.getElementById('load-schedule-btn').addEventListener('click', () => this.loadSchedule());
-                document.getElementById('prev-week-btn').addEventListener('click', () => this.navigateWeek(-1));
-                document.getElementById('next-week-btn').addEventListener('click', () => this.navigateWeek(1));
-                document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
-                document.getElementById('close-modal-btn').addEventListener('click', () => this.closeModal());
-                
-                document.getElementById('venue-select').addEventListener('change', (e) => {
-                    this.selectedVenue = e.target.value;
-                    if (this.selectedVenue) {
+
+                    document.getElementById('load-schedule-btn').addEventListener('click', () => {
+
+                        if (!this.selectedVenue || !this.currentDate) {
+                            this.showEmptyState();
+                            return;
+                        }
+
                         this.loadSchedule();
-                    }
-                });
-            }
+                    });
+
+                    document.getElementById('prev-week-btn').addEventListener('click', () => {
+                        if (!this.selectedVenue) return;
+                        this.navigateWeek(-1);
+                    });
+
+                    document.getElementById('next-week-btn').addEventListener('click', () => {
+                        if (!this.selectedVenue) return;
+                        this.navigateWeek(1);
+                    });
+
+                    document.getElementById('modal-close').addEventListener('click', () => this.closeModal());
+                    document.getElementById('close-modal-btn').addEventListener('click', () => this.closeModal());
+
+                    document.getElementById('venue-select').addEventListener('change', (e) => {
+                        this.selectedVenue = e.target.value;
+
+                        if (!this.selectedVenue) {
+                            this.showEmptyState();
+                            return;
+                        }
+
+                        this.loadSchedule();
+                    });
+                }
+
 
             navigateWeek(direction) {
                 const newDate = new Date(this.currentDate);
@@ -1040,32 +1063,36 @@
             }
 
             async loadSchedule() {
-                if (!this.selectedVenue) return;
-                
+                if (!this.selectedVenue || !this.currentDate) {
+                    this.showEmptyState();
+                    return;
+                }
+
                 this.showLoading();
-                
+
                 try {
-                    console.log("inside loadSchedule() ")
-                    // Calculate start and end dates for the week
+
                     const startDate = this.getWeekStartDate(this.currentDate);
                     const endDate = this.getWeekEndDate(this.currentDate);
-                    console.log('startDate->',startDate)
-                    console.log('endDate->',endDate)
-                    
-                    // Simulate API call to get schedule
-                    // In a real app, this would be fetch(`/api/bookings?venue_id=${this.selectedVenue}&start_date=${startDate}&end_date=${endDate}`)
-                    const response = await this.getScheduleFromBackend(this.selectedVenue, startDate, endDate);
 
-                    console.log('response->',response)
-                    
-                    // Update UI with new data
+                    const response = await this.getScheduleFromBackend(
+                        this.selectedVenue,
+                        startDate,
+                        endDate
+                    );
+
                     this.updateStats(response.booking_statistics);
                     this.displaySchedule(response);
+
                 } catch (error) {
+
                     console.error('Failed to load schedule:', error);
                     this.showEmptyState();
                 }
             }
+
+
+
             async getScheduleFromBackend(venueId, startDate, endDate) {
                 const params = new URLSearchParams({
                     venue_id: venueId,

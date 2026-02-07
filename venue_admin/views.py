@@ -449,7 +449,7 @@ def pending_requests_by_date(request):
     Fetch all pending requests and group them by date.
     The response format: { "YYYY-MM-DD": [list of pending requests] }
     """
-    pending_requests = Request.objects.filter(status='pending').order_by('date', 'time')
+    pending_requests = Request.objects.filter(status='pending').order_by('-date', '-time')
 
     if not pending_requests.exists():
         return Response({"message": "No pending requests."}, status=status.HTTP_200_OK)
