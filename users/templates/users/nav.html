@@ -12,7 +12,7 @@
   <meta name="keywords" content="venue, booking, COEP, events, campus">
   
   <!-- Placeholder image as favicon -->
-  <link rel="icon" href="static 'Logos/coep_tech_black'" type="image/png">
+  <link rel="icon" href="{% static 'Logos/coep_tech_black.png' %}" type="image/png">
 
     <!-- Favicons -->
     <link href="{% static 'assets/img/coep_tech_black.png' %}" rel="icon">
@@ -30,13 +30,8 @@
     <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
     <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
 
-    <!-- Main CSS File -->
-    <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
 
-    <!-- Favicons -->
-  <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
-  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
-
+  
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
@@ -53,7 +48,6 @@
   <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
   
 
-  <link href="{% static 'Logos/coep_tech_black' %}" rel="icon">
 
 
   <style>
@@ -230,22 +224,22 @@
       }
     }
   </style>
-  <link href="{% static '/Logos/coep_tech_black.png' %}" rel="icon">
 </head>
 
-</head>
 <body>
     <header id="header" class="header d-flex align-items-center fixed-top">
         <div class="container-fluid container-xl position-relative d-flex align-items-center">
-            <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
-                {% comment %} <h1 class="sitename">COEP Tech</h1> {% endcomment %}
-                <h1 class="sitename" style="color: white;">COEP Tech</h1>
+                <a href="{% if user.is_authenticated %}{% url 'request_booking:index' %}{% else %}{% url 'users:login' %}{% endif %}" 
+                  class="logo d-flex align-items-center me-auto">
+                    <h1 class="sitename" style="color: white;">COEP Tech</h1>
+                </a>
 
-            </a>
 
             <nav id="navmenu" class="navmenu">
                 <ul>
-                  <li><a href="#hero" class="active">Home</a></li>       
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'request_booking:index' %}" class="active">Home</a></li>
+                    {% endif %}
                     
         
                 </ul>
@@ -253,12 +247,13 @@
               </nav>
 
             {% comment %} <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}">Log Out</a> {% endcomment %}
-            <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout'%}#about">Log Out</a>
-        </div>
+              {% if user.is_authenticated %}
+              <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout'%}">Log Out</a>
+              {% endif %}
+
+          </div>
     </header>
 
-
-    {% load static %}
 
     <!-- Logout Confirmation Modal -->
     <div class="modal-overlay" id="logoutModal">
@@ -313,10 +308,15 @@
       });
       
       // Connect the logout button to show the modal
-      document.getElementById('logoutButton').addEventListener('click', function(e) {
-        e.preventDefault(); // Prevent the default link action
-        showLogoutModal();
-      });
+        const logoutButton = document.getElementById('logoutButton');
+
+        if (logoutButton) {
+          logoutButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLogoutModal();
+          });
+        }
+      
       
       // Close the modal when clicking outside
       document.getElementById('logoutModal').addEventListener('click', function(e) {
