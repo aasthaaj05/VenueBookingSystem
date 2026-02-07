@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib import messages
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -512,9 +512,10 @@ def request_booking(request):
 
     # ✅ Filter requests where status is 'pending' OR 'waiting for approval'
     requests = Request.objects.select_related('venue', 'user').filter(
-        Q(status="pending"),
-        cumulative_booking=0,
-    )
+    Q(status="pending"),
+    cumulative_booking=0,
+    ).order_by('-date', '-time')
+
 
 
     context = {
@@ -2284,50 +2285,17 @@ def approve_cumulative_request(request, cumulative_request_id):
 from collections import defaultdict
 
 def approved_bookings_view(request):
-    print('in approved_bookings_view()')
     user = request.user
+    managed_venues = Venue.objects.filter(venue_admin__admin=user)
 
-    if not user.is_authenticated:
-        print('user is not authenticated')
-        return render(request, 'venue_admin/approved_bookings.html', {
-            'user': None,
-            'managed_venues': [],
-            'approved_bookings': []
-        })
-
-    # ✅ Get venues managed by the user (or all venues if role is venue_admin)
-    user_role = user.role.strip().lower()
-    if user_role == 'venue_admin':
-        managed_venues = Venue.objects.all()
-    else:
-        managed_venues = Venue.objects.filter(venue_admin=user.email)
-
-    if not managed_venues.exists():
-        return render(request, 'venue_admin/approved_bookings.html', {
-            'user': user,
-            'managed_venues': [],
-            'approved_bookings': []
-        })
-
-    # ✅ Fetch all approved bookings
     approved_bookings = Booking.objects.filter(
         venue__in=managed_venues,
         status='active',
-        request__cumulative_request_id__isnull=True  # <-- this line filters out cumulative requests
-    ).select_related('user', 'venue', 'request')
-
-    # Prepare the list to pass to template
-    filtered_bookings_with_requests = [{
-        'booking': booking,
-        'request': booking.request
-    } for booking in approved_bookings]
-
-    print('filtered_bookings_with_requests:', filtered_bookings_with_requests)
+        request__cumulative_request_id__isnull=True
+    ).select_related('user', 'venue', 'request').order_by('-date', '-time')
 
     context = {
-        'user': user,
-        'managed_venues': managed_venues,
-        'approved_bookings': filtered_bookings_with_requests
+        'approved_bookings': approved_bookings
     }
 
     return render(request, 'venue_admin/approved_bookings.html', context)
@@ -2335,38 +2303,19 @@ def approved_bookings_view(request):
 
 
 
-
 def approved_cumulative_bookings_view(request):
-    print('in approved_cumulative_bookings_view()')
-    user = request.user
-
-    if not user.is_authenticated:
-        print('user is not authenticated')
-        return render(request, 'venue_admin/cumulative_approved_bookings.html', {
-            'user': None,
-            'managed_venues': [],
-            'approved_bookings': []
-        })
-
-    user_role = user.role.strip().lower()
-    if user_role == 'venue_admin':
-        managed_venues = Venue.objects.all()
-    else:
-        managed_venues = Venue.objects.filter(venue_admin=user.email)
-
-    if not managed_venues.exists():
-        return render(request, 'venue_admin/approved_bookings.html', {
-            'user': user,
-            'managed_venues': [],
-            'approved_bookings': []
-        })
-
-    # ✅ Fetch only cumulative approved bookings
-    # Step 1: Filter only cumulative request bookings
+    # Order by date descending (latest first), then by time descending
     approved_bookings = Booking.objects.filter(
         status='active',
-        request__cumulative_request_id__isnull=False  # <-- only cumulative requests
-    ).select_related('user', 'venue', 'request')
+        request__cumulative_request_id__isnull=False
+    ).select_related('user', 'venue', 'request').order_by('-date', '-time')
+
+    context = {
+        'approved_bookings': approved_bookings
+    }
+
+    return render(request, 'venue_admin/approved_cumulative_bookings.html', context)
+
 
     
 
@@ -2454,10 +2403,10 @@ def rejected_cumulative_bookings_view(request):
         })
 
     # ✅ Fetch cumulative requests with status 'rejected' or 'user-cancelled'
-    # Step 1: Filter cumulative requests with the desired statuses
+    # Step 1: Filter cumulative requests with the desired statuses - ORDER BY DATE DESCENDING (latest first)
     rejected_cumulative_requests = CumulativeRequest.objects.filter(
         status__in=['rejected','cancelled']
-    ).select_related('user', 'venue')
+    ).select_related('user', 'venue').order_by('-start_date', '-time')
 
     
 
@@ -3034,8 +2983,23 @@ class BookingScheduleAPI(View):
         print('start_date->',start_date)
         print('end_date->',end_date)
         
+        # Return empty data immediately if required parameters are missing
+        # This prevents the loading symbol from appearing when venue/date aren't selected
         if not venue_id or not start_date or not end_date:
-            return JsonResponse({'error': 'Missing required parameters'}, status=400)
+            return JsonResponse({
+                'bookings': [],
+                'venue_id': venue_id or '',
+                'start_date': start_date or '',
+                'end_date': end_date or '',
+                'booking_statistics': {
+                    'total_bookings': 0,
+                    'active': 0,
+                    'cancelled': 0,
+                    'user_cancelled': 0,
+                    'venue_capacity': 0,
+                },
+                'message': 'Please select a venue and date range to view bookings'
+            })
         
         try:
             # Parse dates
@@ -3870,5 +3834,3 @@ COEP Venue Booking System
             # Don't raise the exception - cancellation should succeed even if email fails
 
         print('-----end send_cumulative_cancellation_email--------')
-
-    
