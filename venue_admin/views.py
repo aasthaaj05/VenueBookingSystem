@@ -2261,8 +2261,25 @@ def approve_cumulative_request(request, cumulative_request_id):
 from collections import defaultdict
 
 def approved_bookings_view(request):
+    print('in approved_bookings_view()')
     user = request.user
-    managed_venues = Venue.objects.filter(venue_admin__admin=user)
+
+    if not user.is_authenticated:
+        print('user is not authenticated')
+        return render(request, 'venue_admin/approved_bookings.html', {
+            'approved_bookings': []
+        })
+
+    user_role = user.role.strip().lower()
+    if user_role == 'venue_admin':
+        managed_venues = Venue.objects.all()
+    else:
+        managed_venues = Venue.objects.filter(venue_admin=user.email)
+
+    if not managed_venues.exists():
+        return render(request, 'venue_admin/approved_bookings.html', {
+            'approved_bookings': []
+        })
 
     approved_bookings = Booking.objects.filter(
         venue__in=managed_venues,
@@ -2280,26 +2297,48 @@ def approved_bookings_view(request):
 
 
 def approved_cumulative_bookings_view(request):
+    print('in approved_cumulative_bookings_view()')
+    user = request.user
+
+    if not user.is_authenticated:
+        print('user is not authenticated')
+        return render(request, 'venue_admin/approved_cumulative_bookings.html', {
+            'user': None,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
+    user_role = user.role.strip().lower()
+    if user_role == 'venue_admin':
+        managed_venues = Venue.objects.all()
+    else:
+        managed_venues = Venue.objects.filter(venue_admin=user.email)
+
+    if not managed_venues.exists():
+        return render(request, 'venue_admin/approved_cumulative_bookings.html', {
+            'user': user,
+            'managed_venues': [],
+            'approved_bookings': []
+        })
+
     # Order by date descending (latest first), then by time descending
     approved_bookings = Booking.objects.filter(
+        venue__in=managed_venues,
         status='active',
         request__cumulative_request_id__isnull=False
     ).select_related('user', 'venue', 'request').order_by('-date', '-time')
 
-    context = {
-        'approved_bookings': approved_bookings
-    }
-
-    return render(request, 'venue_admin/approved_cumulative_bookings.html', context)
-
-
-    
 
     # Step 2: Deduplicate based on cumulative_request_id
     seen_cumulative_ids = set()
     unique_bookings = []
 
     for booking in approved_bookings:
+        # Skip if booking has no associated request
+        if not hasattr(booking, 'request') or booking.request is None:
+            print(f"Warning: Booking {booking.id} has no associated request")
+            continue
+            
         cumulative_id = booking.request.cumulative_request_id
         if cumulative_id and cumulative_id not in seen_cumulative_ids:
             seen_cumulative_ids.add(cumulative_id)
@@ -2312,28 +2351,29 @@ def approved_cumulative_bookings_view(request):
 
     print("\n==== Final Values Sent to Template ====")
     for item in unique_bookings:
+        try:
+            req = item['request']
 
-        
+            # Clean the event_details field in-place
+            if hasattr(req, 'event_details'):
+                req.event_details = clean_multiline(req.event_details)
+            if hasattr(req, 'additional_info'):
+                req.additional_info = clean_multiline(req.additional_info)
 
-        req = item['request']
-
-        # Clean the event_details field in-place
-        req.event_details = clean_multiline(req.event_details)
-        req.additional_info = clean_multiline(req.additional_info)
-
-
-        print(f"User Name: {req.user.name}")
-        print(f"Organization Name: {req.organization_name}")
-        print(f"Cumualative Request ID: {req.cumulative_request_id}")
-        print(f"Venue: {req.venue.venue_name}")
-        print(f"Date: {req.date}")
-        print(f"Time: {req.time}")
-        print(f"Duration: {req.duration}")
-        # print(f"Event Details (truncated): {req.event_details[:50] + '...' if len(req.event_details) > 50 else req.event_details}")
-        # print(f"Event Details: {req.event_details.replace('\n', ' ').replace('\r', ' ')}")
-        print(f"Event Details: {req.event_details}")
-
-        print("----------------------------------------")
+            print(f"User Name: {req.user.name if req.user else 'N/A'}")
+            print(f"Organization Name: {req.organization_name if hasattr(req, 'organization_name') else 'N/A'}")
+            print(f"Cumulative Request ID: {req.cumulative_request_id}")
+            print(f"Venue: {req.venue.venue_name if req.venue else 'N/A'}")
+            print(f"Date: {req.date}")
+            print(f"Time: {req.time}")
+            print(f"Duration: {req.duration}")
+            print(f"Event Details: {req.event_details if hasattr(req, 'event_details') else 'N/A'}")
+            print("----------------------------------------")
+        except Exception as e:
+            print(f"Error processing booking item: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
 
 
     context = {
@@ -2342,7 +2382,7 @@ def approved_cumulative_bookings_view(request):
         'approved_bookings': unique_bookings
     }
 
-    return render(request, 'venue_admin/cumulative_approved_bookings.html', context)
+    return render(request, 'venue_admin/approved_cumulative_bookings.html', context)
 
 
 
@@ -2359,7 +2399,7 @@ def rejected_cumulative_bookings_view(request):
 
     if not user.is_authenticated:
         print('user is not authenticated')
-        return render(request, 'venue_admin/cumulative_approved_bookings.html', {
+        return render(request, 'venue_admin/approved_cumulative_bookings.html', {
             'user': None,
             'managed_venues': [],
             'approved_bookings': []
