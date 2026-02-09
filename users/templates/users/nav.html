@@ -233,9 +233,16 @@
                   class="logo d-flex align-items-center me-auto">
                     <h1 class="sitename" style="color: white;">COEP Tech</h1>
                 </a>
+                {% if user.is_authenticated %}
+                
+                <nav id="navmenu" class="navmenu">
+                    <ul>
+                        <li><a href="{% url 'request_booking:index' %}" class="active">Home</a></li>
+                    </ul>
+                    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+                </nav>
+                {% endif %}
 
-
-            <nav id="navmenu" class="navmenu">
                 <ul>
                     {% if user.is_authenticated %}
                     <li><a href="{% url 'request_booking:index' %}" class="active">Home</a></li>
