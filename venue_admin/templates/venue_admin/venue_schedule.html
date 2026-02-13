@@ -1076,46 +1076,45 @@
         
             async confirmCumulativeCancellation() {
                 const reason = document.getElementById('cumulative-cancel-reason').value.trim();
-                
+
                 if (!reason) {
                     alert('Please provide a reason for cumulative cancellation.');
                     return;
                 }
-                
+
                 if (!this.currentBooking) {
                     alert('No booking selected.');
                     return;
                 }
-                
+
+                const confirmBtn = document.getElementById('cumulative-cancel-dialog-confirm');
+                const originalText = confirmBtn.textContent;
+
                 try {
-                    // Show loading state
-                    const confirmBtn = document.getElementById('cumulative-cancel-dialog-confirm');
-                    const originalText = confirmBtn.textContent;
                     confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     confirmBtn.disabled = true;
-                    
-                    // ACTUAL BACKEND CALL
+
                     const response = await this.makeCumulativeCancelCall(this.currentBooking, reason);
-                    
+
                     if (response.success) {
                         alert(`Cumulative cancellation successful! ${response.message}`);
                         this.hideCumulativeCancelDialog();
                         this.closeModal();
-                        this.loadSchedule(); // Refresh the schedule
+                        this.loadSchedule();
                     } else {
-                        throw new Error(response.message || 'Failed to process cumulative cancellation');
+                        throw new Error(response.message);
                     }
-                    
+
                 } catch (error) {
                     console.error('Cumulative cancellation failed:', error);
                     alert('Failed to process cumulative cancellation: ' + error.message);
-                    
-                    // Reset button state
-                    const confirmBtn = document.getElementById('cumulative-cancel-dialog-confirm');
-                    confirmBtn.textContent = 'Confirm Cumulative Cancellation';
-                    confirmBtn.disabled = false;
                 }
+
+                // ⭐ ALWAYS RESET BUTTON
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
             }
+
         
             // Replace the temporary method with this actual implementation
             async makeCumulativeCancelCall(booking, reason) {
@@ -1178,6 +1177,9 @@
                 this.cancelDialog.style.display = 'block';
                 this.cancelOverlay.style.display = 'block';
                 this.cancelReasonTextarea.value = ''; // Clear previous reason
+                const confirmBtn = document.getElementById('cancel-dialog-confirm');
+                confirmBtn.textContent = 'Confirm Cancellation';
+                confirmBtn.disabled = false;
             }
             
             hideCancelDialog() {
@@ -1187,58 +1189,52 @@
             
             async confirmCancellation() {
                 const reason = this.cancelReasonTextarea.value.trim();
-                
+
                 if (!reason) {
                     alert('Please provide a reason for cancellation.');
                     return;
                 }
-                
+
+                const confirmBtn = document.getElementById('cancel-dialog-confirm');
+                const originalText = confirmBtn.textContent;
+
                 try {
-                    // Show loading state
-                    const confirmBtn = document.getElementById('cancel-dialog-confirm');
-                    const originalText = confirmBtn.textContent;
                     confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
                     confirmBtn.disabled = true;
-                    
-                    // Make API call to cancel booking
+
                     const response = await fetch('/venue_admin/cancel_booking_from_calendar/', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRFToken': this.getCSRFToken() // You'll need to implement this
+                            'X-CSRFToken': this.getCSRFToken()
                         },
                         body: JSON.stringify({
                             booking_id: this.currentBooking.id,
                             reason: reason
                         })
                     });
-                    
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    
+
                     const result = await response.json();
-                    
+
                     if (result.success) {
-                        // Show success message and reload schedule
                         alert('Booking cancelled successfully!');
                         this.hideCancelDialog();
                         this.closeModal();
-                        this.loadSchedule(); // Refresh the schedule
+                        this.loadSchedule();
                     } else {
                         throw new Error(result.message || 'Failed to cancel booking');
                     }
-                    
+
                 } catch (error) {
                     console.error('Cancellation failed:', error);
                     alert('Failed to cancel booking: ' + error.message);
-                    
-                    // Reset button state
-                    const confirmBtn = document.getElementById('cancel-dialog-confirm');
-                    confirmBtn.textContent = 'Confirm Cancellation';
-                    confirmBtn.disabled = false;
                 }
-            }
+
+                // ⭐ ALWAYS RESET BUTTON
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
+}
+
             
             // Helper method to get CSRF token (you may need to adjust this based on your setup)
             getCSRFToken() {
@@ -1769,6 +1765,7 @@
 
             closeModal() {
                 document.getElementById('booking-modal').classList.remove('active');
+                this.currentBooking = null;
             }
 
             showLoading() {
