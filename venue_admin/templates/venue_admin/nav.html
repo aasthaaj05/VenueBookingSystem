@@ -71,57 +71,13 @@
     </nav>
 
     <!-- Logout -->
-    <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout' %}">
+    <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}">
       Log Out
     </a>
 
   </div>
 </header>
 
-
-<!-- Logout Modal -->
-<div class="modal-overlay" id="logoutModal">
-  <div class="modal-container">
-
-    <h2>Logout Confirmation</h2>
-    <p>Are you sure you want to log out?</p>
-
-    <div class="buttons">
-      <button class="cancel-btn" id="cancelBtn">Cancel</button>
-      <button class="logout-btn" id="logoutBtn">Logout</button>
-    </div>
-
-  </div>
-</div>
-
-<script>
-
-function showLogoutModal() {
-  document.getElementById('logoutModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function hideLogoutModal() {
-  document.getElementById('logoutModal').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-/* Safe logout button binding */
-const logoutButton = document.getElementById('logoutButton');
-if (logoutButton) {
-  logoutButton.addEventListener('click', function(e) {
-    e.preventDefault();
-    showLogoutModal();
-  });
-}
-
-document.getElementById('cancelBtn').addEventListener('click', hideLogoutModal);
-
-document.getElementById('logoutBtn').addEventListener('click', function() {
-  window.location.href = "{% url 'venue_admin:logout' %}";
-});
-
-</script>
 
 <!-- Vendor JS -->
 <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
