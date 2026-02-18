@@ -1,364 +1,124 @@
 
-
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>COEP Venue Booking System | Book Your Campus Spaces</title>
-  <meta name="description" content="Reserve venues on COEP campus quickly and efficiently.">
-  <meta name="keywords" content="venue, booking, COEP, events, campus">
-  
-  <!-- Placeholder image as favicon -->
-  <link rel="icon" href="static 'Logos/coep_tech_black'" type="image/png">
-  
-  <!-- Placeholder image as favicon -->
-  <link rel="icon" href="static 'Logos/coep_tech_black'" type="image/png">
-  
+<style>
+  /* Modal Overlay Styles (kept here so all pages using the include get them) */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(26, 115, 232, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+  }
+  .modal-overlay.active { opacity: 1; visibility: visible; }
+  .modal-container { background: #fff; border-radius: 8px; padding: 28px; max-width:420px; width:100%; box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+  .buttons { display:flex; gap:12px; justify-content:center; margin-top:16px; }
+  .cancel-btn { background:#f1f3f4; border:1px solid #ddd; padding:8px 14px; border-radius:4px; }
+  .logout-btn { background:#0d6efd; color:#fff; border:none; padding:8px 14px; border-radius:6px; }
+  @media (max-width:480px){ .modal-container{ padding:18px; } .buttons{ flex-direction:column; } }
+  /* Navbar layout and visual styles to match provided design */
+  :root{ --nav-bg:#36537a; --nav-contrast:#2f4f73; --link-color:#ffffff; --link-muted:rgba(255,255,255,0.85); --btn-bg:#66c8ff; --shadow-md:0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08); }
+  /* Ensure page content sits below fixed header and header styling matches approved page */
+  #header{ background:var(--nav-bg); width:100%; top:0; left:0; right:0; z-index:9999; position:fixed; padding:1rem 2rem; box-shadow:var(--shadow-md); }
+  body{ padding-top:80px; }
+  /* 3-column flex: brand | centered links | logout */
+  #header > .container-fluid{ display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:nowrap; }
+  .brand{ font-family: 'Poppins', sans-serif; color:var(--link-color); font-weight:700; font-size:24px; letter-spacing:2px; text-decoration:none; margin:0; padding:8px 8px; text-transform:uppercase; }
+  /* Center nav occupies remaining space but does not force wrap */
+  #navmenu{ display:flex; align-items:center; flex:1 1 auto; min-width:0; }
+  #navmenu ul{ list-style:none; margin:0; padding:0; display:flex; gap:1.5rem; align-items:center; justify-content:center; width:100%; white-space:nowrap; }
+  #navmenu ul li{ margin:0; }
+  #navmenu ul li a{ color:var(--link-color); text-decoration:none; padding:8px 6px; display:block; font-family: 'Poppins', sans-serif; font-size:16px; white-space:nowrap; }
+  #navmenu ul li a.active{ font-weight:600; color:#e6f7ff; }
+  /* Right logout button (pill) */
+  .btn-getstarted{ flex:0 0 auto; margin-left:16px; background:var(--btn-bg); color:#063042; padding:8px 16px; border-radius:28px; text-decoration:none; display:inline-block; font-weight:600; box-shadow:0 2px 6px rgba(0,0,0,0.08); }
+  .mobile-nav-toggle{ display:none; color:var(--link-color); }
+  /* Prevent nav items from wrapping; on small screens hide and use mobile toggle */
+  @media (max-width:992px){
+    #navmenu{ flex:1 1 100%; }
+    #navmenu ul{ display:none; position:absolute; top:100%; left:0; right:0; background:var(--nav-contrast); flex-direction:column; padding:12px; }
+    .mobile-nav-toggle{ display:block; margin-left:8px; }
+    header.nav-open #navmenu ul{ display:flex; }
+    .btn-getstarted{ margin-left:0; }
+  }
+</style>
 
-    <!-- Favicons -->
-    <link href="{% static 'assets/img/coep_tech_black.png' %}" rel="icon">
-    <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+<header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center">
+      <a href="{% url 'venue_admin:home' %}" class="brand">COEP TECH</a>
+        {% comment %} Logo area preserved but commented: adjust if needed in pages {% endcomment %}
 
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com" rel="preconnect">
-    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="{% url 'venue_admin:home' %}#hero" class="active">Home</a></li>
+              <li><a href="{% url 'venue_admin:get_cumulative_requests' %}" class="btn signup-btn">View Cumulative Requests</a></li>
+              <li><a href="{% url 'venue_admin:approved_cumulative_bookings_view' %}">Cumulative Bookings</a></li>
+              <li><a href="{% url 'venue_admin:venue_schedule' %}">Bookings Calendar</a></li>
+              <li><a href="{% url 'venue_admin:venue_edit_start' %}">Edit Venue</a></li>
+              <li><a href="{% url 'venue_admin:user_list' %}">Edit Users</a></li>
+            </ul>
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+        <!-- Right-aligned logout button -->
+        <a class="btn-getstarted ms-auto" id="logoutButton" href="{% url 'venue_admin:logout' %}">Log Out</a>
+    </div>
+</header>
 
-    <!-- Vendor CSS Files -->
-    <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
-    <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
-
-    <!-- Main CSS File -->
-    <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
-
-    <!-- Favicons -->
-  <link href="{% static 'assets/img/coep_tech_black.png' %}" rel="icon">
-  <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
-
-  <!-- Fonts -->
-  <link href="https://fonts.googleapis.com" rel="preconnect">
-  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <!-- Vendor CSS Files -->
-  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
-  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
-  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
-  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
-  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
-
-  <!-- Main CSS File -->
-  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
-  <link rel="icon" href="{%static 'Logos/coep_tech_black'%}" type="image/png", rel="icon">
-
-
-  <style>
-    /* Modal Overlay Styles */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(26, 115, 232, 0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
-    }
-    
-    .modal-overlay.active {
-      opacity: 1;
-      visibility: visible;
-    }
-    
-    /* Background blobs for the overlay */
-    .modal-overlay::before, .modal-overlay::after {
-      content: "";
-      position: absolute;
-      width: 50vw;
-      height: 50vw;
-      background-color: rgba(255, 255, 255, 0.05);
-      border-radius: 50%;
-      z-index: 0;
-    }
-    
-    .modal-overlay::before {
-      top: -15vw;
-      right: -15vw;
-    }
-    
-    .modal-overlay::after {
-      bottom: -15vw;
-      left: -15vw;
-    }
-    
-    .modal-container {
-      background-color: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      max-width: 420px;
-      padding: 40px 30px;
-      text-align: center;
-      z-index: 1;
-      transform: translateY(20px);
-      transition: transform 0.3s ease;
-    }
-    
-    .modal-overlay.active .modal-container {
-      transform: translateY(0);
-    }
-    
-    .icon-container {
-      margin-bottom: 20px;
-      position: relative;
-      display: inline-block;
-    }
-    
-    .window-icon {
-      width: 60px;
-      height: 60px;
-      border: 2.5px solid #1a73e8;
-      border-radius: 8px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #1a73e8;
-    }
-    
-    .window-face {
-      font-size: 24px;
-      line-height: 1;
-    }
-    
-    .circle-icon {
-      position: absolute;
-      top: -10px;
-      right: -10px;
-      background-color: #1a73e8;
-      border: 2px solid white;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 16px;
-    }
-    
-    .modal-container h2 {
-      color: #333;
-      font-size: 24px;
-      margin-bottom: 12px;
-    }
-    
-    .modal-container p {
-      color: #666;
-      font-size: 16px;
-      line-height: 1.5;
-      margin-bottom: 30px;
-    }
-    
-    .buttons {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-    }
-    
-    .modal-container button {
-      padding: 12px 24px;
-      border-radius: 24px;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      outline: none;
-    }
-    
-    .cancel-btn {
-      background-color: #f1f3f4;
-      border: none;
-      color: #5f6368;
-    }
-    
-    .cancel-btn:hover {
-      background-color: #e8eaed;
-    }
-    
-    .logout-btn {
-      background-color: #1a73e8;
-      border: none;
-      color: white;
-    }
-    
-    .logout-btn:hover {
-      background-color: #1765cc;
-      box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
-    }
-    
-    /* Responsive adjustments */
-    @media (max-width: 480px) {
-      .modal-container {
-        padding: 30px 20px;
-      }
-      
-      .modal-container h2 {
-        font-size: 20px;
-      }
-      
-      .modal-container p {
-        font-size: 14px;
-        margin-bottom: 24px;
-      }
-      
-      .buttons {
-        flex-direction: column;
-      }
-      
-      .modal-container button {
-        width: 100%;
-      }
-    }
-  </style>
-</head>
-
-</head>
-<body>
-    <header id="header" class="header d-flex align-items-center fixed-top">
-        <div class="container-fluid container-xl position-relative d-flex align-items-center">
-            {% comment %} <a href="{% url 'request_booking:index' %}" class="logo d-flex align-items-center me-auto">
-                <h1 class="sitename">COEP Tech</h1>
-            </a> {% endcomment %}
-
-            <nav id="navmenu" class="navmenu">
-                <ul>
-                  {% comment %} <li><a href="#hero" class="active">Home</a></li> {% endcomment %}
-                  {% comment %} <li><a href="#about">About</a></li> {% endcomment %}
-                  <li><a href="{% url 'venue_admin:home' %}#hero" class="active">Home</a></li>
-                  {% comment %} <li><a href="#services">Services</a></li> {% endcomment %}
-                  {% comment %} <li><a href="{% url 'venue_admin:home' %}#services">Services</a></li> {% endcomment %}
-                  
-                  {% comment %} <li><a href="#team">Team</a></li> {% endcomment %}
-                  
-                  {% comment %} <li><a href="{% url 'venue_admin:home' %}#recent-blog-postst">Venues</a></li> {% endcomment %}
-                  
-                  {% comment %} <li><a href="#contact">Contact</a></li> {% endcomment %}
-        
-                  <li><a href="{% url 'venue_admin:get_requests' %}" class="btn signup-btn">View Requests</a></li>
-                  <li><a href="{% url 'venue_admin:get_cumulative_requests' %}" class="btn signup-btn">View Cumulative Requests</a></li>
-                    
-                  {%comment%}<li><a href="{% url 'venue_admin:home' %}#features">VENUE ADMIN</a></li>{%endcomment%}
-                  <li><a href="{% url 'venue_admin:approved_bookings' %}">Bookings</a></li>
-
-                  <li><a href="{% url 'venue_admin:approved_cumulative_bookings_view' %}">Cumulative Bookings</a></li>
-                  {% comment %} <li><a href="{% url 'venue_admin:rejected_cumulative_bookings_view' %}">Rejected Cumulative Bookings</a></li> {% endcomment %}
-
-                  <li><a href="{% url 'venue_admin:venue_schedule' %}"> Bookings Calendar</a></li>
-
-                  <li><a href="{% url 'venue_admin:venue_edit_start' %}">Edit Venue</a></li>
-                  <li><a href="{% url 'venue_admin:user_list' %}">Edit Users</a></li>
-        
-                </ul>
-                <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-              </nav>
-
-            {% comment %} <a class="btn-getstarted" href="{% url 'venue_admin:logout' %}">Log Out</a> {% endcomment %}
-            <a class="btn-getstarted" id="logoutButton" href="{% url 'venue_admin:logout'%}#about">Log Out</a>
-        </div>
-    </header>
-
-
-    {% load static %}
-
-    <!-- Logout Confirmation Modal -->
-    <div class="modal-overlay" id="logoutModal">
-      <div class="modal-container">
-        <div class="icon-container">
-          <div class="window-icon">
-            <div class="window-face">•-•</div>
-          </div>
-          <div class="circle-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M23 4v6h-6"/>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-            </svg>
-          </div>
-        </div>
-        
-        <h2>Logout Confirmation</h2>
-        <p>Are you sure you want to log out? Your current session will be terminated.</p>
-        
-        <div class="buttons">
-          <button class="cancel-btn" id="cancelBtn">Cancel</button>
-          <button class="logout-btn" id="logoutBtn">Logout</button>
-        </div>
+<!-- Logout Confirmation Modal (kept inside nav include so it's available on all pages) -->
+<div class="modal-overlay" id="logoutModal">
+  <div class="modal-container">
+    <div class="icon-container">
+      <div class="window-icon">
+        <div class="window-face">•-•</div>
+      </div>
+      <div class="circle-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
       </div>
     </div>
     
-    <script>
-      // Function to show the modal
-      function showLogoutModal() {
-        const modal = document.getElementById('logoutModal');
-        modal.classList.add('active');
-        // Prevent scrolling on the body when modal is open
-        document.body.style.overflow = 'hidden';
-      }
-      
-      // Function to hide the modal
-      function hideLogoutModal() {
-        const modal = document.getElementById('logoutModal');
-        modal.classList.remove('active');
-        // Restore scrolling
-        document.body.style.overflow = '';
-      }
-      
-      // Set up event listeners
-      document.getElementById('cancelBtn').addEventListener('click', function() {
-        hideLogoutModal();
-      });
-      
-      document.getElementById('logoutBtn').addEventListener('click', function() {
-        // Redirect to the logout URL
-        window.location.href = "{% url 'venue_admin:logout' %}";
-      });
-      
-      // Connect the logout button to show the modal
-      document.getElementById('logoutButton').addEventListener('click', function(e) {
-        e.preventDefault(); // Prevent the default link action
-        showLogoutModal();
-      });
-      
-      // Close the modal when clicking outside
-      document.getElementById('logoutModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-          hideLogoutModal();
-        }
-      });
-    </script>
+    <h2>Logout Confirmation</h2>
+    <p>Are you sure you want to log out? Your current session will be terminated.</p>
     
-    <!-- Vendor JS Files -->
-    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
-    <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
-    <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
-    <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
-    <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
-    <script src="{% static 'assets/vendor/waypoints/noframework.waypoints.js' %}"></script>
-    <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
-    <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
-    
-    <!-- Main JS File -->
-    <script src="{% static 'assets/js/main.js' %}"></script>
-</body>
-</html>
+    <div class="buttons">
+      <button class="cancel-btn" id="cancelBtn">Cancel</button>
+      <button class="logout-btn" id="logoutBtn">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (!modal) return;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+  function hideLogoutModal() {
+    const modal = document.getElementById('logoutModal');
+    if (!modal) return;
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    const cancel = document.getElementById('cancelBtn');
+    const logout = document.getElementById('logoutBtn');
+    const logoutLink = document.getElementById('logoutButton');
+    if(cancel) cancel.addEventListener('click', hideLogoutModal);
+    if(logout) logout.addEventListener('click', function(){ window.location.href = "{% url 'venue_admin:logout' %}"; });
+    if(logoutLink) logoutLink.addEventListener('click', function(e){ e.preventDefault(); showLogoutModal(); });
+    const modal = document.getElementById('logoutModal');
+    if(modal) modal.addEventListener('click', function(e){ if(e.target === this) hideLogoutModal(); });
+  });
+</script>
