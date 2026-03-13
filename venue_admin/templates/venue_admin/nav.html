@@ -45,9 +45,24 @@
   /* Prevent nav items from wrapping; on small screens hide and use mobile toggle */
   @media (max-width:992px){
     #navmenu{ flex:1 1 100%; }
-    #navmenu ul{ display:none; position:absolute; top:100%; left:0; right:0; background:var(--nav-contrast); flex-direction:column; padding:12px; }
+    /* hide default list, position it for the overlay */
+    #navmenu ul{
+      display:none;
+      position:absolute;
+      /* place just below header (approx. 80px) instead of at bottom of full-screen overlay */
+      top:80px;
+      left:0;
+      right:0;
+      background:var(--nav-contrast);
+      flex-direction:column;
+      padding:12px;
+    }
+    /* show when mobile nav active on body */
+    body.mobile-nav-active #navmenu ul{
+      display:flex !important;
+      z-index:10001; /* above overlay background */
+    }
     .mobile-nav-toggle{ display:block; margin-left:8px; }
-    header.nav-open #navmenu ul{ display:flex; }
     .btn-getstarted{ margin-left:0; }
   }
 </style>
