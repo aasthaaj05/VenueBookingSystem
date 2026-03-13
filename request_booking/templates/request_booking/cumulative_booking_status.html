@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>COEPVenueBookingSystem</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- vendor CSS needed for consistent navbar style -->
+    <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
     <style>
         /* ====== BASE STYLES ====== */
         :root {
@@ -119,75 +126,7 @@
             padding: 0 var(--space-lg);
         }
 
-        /* ====== HEADER ====== */
-        header {
-            background-color: var(--primary-900);
-            color: white;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            box-shadow: var(--shadow-md);
-            z-index: 1000;
-        }
-
-        .header-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            font-size: 1.25rem;
-            font-weight: 600;
-        }
-
-        .logo i {
-            font-size: 1.5rem;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: var(--space-lg);
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            gap: var(--space-sm);
-            font-weight: 500;
-            position: relative;
-            padding: var(--space-sm) 0;
-        }
-
-        .nav-links a:hover {
-            color: white;
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: white;
-            transition: var(--transition-medium);
-        }
-
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
+        /* ====== HEADER STYLES REMOVED - shared bootstrap navbar will be used instead */
         /* ====== MAIN CONTENT ====== */
         .main-content {
             padding: var(--space-xl) 0;
@@ -206,6 +145,12 @@
             gap: var(--space-xl);
             position: relative;
             overflow: hidden;
+        }
+        .welcome-card h2 {
+            color: white !important;
+        }
+        .welcome-card h2::selection {
+            color: white;
         }
 
         .welcome-card::before {
@@ -664,19 +609,8 @@
 </head>
 <body>
     <!-- Header Section -->
-    <header>
-        <div class="container header-container">
-            <div class="logo">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Venue Booking System</span>
-            </div>
-            <ul class="nav-links">
-                <li><a href="{% url 'faculty_advisor:home' %}"><i class="fas fa-tachometer-alt"></i> Home</a></li>
-                {% comment %} <li><a href="#"><i class="fas fa-calendar"></i> Bookings</a></li>
-                <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                <li><a href="#"><i class="fas fa-sign-out-alt"></i> Logout</a></li> {% endcomment %}
-            </ul>
-        </div>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        {% include 'request_booking/nav.html' %}
     </header>
 
     <!-- Main Content -->

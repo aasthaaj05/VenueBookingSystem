@@ -602,7 +602,7 @@
                         <i class="fas fa-eye"></i> View
                     </button>
                     <button type="button" class="btn cancel-btn" onclick="showCancelDialog(
-                        '{{ request.request_id }}',
+                        '{{ request.cumulative_request_id }}',
                         '{{ request.user.name }}',
                         '{{ request.venue.venue_name }}',
                         '{{ request.date }}',
@@ -737,8 +737,8 @@
             confirmBtn.disabled = true;
             confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
             
-            // Send the cancellation request to the server
-            fetch(`/cancel-booking/${currentRequestId}/`, {
+            // Send the cancellation request to the server (cumulative route)
+            fetch(`/venue_admin/cancel-cumulative-booking/${currentRequestId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
