@@ -14,21 +14,35 @@
     <!-- Linking CSS -->
     <link rel="stylesheet" href="{% static 'css/view_requests.css' %}">
 
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+  <style>
+    main { margin-top: 80px; }
+  </style>
+
     <!-- Linking JavaScript -->
     <script src="{% static 'js/view_requests.js' %}" defer></script>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">Venue Booking</div>
-        <ul class="nav-links">
-            <li><a href="{% url 'faculty_advisor:home' %}">Dashboard</a></li>
-            <li><a href="{% url 'faculty_advisor:get_pending_forward_requests' %}">Pending Requests</a></li>
-            <li><a href="{% url 'faculty_advisor:home' %}">Home</a></li>
-            <li><a href="{% url 'faculty_advisor:logout' %}">Logout</a></li>
-        </ul>
-    </nav>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+      {% include 'faculty_advisor/nav.html' %}
+    </header>
+
+    <main class="main">
 
     <!-- Sidebar -->
     <div class="sidebar">
@@ -80,6 +94,21 @@
             </tbody>
         </table>
     </div>
+
+    </main>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+    <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+    <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/waypoints/noframework.waypoints.js' %}"></script>
+    <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+    <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+
+    <!-- Main JS File -->
+    <script src="{% static 'assets/js/main.js' %}"></script>
 
     <script src="{% static 'js/view_requests.js' %}"></script>
 
