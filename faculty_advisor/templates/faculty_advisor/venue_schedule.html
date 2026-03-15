@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,25 @@
     <title>Venue Booking System</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800&family=Poppins:wght@100;200;300;400;500;600;700;800;900&family=Jost:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
     <style>
+        main { margin-top: 80px; }
+
         :root {
             --primary-color: rgba(26, 115, 232, 0.8);
             --primary-color-solid: rgb(26, 115, 232);
@@ -718,33 +737,13 @@
     </style>
 </head>
 <body>
+    <header id="header" class="header d-flex align-items-center fixed-top">
+      {% include 'faculty_advisor/nav.html' %}
+    </header>
+
+    <main class="main">
+
     <div class="container">
-        <header class="app-header">
-            <div class="header-content">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-calendar-alt"></i>
-                    </div>
-                    <div class="logo-text">
-                        <h1>Venue Booking System</h1>
-                        <p>Manage and schedule venue bookings efficiently</p>
-                    </div>
-                </div>
-
-                <nav class="navbar">
-                    <ul class="nav-links">
-                        <a href="{% url 'faculty_advisor:home' %}">Home</a>
-                    </ul>
-                </nav>
-
-                {% comment %} <div class="user-controls">
-                    <div class="user-profile">
-                        <div class="user-avatar">AD</div>
-                        <span class="user-name">Admin User</span>
-                    </div>
-                </div> {% endcomment %}
-            </div>
-        </header>
 
         
 
